@@ -1,0 +1,60 @@
+<template>
+  <section class="py-24 bg-white">
+
+    <div class="max-w-6xl mx-auto px-6">
+
+      <!-- HEADER -->
+      <div class="text-center mb-16">
+
+        <p class="text-[#D4AF37] text-xs tracking-[.3em] uppercase mb-3">
+          Reviews
+        </p>
+
+        <h2 class="heading-font text-5xl font-bold">
+          What Our Clients Say
+        </h2>
+
+      </div>
+
+      <!-- GRID -->
+      <div class="grid md:grid-cols-3 gap-8">
+
+        <div
+          v-for="review in reviews"
+          :key="review.name"
+          class="bg-white p-8 rounded-3xl shadow-lg"
+        >
+
+          <p class="text-[#D4AF37] text-xl">★★★★★</p>
+
+          <p class="my-4">
+            {{ review.text }}
+          </p>
+
+          <strong>— {{ review.name }}</strong>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </section>
+</template>
+
+<script setup>
+const reviews = [
+  {
+    name: "Christina K.",
+    text: "Amazing service and wonderful staff. I always leave feeling beautiful."
+  },
+  {
+    name: "Emily M.",
+    text: "The attention to detail is unmatched! Every visit leaves me impressed and delighted with the results."
+  },
+  {
+    name: "Sophia A.",
+    text: "A beautiful atmosphere, talented specialists, and outstanding service. I wouldn't trust anyone else."
+  }
+]
+</script>
