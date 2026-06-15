@@ -8,7 +8,7 @@
         The Team
       </p>
 
-      <h2 class="text-5xl font-bold mb-4">
+      <h2 class="text-5xl font-bold mb-4" style="font-family: 'Playfair Display', serif;">
         Meet Our Specialists
       </h2>
 

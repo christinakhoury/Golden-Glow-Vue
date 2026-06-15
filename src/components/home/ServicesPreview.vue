@@ -8,7 +8,7 @@
           What We Offer
         </p>
 
-       <h2 class="heading-font text-5xl font-bold mb-4">
+       <h2 class="heading-font text-5xl font-bold mb-4" style="font-family: 'Playfair Display', serif;">
   Our Signature Services
 </h2>
 

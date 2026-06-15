@@ -7,7 +7,7 @@
         Combo Deals
       </p>
 
-      <h2 class="heading-font text-5xl font-bold mb-6">
+      <h2 class="heading-font text-5xl font-bold mb-6" style="font-family: 'Playfair Display', serif;">
         Exclusive Offers
       </h2>
 

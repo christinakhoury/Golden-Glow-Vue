@@ -10,7 +10,7 @@
           Since 2019
         </p>
 
-        <h2 class="heading-font text-5xl font-bold text-[#1C1C1C] mb-6">
+        <h2 class="heading-font text-5xl font-bold text-[#1C1C1C] mb-6" style="font-family: 'Playfair Display', serif;">
           Our Story
         </h2>
 

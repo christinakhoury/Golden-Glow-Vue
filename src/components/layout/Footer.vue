@@ -33,7 +33,7 @@
         </ul>
       </div>
 
-       <div>
+     <!-- CONTACT --> <div>
        <h3 class="font-bold mb-3">Contact</h3>
         <p class="text-gray-400">+961 XXX XXX</p>
          <div class="flex gap-4 mt-4">

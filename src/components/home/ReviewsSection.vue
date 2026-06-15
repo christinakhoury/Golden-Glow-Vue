@@ -10,7 +10,7 @@
           Reviews
         </p>
 
-        <h2 class="heading-font text-5xl font-bold">
+        <h2 class="heading-font text-5xl font-bold" style="font-family: 'Playfair Display', serif;">
           What Our Clients Say
         </h2>
 
