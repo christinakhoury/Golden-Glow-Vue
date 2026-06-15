@@ -1,5 +1,5 @@
-<template>
-  <div class="group bg-white rounded-3xl overflow-hidden border border-[#D4AF37] shadow-lg hover:-translate-y-2 transition">
+<template >
+  <div data-aos="fade-up" class="group bg-white rounded-3xl overflow-hidden border border-[#D4AF37] shadow-lg hover:-translate-y-2 transition">
 
     <!-- IMAGE -->
     <div class="h-72 overflow-hidden">
@@ -10,7 +10,7 @@
     </div>
 
     <!-- CONTENT -->
-    <div class="p-6">
+    <div data-aos="fade-up" class="p-6">
 
       <div class="flex justify-between items-start mb-2">
 
@@ -31,7 +31,7 @@
       </div>
 
       <!-- DETAILS -->
-      <div class="mt-4 grid grid-cols-2 gap-y-2 text-sm">
+      <div data-aos="fade-up" class="mt-4 grid grid-cols-2 gap-y-2 text-sm">
 
         <span class="text-gray-500">Experience</span>
         <span>{{ specialist.experience }}</span>
@@ -45,7 +45,7 @@
       </div>
 
       <!-- BUTTONS -->
-      <div class="mt-6 flex gap-3">
+      <div data-aos="fade-up" class="mt-6 flex gap-3">
 
         <RouterLink
           to="/specialists"

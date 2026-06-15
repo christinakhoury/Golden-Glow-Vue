@@ -1,9 +1,9 @@
 <template>
-  <div class="bg-[#F8F4EF] text-[#1C1C1C] font-[Poppins]">
+  <div  class="bg-[#F8F4EF] text-[#1C1C1C] font-[Poppins]">
 
 
     <!-- HERO -->
-    <section class="pt-32 pb-16 text-center">
+    <section data-aos="fade-up" class="pt-32 pb-16 text-center">
       <h1 class="text-5xl font-bold mb-4">{{ current.title }}</h1>
 
       <p class="text-gray-600 max-w-2xl mx-auto">
@@ -19,8 +19,8 @@
     </section>
 
     <!-- SERVICES GRID -->
-    <section class="max-w-7xl mx-auto px-6 pb-24">
-      <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+    <section data-aos="fade-up" class="max-w-7xl mx-auto px-6 pb-24">
+      <div  class="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
 
         <a
           v-for="item in current.services"
@@ -49,7 +49,7 @@
     </section>
 
     <!-- SPECIALISTS -->
-    <section class="bg-white py-24">
+    <section data-aos="fade-up" class="bg-white py-24">
       <div class="max-w-7xl mx-auto px-6 text-center">
 
         <h2 class="text-4xl font-bold mb-12">
@@ -89,7 +89,7 @@
     </section>
 
     <!-- BENEFITS SECTION -->
-<section class="py-24 bg-[#F8F4EF]">
+<section data-aos="fade-up" class="py-24 bg-[#F8F4EF]">
   <div class="max-w-6xl mx-auto px-6 text-center">
 
     <h2 class="text-4xl font-bold mb-12">

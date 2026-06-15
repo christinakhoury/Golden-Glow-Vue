@@ -1,5 +1,5 @@
  <template>
-  <section
+  <section data-aos="fade-up"
     id="home"
     class="h-screen bg-cover bg-center relative"
     style="background-image:url('https://images.unsplash.com/photo-1560066984-138dadb4c035')"

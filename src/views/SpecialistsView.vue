@@ -1,7 +1,6 @@
 <template>
-  <div class="body-font bg-[#F8F4EF] text-[#1C1C1C]">
+  <div data-aos="fade-up" class="body-font bg-[#F8F4EF] text-[#1C1C1C]">
 
-```
 <!-- HERO -->
 <section class="relative pt-32 pb-20 text-center overflow-hidden">
 
@@ -10,7 +9,7 @@
     <div class="absolute w-[400px] h-[400px] bg-[#bd9c30]/20 blur-3xl rounded-full bottom-[-120px] right-[-120px]"></div>
   </div>
 
-  <div class="relative max-w-4xl mx-auto px-6">
+  <div data-aos="fade-up" class="relative max-w-4xl mx-auto px-6">
 
     <p class="text-[#D4AF37] text-xs tracking-[.3em] uppercase mb-3">
       Golden Glow Studio Team
@@ -25,12 +24,13 @@
     </p>
 
     <!-- CATEGORY BUTTONS -->
-    <div class="mt-8 flex justify-center gap-4 flex-wrap">
+    <div data-aos="fade-up" class="mt-8 flex justify-center gap-4 flex-wrap">
 
       <a
         v-for="section in sections"
         :key="section.id"
         :href="`#${section.id}`"
+        data-aos="fade-up"
         class="px-5 py-2 bg-[#F8F4EF] shadow rounded-full text-sm border border-[#D4AF37]
                hover:bg-[#D4AF37] hover:text-white transition"
       >
@@ -43,7 +43,7 @@
 </section>
 
 <!-- SPECIALIST SECTIONS -->
-<section
+<section data-aos="fade-up"
   v-for="section in sections"
   :key="section.id"
   :id="section.id"
@@ -95,7 +95,6 @@
 
   </div>
 </section>
-```
 
   </div>
 </template>

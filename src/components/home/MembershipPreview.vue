@@ -1,5 +1,5 @@
 <template>
-  <section class="py-24 bg-[#F8F4EF]" id="membership">
+  <section  data-aos="fade-up" class="py-24 bg-[#F8F4EF]" id="membership">
 
 <div class="max-w-5xl mx-auto px-6 text-center">
 
@@ -7,7 +7,7 @@
     Exclusive Membership
   </p>
 
-  <h2 class="heading-font text-5xl font-bold mb-6" style="font-family: 'Playfair Display', serif;">
+  <h2 class="heading-font text-5xl font-bold mb-6" >
     Join Glow Rewards
   </h2>
 

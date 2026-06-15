@@ -1,5 +1,5 @@
 <template>
-  <section class="py-24 bg-[#F8F4EF]" id="aboutus">
+  <section data-aos="fade-up" class="py-24 bg-[#F8F4EF]" id="aboutus">
 
     <div class="max-w-5xl mx-auto px-6">
 
