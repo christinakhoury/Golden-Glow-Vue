@@ -28,11 +28,11 @@ const routes = [
     props: true
   },
 
-  {
-    path: "/specialists",
-    name: "specialists",
-    component: () => import("../views/MeetOurSpecialists.vue")
-  },
+{
+  path: "/specialists",
+  name: "specialists",
+  component: () => import("../views/SpecialistsView.vue")
+},
 
   // 💳 Gift Cards Flow
   {

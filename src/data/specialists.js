@@ -1,59 +1,4 @@
-<template>
-  <div class="body-font bg-[#F8F4EF] text-[#1C1C1C]">
-
-    <!-- HERO -->
-    <section class="relative pt-32 pb-20 text-center overflow-hidden">
-
-      <div class="absolute inset-0">
-        <div class="absolute w-125 h-125 bg-[#D4AF37]/20 blur-3xl rounded-full -top-30 -left-30"></div>
-        <div class="absolute w-100 h-100 bg-[#bd9c30]/20 blur-3xl rounded-full -bottom-30 -right-30"></div>
-      </div>
-
-      <div class="relative max-w-4xl mx-auto px-6">
-
-        <p class="text-[#D4AF37] text-xs tracking-[.3em] uppercase mb-3">
-          Golden Glow Studio Team
-        </p>
-
-        <h1 class="text-5xl md:text-6xl font-bold mt-4 heading-font">
-          Meet Our Beloved Team
-        </h1>
-
-        <p class="text-gray-600 mt-6 text-lg leading-relaxed">
-          A handpicked collection of artists, specialists, and beauty experts dedicated to
-          bringing out your most confident glow.
-        </p>
-
-        <div class="mt-8 flex justify-center gap-4 flex-wrap">
-          <a v-for="s in sections"
-             :key="s.id"
-             :href="`#${s.id}`"
-             class="px-5 py-2 bg-[#F8F4EF] shadow rounded-full text-sm border border-[#D4AF37]
-             hover:bg-[#D4AF37] hover:text-white transition">
-            {{ s.title }}
-          </a>
-        </div>
-
-      </div>
-    </section>
-
-    <!-- SECTIONS -->
-    <SpecialistSection
-      v-for="section in sections"
-      :key="section.id"
-      :id="section.id"
-      :title="section.title"
-      :bg="section.bg"
-      :specialists="section.specialists"
-    />
-
-  </div>
-</template>
-
-<script setup>
-import SpecialistsPreview from "../components/SpecialistsPreview.vue"
-
-const sections = [
+export  const sections = [
   {
     id: "hair",
     title: "Hair Specialists",
@@ -105,4 +50,3 @@ const sections = [
     ]
   }
 ]
-</script>

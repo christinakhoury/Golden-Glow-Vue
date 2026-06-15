@@ -29,8 +29,7 @@
 
       <!-- LINK -->
       <div class="mt-12">
-        <RouterLink
-          to="/MeetOurSpecialists"
+        <RouterLink :to="{ name: 'specialists' }"
           class="text-[#D4AF37] border-b border-[#D4AF37] pb-1 uppercase tracking-wider text-sm hover:opacity-80 transition"
         >
           Meet All Specialists →
