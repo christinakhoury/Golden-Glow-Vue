@@ -1,44 +1,21 @@
 <template>
-  <section data-aos="fade-up" class="py-24 bg-white">
-
+  <section data-aos="fade-up" class="py-24 bg-card">
     <div class="max-w-6xl mx-auto px-6">
-
-      <!-- HEADER -->
       <div class="text-center mb-16">
-
-        <p class="text-[#D4AF37] text-xs tracking-[.3em] uppercase mb-3">
-          Reviews
-        </p>
-
-        <h2 class="heading-font text-5xl font-bold" style="font-family: 'Playfair Display', serif;">
+        <p class="text-[#D4AF37] text-xs tracking-[.3em] uppercase mb-3">Reviews</p>
+        <h2 class="heading-font text-5xl font-bold text-primary" style="font-family: 'Playfair Display', serif;">
           What Our Clients Say
         </h2>
-
       </div>
 
-      <!-- GRID -->
       <div class="grid md:grid-cols-3 gap-8">
-
-        <div
-          v-for="review in reviews"
-          :key="review.name"
-          class="bg-white p-8 rounded-3xl shadow-lg"
-        >
-
+        <div v-for="review in reviews" :key="review.name" class="bg-card p-8 rounded-3xl shadow-theme border border-theme" data-aos="fade-up">
           <p class="text-[#D4AF37] text-xl">★★★★★</p>
-
-          <p class="my-4">
-            {{ review.text }}
-          </p>
-
-          <strong>— {{ review.name }}</strong>
-
+          <p class="my-4 text-primary">{{ review.text }}</p>
+          <strong class="text-primary">— {{ review.name }}</strong>
         </div>
-
       </div>
-
     </div>
-
   </section>
 </template>
 

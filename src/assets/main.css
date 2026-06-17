@@ -1,1 +1,114 @@
+/* src/assets/main.css */
 @import "tailwindcss";
+
+/* Dark mode configuration */
+:root {
+  /* Light mode colors */
+  --bg-primary: #ffffff;
+  --bg-secondary: #F8F4EF;
+  --bg-card: #ffffff;
+  --bg-input: #ffffff;
+  --bg-navbar: rgba(255, 255, 255, 0.9);
+  --bg-sidebar: #ffffff;
+  --bg-dropdown: #ffffff;
+  --bg-hover: #faf7ef;
+  
+  --text-primary: #1C1C1C;
+  --text-secondary: #6b6375;
+  --text-muted: #9ca3af;
+  --text-inverse: #ffffff;
+  
+  --border-color: #e5e4e7;
+  --border-light: #f3f4f6;
+  
+  --shadow-color: rgba(0, 0, 0, 0.1);
+  --shadow-heavy: rgba(0, 0, 0, 0.15);
+  
+  --gold: #D4AF37;
+  --gold-hover: #c39d28;
+  --gold-light: #faf7ef;
+}
+
+.dark {
+  /* Dark mode colors */
+  --bg-primary: #121212;
+  --bg-secondary: #1e1e1e;
+  --bg-card: #2d2d2d;
+  --bg-input: #3d3d3d;
+  --bg-navbar: rgba(18, 18, 18, 0.9);
+  --bg-sidebar: #1e1e1e;
+  --bg-dropdown: #2d2d2d;
+  --bg-hover: #3d3d3d;
+  
+  --text-primary: #f3f4f6;
+  --text-secondary: #9ca3af;
+  --text-muted: #6b7280;
+  --text-inverse: #1C1C1C;
+  
+  --border-color: #374151;
+  --border-light: #2d2d2d;
+  
+  --shadow-color: rgba(0, 0, 0, 0.4);
+  --shadow-heavy: rgba(0, 0, 0, 0.6);
+  
+  --gold: #D4AF37;
+  --gold-hover: #c39d28;
+  --gold-light: #2d2d2d;
+}
+
+/* Apply base styles */
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Utility classes for dark mode */
+.bg-primary {
+  background-color: var(--bg-primary);
+}
+.bg-secondary {
+  background-color: var(--bg-secondary);
+}
+.bg-card {
+  background-color: var(--bg-card);
+}
+.bg-input {
+  background-color: var(--bg-input);
+}
+.bg-navbar {
+  background-color: var(--bg-navbar);
+}
+.bg-sidebar {
+  background-color: var(--bg-sidebar);
+}
+.bg-dropdown {
+  background-color: var(--bg-dropdown);
+}
+.bg-hover {
+  background-color: var(--bg-hover);
+}
+
+.text-primary {
+  color: var(--text-primary);
+}
+.text-secondary {
+  color: var(--text-secondary);
+}
+.text-muted {
+  color: var(--text-muted);
+}
+
+.border-theme {
+  border-color: var(--border-color);
+}
+.border-light {
+  border-color: var(--border-light);
+}
+
+.shadow-theme {
+  box-shadow: 0 10px 15px -3px var(--shadow-color), 0 4px 6px -2px var(--shadow-color);
+}
+.shadow-theme-heavy {
+  box-shadow: 0 20px 25px -5px var(--shadow-heavy), 0 10px 10px -5px var(--shadow-heavy);
+}

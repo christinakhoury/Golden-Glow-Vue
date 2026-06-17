@@ -1,60 +1,29 @@
 <template>
-  <div class="body-font bg-[#F8F4EF] min-h-screen flex items-center justify-center">
-    <div class="max-w-2xl w-full bg-white border border-[#D4AF37] rounded-3xl shadow-2xl p-10 text-center">
+  <div class="body-font bg-secondary min-h-screen flex items-center justify-center">
+    <div class="max-w-2xl w-full bg-card border border-[#D4AF37] rounded-3xl shadow-theme-heavy p-10 text-center">
+      <h1 class="heading-font text-5xl font-bold text-[#D4AF37] mb-4">Gift Voucher</h1>
+      <p class="text-secondary mb-8">Your gift card purchase was successful 🎉</p>
 
-      <h1 class="heading-font text-5xl font-bold text-[#D4AF37] mb-4">
-        Gift Voucher
-      </h1>
+      <div class="border border-[#D4AF37] rounded-3xl p-8 mb-8 bg-card">
+        <h2 class="text-3xl font-bold text-[#D4AF37] mb-4">Golden Glow Studio</h2>
+        <p class="mb-2 text-primary">🎁 Gifted To: <strong>{{ giftCard.recipientName }}</strong></p>
+        <p class="mb-2 text-primary">💝 Gifted By: <strong>{{ giftCard.buyerName }}</strong></p>
+        <p class="mb-2 text-primary">💰 Value: <strong>${{ giftCard.amount }}</strong></p>
+        <p class="mb-6 text-primary">🎫 Voucher Code: <strong>{{ giftCard.code }}</strong></p>
 
-      <p class="text-gray-600 mb-8">
-        Your gift card purchase was successful 🎉
-      </p>
-
-      <div class="border border-[#D4AF37] rounded-3xl p-8 mb-8">
-
-        <h2 class="text-3xl font-bold text-[#D4AF37] mb-4">
-          Golden Glow Studio
-        </h2>
-
-        <p class="mb-2">
-          🎁 Gifted To: <strong>{{ giftCard.recipientName }}</strong>
-        </p>
-
-        <p class="mb-2">
-          💝 Gifted By: <strong>{{ giftCard.buyerName }}</strong>
-        </p>
-
-        <p class="mb-2">
-          💰 Value: <strong>${{ giftCard.amount }}</strong>
-        </p>
-
-        <p class="mb-6">
-          🎫 Voucher Code: <strong>{{ giftCard.code }}</strong>
-        </p>
-
-        <div class="bg-[#F8F4EF] rounded-2xl p-5">
-          <p class="font-semibold mb-2">Personal Message</p>
-          <p class="italic text-gray-700">
-            "{{ giftCard.message || 'Enjoy your luxury experience at Golden Glow Studio.' }}"
-          </p>
+        <div class="bg-secondary rounded-2xl p-5 border border-theme">
+          <p class="font-semibold mb-2 text-primary">Personal Message</p>
+          <p class="italic text-secondary">"{{ giftCard.message || 'Enjoy your luxury experience at Golden Glow Studio.' }}"</p>
         </div>
-
       </div>
 
-      <button
-        @click="downloadPDF"
-        class="bg-[#D4AF37] text-white px-8 py-3 rounded-xl hover:bg-[#c39d28] transition"
-      >
+      <button @click="downloadPDF" class="bg-[#D4AF37] text-white px-8 py-3 rounded-xl hover:bg-[#c39d28] transition">
         Download PDF Voucher
       </button>
 
-      <router-link
-        to="/"
-        class="inline-block mt-4 px-6 py-2 text-sm border border-[#D4AF37] text-[#D4AF37] rounded-xl hover:bg-[#D4AF37] hover:text-white transition"
-      >
+      <router-link to="/" class="inline-block mt-4 px-6 py-2 text-sm border border-[#D4AF37] text-[#D4AF37] rounded-xl hover:bg-[#D4AF37] hover:text-white transition">
         ← Get Back Home
       </router-link>
-
     </div>
   </div>
 </template>
@@ -74,10 +43,7 @@ async function downloadPDF() {
   const { jsPDF } = await import("jspdf")
   const doc = new jsPDF()
 
-  const message =
-    giftCard.value.message?.trim() ||
-    "Enjoy your luxury experience at Golden Glow Studio."
-
+  const message = giftCard.value.message?.trim() || "Enjoy your luxury experience at Golden Glow Studio."
   const recipient = clean(giftCard.value.recipientName)
   const buyer = clean(giftCard.value.buyerName)
   const amount = giftCard.value.amount || "0"

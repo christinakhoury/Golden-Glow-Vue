@@ -1,33 +1,20 @@
 <template>
-  <section data-aos="fade-up" id="specialists" class="py-24 bg-white">
-
+  <section data-aos="fade-up" id="specialists" class="py-24 bg-card">
     <div class="max-w-7xl mx-auto px-6 text-center">
-
-      <!-- HEADER -->
-      <p class="text-[#D4AF37] text-xs tracking-[.3em] uppercase mb-3">
-        The Team
-      </p>
-
-      <h2 class="text-5xl font-bold mb-4" style="font-family: 'Playfair Display', serif;">
+      <p class="text-[#D4AF37] text-xs tracking-[.3em] uppercase mb-3">The Team</p>
+      <h2 class="text-5xl font-bold mb-4 text-primary" style="font-family: 'Playfair Display', serif;">
         Meet Our Specialists
       </h2>
+      <p class="text-secondary mb-12">Experienced professionals dedicated to your beauty journey.</p>
 
-      <p class="text-gray-600 mb-12">
-        Experienced professionals dedicated to your beauty journey.
-      </p>
-
-      <!-- GRID -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-
         <SpecialistCard
           v-for="person in specialists"
           :key="person.name"
           :specialist="person"
         />
-
       </div>
 
-      <!-- LINK -->
       <div class="mt-12">
         <RouterLink :to="{ name: 'specialists' }"
           class="text-[#D4AF37] border-b border-[#D4AF37] pb-1 uppercase tracking-wider text-sm hover:opacity-80 transition"
@@ -35,14 +22,11 @@
           Meet All Specialists →
         </RouterLink>
       </div>
-
     </div>
-
   </section>
 </template>
 
 <script setup>
-
 import SpecialistCard from '../specialists/SpecialistCard.vue'
 
 const specialists = [

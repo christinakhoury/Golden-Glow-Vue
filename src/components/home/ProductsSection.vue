@@ -1,52 +1,22 @@
 <template>
-  <section data-aos="fade-up" class="py-24 bg-[#F8F4EF]">
-
+  <section data-aos="fade-up" class="py-24 bg-secondary">
     <div class="max-w-7xl mx-auto px-6 text-center">
-
-      <p class="text-[#D4AF37] text-xs tracking-[.3em] uppercase mb-3">
-        Selected For You
-      </p>
-
-      <h2 class="heading-font text-5xl font-bold mb-6" style="font-family: 'Playfair Display', serif;">
+      <p class="text-[#D4AF37] text-xs tracking-[.3em] uppercase mb-3">Selected For You</p>
+      <h2 class="heading-font text-5xl font-bold mb-6 text-primary" style="font-family: 'Playfair Display', serif;">
         Recommended For You
       </h2>
+      <p class="text-secondary mb-12">Professional products used by our specialists.</p>
 
-      <p class="text-gray-600 mb-12">
-        Professional products used by our specialists.
-      </p>
-
-      <!-- GRID -->
       <div class="grid md:grid-cols-3 gap-8">
-
-        <div
-          v-for="product in products"
-          :key="product.name"
-          class="border border-[#D4AF37] bg-white rounded-3xl shadow-lg overflow-hidden hover:-translate-y-3 hover:shadow-2xl transition duration-300"
-        >
-
-          <img
-            :src="product.image"
-            class="h-56 w-full object-cover"
-          />
-
+        <div v-for="product in products" :key="product.name" class="border border-[#D4AF37] bg-card rounded-3xl shadow-theme overflow-hidden hover:-translate-y-3 hover:shadow-theme-heavy transition duration-300" data-aos="fade-up">
+          <img :src="product.image" class="h-56 w-full object-cover" />
           <div class="p-6">
-
-            <h3 class="font-bold text-xl">
-              {{ product.name }}
-            </h3>
-
-            <p class="text-gray-600 mt-2">
-              {{ product.desc }}
-            </p>
-
+            <h3 class="font-bold text-xl text-primary">{{ product.name }}</h3>
+            <p class="text-secondary mt-2">{{ product.desc }}</p>
           </div>
-
         </div>
-
       </div>
-
     </div>
-
   </section>
 </template>
 

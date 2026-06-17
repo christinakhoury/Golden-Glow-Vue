@@ -1,56 +1,32 @@
 <template>
-  <section data-aos="fade-up" id="services" class="py-24 bg-[#F8F4EF]">
+  <section data-aos="fade-up" id="services" class="py-24 bg-secondary">
     <div class="max-w-7xl mx-auto px-6">
-
-      <!-- Header -->
       <div class="text-center mb-16">
-        <p class="text-[#D4AF37] text-xs tracking-[.3em] uppercase mb-3">
-          What We Offer
-        </p>
-
-       <h2 class="heading-font text-5xl font-bold mb-4" style="font-family: 'Playfair Display', serif;">
-  Our Signature Services
-</h2>
-
-        <p class="text-gray-600 max-w-2xl mx-auto">
+        <p class="text-[#D4AF37] text-xs tracking-[.3em] uppercase mb-3">What We Offer</p>
+        <h2 class="heading-font text-5xl font-bold mb-4 text-primary" style="font-family: 'Playfair Display', serif;">
+          Our Signature Services
+        </h2>
+        <p class="text-secondary max-w-2xl mx-auto">
           From radiant hair to flawless skin — every treatment is a curated luxury experience.
         </p>
       </div>
 
-      <!-- Services Grid -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
-
         <RouterLink
-  v-for="service in services"
-  :key="service.name"
-  :to="service.link"
-  class="group block bg-white border border-[#D4AF37] rounded-3xl overflow-hidden shadow-lg hover:-translate-y-2 hover:shadow-xl transition duration-300"
->
-          <img
-            :src="service.image"
-            :alt="service.name"
-            class="h-56 w-full object-cover"
-          />
-
+          v-for="service in services"
+          :key="service.name"
+          :to="service.link"
+          class="group block bg-card border border-[#D4AF37] rounded-3xl overflow-hidden shadow-theme hover:-translate-y-2 hover:shadow-theme-heavy transition duration-300"
+          data-aos="fade-up"
+        >
+          <img :src="service.image" :alt="service.name" class="h-56 w-full object-cover" />
           <div class="p-6">
-            <h3 class="text-2xl font-semibold mb-2">
-              {{ service.name }}
-            </h3>
-
-            <p class="text-gray-600 mb-4">
-              {{ service.desc }}
-            </p>
-
-            <span
-              class="text-[#D4AF37] font-semibold group-hover:underline"
-            >
-              Learn More →
-            </span>
+            <h3 class="text-2xl font-semibold mb-2 text-primary">{{ service.name }}</h3>
+            <p class="text-secondary mb-4">{{ service.desc }}</p>
+            <span class="text-[#D4AF37] font-semibold group-hover:underline">Learn More →</span>
           </div>
         </RouterLink>
-
       </div>
-
     </div>
   </section>
 </template>

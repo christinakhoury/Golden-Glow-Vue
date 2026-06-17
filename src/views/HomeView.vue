@@ -13,15 +13,12 @@
     <OffersSection />
     <GiftCardsSection />
     <ProductsSection />
-
- 
   </div>
 </template>
 
 <script setup>
 import Navbar from '../components/layout/Navbar.vue'
 import Footer from '../components/layout/Footer.vue'
-
 
 import HomeHero from '../components/home/HomeHero.vue'
 import StatsSection from '../components/home/StatsSection.vue'
