@@ -15,11 +15,37 @@ const routes = [
     component: HomeView
   },
 
+  /* =========================
+     CART + BOOKING FLOW
+  ========================= */
+
   {
     path: "/book",
     name: "book",
     component: BookView
   },
+
+{
+  path: "/cart",
+  name: "cart",
+  component: () => import("../views/CartView.vue")
+},
+
+  {
+    path: "/payment",
+    name: "payment",
+    component: PaymentView
+  },
+
+  {
+    path: "/booking",
+    name: "booking",
+    component: () => import("../views/BookView.vue")
+  },
+
+  /* =========================
+     SERVICES
+  ========================= */
 
   {
     path: "/services/:type",
@@ -28,24 +54,20 @@ const routes = [
     props: true
   },
 
-{
-  path: "/specialists",
-  name: "specialists",
-  component: () => import("../views/SpecialistsView.vue")
-},
+  {
+    path: "/specialists",
+    name: "specialists",
+    component: () => import("../views/SpecialistsView.vue")
+  },
 
-  // 💳 Gift Cards Flow
+  /* =========================
+     GIFT CARDS FLOW
+  ========================= */
+
   {
     path: "/giftcards",
     name: "giftcards",
     component: GiftCardsFormView,
-    meta: { hideLayout: true }
-  },
-
-  {
-    path: "/payment",
-    name: "payment",
-    component: PaymentView,
     meta: { hideLayout: true }
   },
 
@@ -55,33 +77,36 @@ const routes = [
     component: VoucherView,
     meta: { hideLayout: true }
   },
+
+  /* =========================
+     AUTH + VIP
+  ========================= */
+
   {
-  path: "/login",
-  name: "login",
-  component: () => import("../views/LoginView.vue"),
-   meta: { hideLayout: true },
+    path: "/login",
+    name: "login",
+    component: () => import("../views/LoginView.vue"),
+    meta: { hideLayout: true }
   },
 
   {
-  path: "/vip",
-  name: "vip",
-  component: () => import("../views/VIPView.vue"),
-  meta: { hideLayout: true },
-  },  
-  
-
-  
+    path: "/vip",
+    name: "vip",
+    component: () => import("../views/VIPView.vue"),
+    meta: { hideLayout: true }
+  }
 ]
+
+/* =========================
+   ROUTER
+========================= */
 
 const router = createRouter({
   history: createWebHistory(),
   routes,
 
   scrollBehavior(to, from, savedPosition) {
-
-    if (savedPosition) {
-      return savedPosition
-    }
+    if (savedPosition) return savedPosition
 
     if (to.hash) {
       return {
@@ -90,9 +115,7 @@ const router = createRouter({
       }
     }
 
-    return {
-      top: 0
-    }
+    return { top: 0 }
   }
 })
 
@@ -105,19 +128,21 @@ router.beforeEach((to, from, next) => {
   const completed = JSON.parse(localStorage.getItem("gg-giftcards")) || []
   const user = JSON.parse(localStorage.getItem("gg-user"))
 
-  // 🚫 Payment blocked if no gift card started
+  /* 🚫 Payment protection (gift cards) */
   if (to.name === "payment" && !giftCard) {
     return next("/giftcards")
   }
 
+  /* 🚫 VIP only for logged in users */
   if (to.name === "vip" && !user) {
-  return next("/login")
-}
+    return next("/login")
+  }
 
-  // 🚫 Voucher blocked if no completed payment
+  /* 🚫 Voucher only after completion */
   if (to.name === "voucher" && completed.length === 0) {
     return next("/giftcards")
   }
+
   next()
 })
 

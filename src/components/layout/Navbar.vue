@@ -104,7 +104,7 @@
     </template>
 
     <RouterLink
-      to="/book"
+      to="/cart"
       class="bg-[#D4AF37] text-white px-5 py-2 rounded-full hover:scale-105 transition"
     >
       Book Now

@@ -1,3 +1,5 @@
+
+
 <template>
   <div class="min-h-screen bg-[#F8F4EF] text-[#1C1C1C]">
 
@@ -218,7 +220,10 @@
 </template>
 
 <script setup>
-import { reactive, ref } from "vue"
+import { reactive, ref, onMounted } from "vue"
+import { useRouter } from "vue-router"
+
+const router = useRouter()
 
 const step = ref(1)
 
@@ -246,6 +251,10 @@ const selectedSpecialist = ref("")
 const rem24 = ref(false)
 const remWa = ref(false)
 
+/* CART INTEGRATION */
+const cartService = ref(null)
+
+/* DATES */
 const today = new Date().toISOString().split("T")[0]
 
 const maxDateObj = new Date()
@@ -253,10 +262,46 @@ maxDateObj.setFullYear(maxDateObj.getFullYear() + 1)
 
 const maxDate = maxDateObj.toISOString().split("T")[0]
 
+/* INIT - CART CHECK */
+onMounted(() => {
+  const payment = JSON.parse(localStorage.getItem("gg-payment"))
+  const cart = JSON.parse(localStorage.getItem("gg-cart"))
+
+  // 🔐 BLOCK ACCESS IF NO PAYMENT
+  if (!payment) {
+    alert("You must complete payment first")
+    router.push("/cart")
+    return
+  }
+
+  // 🔐 FIND SERVICE IN CART
+  const serviceItem = cart?.find(i => i.type === "service")
+
+  if (!serviceItem) {
+    alert("No service found in cart")
+    router.push("/")
+    return
+  }
+
+  cartService.value = serviceItem.name
+
+  // auto-select service
+  selectedService.value = serviceItem.name
+
+  // auto-fill user info if exists
+  const user = JSON.parse(localStorage.getItem("gg-user"))
+  if (user) {
+    form.name = user.name || ""
+    form.email = user.email || ""
+  }
+})
+
+/* INITIALS */
 function initials(name) {
   return name.split(" ").map(w => w[0]).join("").slice(0, 2)
 }
 
+/* STEP VALIDATION */
 function goStep2() {
   if (form.name.length < 3) return alert("Enter valid name")
   if (!form.email.includes("@")) return alert("Enter valid email")
@@ -264,16 +309,21 @@ function goStep2() {
   step.value = 2
 }
 
+/* SERVICE SELECT (LOCKED IF FROM CART) */
 function selectService(s) {
+  if (cartService.value) return // prevent changing if coming from cart
+
   selectedService.value = s
   selectedSpecialist.value = ""
 }
 
+/* TOGGLES */
 function toggle(type) {
   if (type === "rem24") rem24.value = !rem24.value
   if (type === "wa") remWa.value = !remWa.value
 }
 
+/* CONFIRM BOOKING */
 function confirm() {
   if (!selectedService.value || !selectedSpecialist.value)
     return alert("Select service + specialist")
@@ -281,6 +331,23 @@ function confirm() {
   if (!form.date || !form.time)
     return alert("Select date + time")
 
+  // save booking
+  const booking = {
+    service: selectedService.value,
+    specialist: selectedSpecialist.value,
+    ...form,
+    reminders: {
+      email24h: rem24.value,
+      whatsapp: remWa.value
+    }
+  }
+
+  localStorage.setItem("gg-booking", JSON.stringify(booking))
+
   step.value = 3
+
+  // optional cleanup
+  localStorage.removeItem("gg-cart")
+  localStorage.removeItem("gg-payment")
 }
 </script>
