@@ -77,10 +77,22 @@ const router = createRouter({
   history: createWebHistory(),
   routes,
 
-  // ✅ scroll fix (always top on navigation)
   scrollBehavior(to, from, savedPosition) {
-    if (savedPosition) return savedPosition
-    return { top: 0 }
+
+    if (savedPosition) {
+      return savedPosition
+    }
+
+    if (to.hash) {
+      return {
+        el: to.hash,
+        behavior: "smooth"
+      }
+    }
+
+    return {
+      top: 0
+    }
   }
 })
 
