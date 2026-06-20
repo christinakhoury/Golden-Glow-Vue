@@ -4,26 +4,23 @@
     <section data-aos="fade-up" class="pt-32 pb-16 text-center">
       <h1 class="text-5xl font-bold mb-4 text-primary">{{ current.title }}</h1>
       <p class="text-secondary max-w-2xl mx-auto">{{ current.desc }}</p>
-      <router-link :to="`/book?service=${serviceType}`" class="mt-8 inline-block bg-[#D4AF37] text-white px-8 py-4 rounded-full hover:scale-105 transition">
-        Book {{ current.title }}
-      </router-link>
     </section>
 
     <!-- SERVICES GRID -->
     <section data-aos="fade-up" class="max-w-7xl mx-auto px-6 pb-24">
-      <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-        <a v-for="item in current.services" :key="item.name" :href="`/book?service=${item.slug}`" class="bg-card rounded-3xl border border-[#D4AF37] shadow-theme p-6 hover:-translate-y-2 transition block">
+      <div class=" grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div v-for="item in current.services" :key="item.name" :href="`/book?service=${item.slug}`" class="bg-card rounded-3xl border border-[#D4AF37] shadow-theme p-6 hover:-translate-y-2 transition block">
           <h3 class="text-xl font-bold mb-2 text-primary">{{ item.icon }} {{ item.name }}</h3>
           <p class="text-secondary text-sm mb-3">{{ item.desc }}</p>
           <p class="text-[#D4AF37] font-bold">{{ item.price }}</p>
           <p class="text-muted text-sm">{{ item.time }}</p>
-        </a>
+        </div>
       </div>
     </section>
 
     <!-- SPECIALISTS -->
-    <section data-aos="fade-up" class="bg-card py-24">
-      <div class="max-w-7xl mx-auto px-6 text-center">
+    <section data-aos="fade-up" class="py-24 bg-white">
+      <div class=" max-w-7xl mx-auto px-6 text-center">
         <h2 class="text-4xl font-bold mb-12 text-primary">{{ current.title }} Specialists</h2>
         <div class="grid md:grid-cols-3 gap-8">
           <div v-for="spec in current.specialists" :key="spec.name" class="border border-[#D4AF37] rounded-3xl p-6 shadow-theme bg-card">

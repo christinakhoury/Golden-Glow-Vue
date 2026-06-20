@@ -1,7 +1,9 @@
-<template>
-  <section data-aos="fade-up" id="services" class="py-24 bg-secondary">
-    <div class="max-w-7xl mx-auto px-6">
-      <div class="text-center mb-16">
+<template >
+  
+
+  <section data-aos="fade-up" id="services" class= "py-24  bg-secondary">
+    <div class="max-w-7xl mx-auto px-6 ">
+      <div class="text-center mb-16 ">
         <p class="text-[#D4AF37] text-xs tracking-[.3em] uppercase mb-3">What We Offer</p>
         <h2 class="heading-font text-5xl font-bold mb-4 text-primary" style="font-family: 'Playfair Display', serif;">
           Our Signature Services

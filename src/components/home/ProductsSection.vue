@@ -1,5 +1,5 @@
 <template>
-  <section data-aos="fade-up" class="py-24 bg-secondary">
+  <section id="products" data-aos="fade-up" class="py-24 bg-secondary">
     <div class="max-w-7xl mx-auto px-6 text-center">
       <p class="text-[#D4AF37] text-xs tracking-[.3em] uppercase mb-3">Selected For You</p>
       <h2 class="heading-font text-5xl font-bold mb-6 text-primary" style="font-family: 'Playfair Display', serif;">
@@ -15,6 +15,13 @@
             <p class="text-secondary mt-2">{{ product.desc }}</p>
           </div>
         </div>
+      </div>
+       <div class="mt-12">
+        <RouterLink :to="{ name: 'products' }"
+          class="text-[#D4AF37] border-b border-[#D4AF37] pb-1 uppercase tracking-wider text-sm hover:opacity-80 transition"
+        >
+          See all Products →
+        </RouterLink>
       </div>
     </div>
   </section>

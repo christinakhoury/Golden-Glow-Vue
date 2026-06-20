@@ -12,7 +12,7 @@ export  const sections = [
   {
     id: "nails",
     title: "Nail Specialists",
-    bg: "bg-[#F8F4EF]",
+    bg: "bg-secondary",
     specialists: [
       { name: "Maya Rahme", role: "Senior Nail Artist", img: "/images/maya.jpg", rating: "4.9", exp: "4 Years", service: "nails", key: "maya" },
       { name: "Rita Khoury", role: "Nail Art Specialist", img: "/images/rita.jpg", rating: "4.8", exp: "5 Years", service: "nails", key: "rita" },
@@ -32,7 +32,7 @@ export  const sections = [
   {
     id: "massage",
     title: "Massage Specialists",
-    bg: "bg-[#F8F4EF]",
+    bg: "bg-secondary",
     specialists: [
       { name: "Amir Hannah", role: "Senior Therapist", img: "/images/amir.jpg", rating: "4.9", exp: "7 Years", service: "massage", key: "amir" },
       { name: "Nour Abou Khalil", role: "Wellness Specialist", img: "/images/nour.jpg", rating: "5.0", exp: "8 Years", service: "massage", key: "nour" },

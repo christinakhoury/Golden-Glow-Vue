@@ -8,10 +8,25 @@
       <p class="text-secondary mb-12">Ideal for birthdays, weddings, and Mother's Day. Give the gift of luxury beauty care.</p>
 
       <div class="flex flex-wrap justify-center gap-6">
-        <router-link v-for="gift in gifts" :key="gift.amount" :to="`/giftcards?amount=${gift.amount}`" class="border border-[#D4AF37] p-8 rounded-2xl w-48 text-center hover:bg-[#D4AF37] hover:text-white transition bg-card" data-aos="fade-up">
-          <h3 class="text-2xl font-bold text-primary hover:text-white">${{ gift.amount }}</h3>
-        </router-link>
-      </div>
+  <router-link
+    v-for="gift in gifts"
+    :key="gift.amount"
+    :to="`/giftcards?amount=${gift.amount}`"
+    class="border border-[#D4AF37] p-8 rounded-2xl w-48 text-center
+           bg-white text-stone-800
+           hover:bg-[#D4AF37] hover:text-white
+           transition-all duration-300 ease-in-out
+           group"
+    data-aos="fade-up"
+  >
+    <h3
+      class="text-2xl font-bold
+             group-hover:text-white transition"
+    >
+      ${{ gift.amount }}
+    </h3>
+  </router-link>
+</div>
     </div>
   </section>
 </template>

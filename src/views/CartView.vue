@@ -1,104 +1,204 @@
 <template>
-  <div class="w-full min-h-screen flex items-center justify-center bg-secondary body-font">
-    <div class="w-full max-w-2xl bg-card border border-[#D4AF37] shadow-theme-heavy rounded-3xl p-10">
-      <h1 class="heading-font text-4xl font-bold text-center text-[#D4AF37] mb-2">Gift Cards</h1>
-      <p class="text-center text-secondary mb-8">Send luxury beauty to someone special 🎁</p>
+  <main class="bg-secondary pt-32 pb-20 px-5">
+    <div class="max-w-7xl mx-auto">
 
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        <button v-for="a in amounts" :key="a" @click="selectAmount(a)" class="gift-btn" :class="{ active: selectedAmount === a }">
-          ${{ a }}
-        </button>
+      <!-- PAGE TITLE -->
+      <div class="text-center mb-12">
+        <h1 class="font-playfair text-4xl md:text-5xl font-light text-stone-800 mb-3">
+           Shopping Cart
+        </h1>
+        <div class="w-20 h-0.5 bg-[#D4AF37] mx-auto rounded-full"></div>
       </div>
 
-      <div class="space-y-4">
-        <input v-model="buyerName" type="text" placeholder="Your Name" class="w-full px-4 py-3 border border-theme rounded-xl bg-input text-primary placeholder:text-secondary" />
-        <input v-model="buyerEmail" type="email" placeholder="Your Email" class="w-full px-4 py-3 border border-theme rounded-xl bg-input text-primary placeholder:text-secondary" />
-        <input v-model="recipientName" type="text" placeholder="Recipient Name" class="w-full px-4 py-3 border border-theme rounded-xl bg-input text-primary placeholder:text-secondary" />
-        <input v-model="recipientPhone" type="text" placeholder="Recipient Phone Number" class="w-full px-4 py-3 border border-theme rounded-xl bg-input text-primary placeholder:text-secondary" />
-        <textarea v-model="message" placeholder="Add a message (optional)" class="w-full px-4 py-3 border border-theme rounded-xl bg-input text-primary placeholder:text-secondary"></textarea>
-        <p class="text-center text-secondary">
-          Selected Amount: <span class="font-bold text-[#D4AF37]">${{ selectedAmount }}</span>
-        </p>
-        <button @click="pay" class="w-full bg-[#D4AF37] text-white py-3 rounded-xl font-semibold hover:bg-[#c39d28] transition">
-          Complete Payment
-        </button>
+      <!-- EMPTY CART -->
+      <div v-if="!cartStore.items.length" class="text-center py-16 text-stone-400">
+        <i class="fas fa-shopping-bag text-5xl mb-4 opacity-50"></i>
+        <p>Your cart is empty</p>
+
+        <router-link
+          to="/products"
+          class="inline-block mt-4 px-6 py-2 bg-[#D4AF37] text-white rounded-full text-sm hover:bg-amber-700 transition"
+        >
+          Continue Shopping
+        </router-link>
+      </div>
+
+      <!-- CART CONTENT -->
+      <div v-else class="flex flex-col lg:flex-row gap-10">
+
+        <!-- LEFT: ITEMS -->
+        <div class="flex-1 bg-white rounded-2xl shadow-md overflow-hidden">
+
+          <div class="divide-y divide-amber-100">
+
+            <!-- 🛒 PRODUCTS -->
+            <div
+              v-for="item in productItems"
+              :key="item.id"
+              class="p-5 flex gap-4 items-center"
+            >
+              <img :src="item.image" class="w-24 h-24 object-cover rounded-xl" />
+
+              <div class="flex-1">
+                <h3 class="font-semibold text-stone-800">
+                  {{ item.name }}
+                </h3>
+
+                <p class="text-amber-700 font-bold mt-1">
+                  ${{ item.price.toLocaleString() }}
+                </p>
+
+                <div class="flex items-center gap-3 mt-2">
+
+                  <button
+                    @click="decreaseQty(item.id)"
+                    class="w-8 h-8 rounded-full bg-amber-100 hover:bg-amber-600 hover:text-white"
+                  >
+                    -
+                  </button>
+
+                  <span class="w-8 text-center">
+                    {{ item.quantity }}
+                  </span>
+
+                  <button
+                    @click="increaseQty(item.id)"
+                    class="w-8 h-8 rounded-full bg-amber-100 hover:bg-amber-600 hover:text-white"
+                  >
+                    +
+                  </button>
+
+                  <button
+                    @click="removeItem(item.id)"
+                    class="ml-4 text-stone-400 hover:text-red-500 text-sm"
+                  >
+                    <i class="fas fa-trash-alt"></i> Remove
+                  </button>
+
+                </div>
+              </div>
+
+              <div class="text-right font-bold text-stone-800">
+                ${{ (item.price * item.quantity).toLocaleString() }}
+              </div>
+            </div>
+
+            <!-- 💼 SERVICES -->
+            <div
+              v-for="item in serviceItems"
+              :key="item.id"
+              class="p-5 flex justify-between items-center bg-amber-50/30"
+            >
+              <div>
+                <h3 class="font-semibold text-stone-800">
+                  {{ item.name }}
+                </h3>
+                <p class="text-sm text-stone-500">Service</p>
+              </div>
+
+              <div class="font-bold text-amber-700">
+                ${{ item.price.toLocaleString() }}
+              </div>
+
+              <button
+                @click="removeItem(item.id)"
+                class="text-red-500 hover:text-red-700 text-sm"
+              >
+                Remove
+              </button>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- RIGHT: SUMMARY -->
+        <div class="lg:w-96">
+
+          <div class="bg-white rounded-2xl shadow-md p-6 sticky top-32">
+
+            <h3 class="text-xl font-playfair font-semibold mb-4">
+              Order Summary
+            </h3>
+
+            <div class="space-y-3 border-b pb-4">
+
+              <div class="flex justify-between">
+                <span>Subtotal</span>
+                <span>${{ subtotal.toLocaleString() }}</span>
+              </div>
+
+              <div class="flex justify-between">
+                <span>Tax (8%)</span>
+                <span>${{ tax.toFixed(2) }}</span>
+              </div>
+
+            </div>
+
+            <div class="flex justify-between font-bold text-lg pt-4">
+              <span>Total</span>
+              <span>${{ total.toFixed(2) }}</span>
+            </div>
+
+            <router-link
+              to="/checkout"
+              class="block w-full mt-6 bg-amber-600 text-white py-3 rounded-full text-center hover:scale-[1.02] transition"
+            >
+              Checkout
+            </router-link>
+
+          </div>
+
+        </div>
+
       </div>
     </div>
-  </div>
+  </main>
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue"
-import { useRouter, useRoute } from "vue-router"
+import { computed } from 'vue'
+import { useCartStore } from '../composables/cart'
 
-const router = useRouter()
-const route = useRoute()
+const cartStore = useCartStore()
 
-const amounts = [25, 50, 100, 250]
-const selectedAmount = ref(0)
-const buyerName = ref("")
-const buyerEmail = ref("")
-const recipientName = ref("")
-const recipientPhone = ref("")
-const message = ref("")
+// 🛒 PRODUCTS ONLY
+const productItems = computed(() =>
+  cartStore.items.filter(i => i.type === 'product')
+)
 
-function selectAmount(amount) {
-  selectedAmount.value = amount
+// 💼 SERVICES ONLY
+const serviceItems = computed(() =>
+  cartStore.items.filter(i => i.type === 'service')
+)
+
+// ➕ INCREASE
+function increaseQty(id) {
+  const item = cartStore.items.find(i => i.id === id)
+  if (item) item.quantity++
 }
 
-function generateCode() {
-  return (
-    "GLOW-" +
-    Math.random().toString(36).substring(2, 6).toUpperCase() +
-    "-" +
-    Math.floor(Math.random() * 9000 + 1000)
-  )
+// ➖ DECREASE
+function decreaseQty(id) {
+  const item = cartStore.items.find(i => i.id === id)
+  if (item && item.quantity > 1) item.quantity--
 }
 
-function pay() {
-  if (!selectedAmount.value) return alert("Select an amount")
-  if (!buyerName.value || !buyerEmail.value) return alert("Enter your info")
-  if (!recipientName.value || !recipientPhone.value) return alert("Enter recipient info")
-
-  const giftCard = {
-    code: generateCode(),
-    amount: selectedAmount.value,
-    buyerName: buyerName.value,
-    buyerEmail: buyerEmail.value,
-    recipientName: recipientName.value,
-    phoneNumber: recipientPhone.value,
-    message: message.value,
-    status: "active"
-  }
-
-  localStorage.setItem("gg-current-giftcard", JSON.stringify(giftCard))
-  router.push("/payment")
+// 🗑 REMOVE
+function removeItem(id) {
+  cartStore.removeItem(id)
 }
 
-onMounted(() => {
-  const amount = route.query.amount
-  if (amount) selectedAmount.value = Number(amount)
+// 💰 SUBTOTAL
+const subtotal = computed(() => {
+  return cartStore.items.reduce((sum, item) => {
+    const qty = item.type === 'product' ? item.quantity : 1
+    return sum + item.price * qty
+  }, 0)
 })
+
+// 🧾 TAX
+const tax = computed(() => subtotal.value * 0.08)
+
+// 💵 TOTAL
+const total = computed(() => subtotal.value + tax.value)
 </script>
-
-<style scoped>
-.gift-btn {
-  border: 1px solid #D4AF37;
-  padding: 12px;
-  border-radius: 12px;
-  font-weight: 600;
-  transition: 0.3s;
-  background: var(--bg-card);
-  color: var(--text-primary);
-}
-
-.gift-btn:hover {
-  background: #D4AF37;
-  color: white;
-}
-
-.gift-btn.active {
-  background: #D4AF37;
-  color: white;
-}
-</style>

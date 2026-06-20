@@ -12,10 +12,19 @@
         <p class="text-secondary mt-6 text-lg leading-relaxed">A handpicked collection of artists, specialists, and beauty experts dedicated to bringing out your most confident glow.</p>
 
         <div data-aos="fade-up" class="mt-8 flex justify-center gap-4 flex-wrap">
-          <a v-for="section in sections" :key="section.id" :href="`#${section.id}`" class="px-5 py-2 bg-secondary shadow rounded-full text-sm border border-[#D4AF37] hover:bg-[#D4AF37] hover:text-white transition text-primary">
-            {{ section.title }}
-          </a>
-        </div>
+  <a
+    v-for="section in sections"
+    :key="section.id"
+    :href="`#${section.id}`"
+    class="px-5 py-2 rounded-full text-sm border border-[#D4AF37]
+           text-stone-700
+           hover:bg-[#D4AF37] hover:text-white
+           hover:scale-105 hover:shadow-lg
+           transition-all duration-300 ease-in-out"
+  >
+    {{ section.title }}
+  </a>
+</div>
       </div>
     </section>
 

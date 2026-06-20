@@ -134,30 +134,38 @@ const remWa = ref(false)
 const cartService = ref(null)
 
 const today = new Date().toISOString().split("T")[0]
+
 const maxDateObj = new Date()
 maxDateObj.setFullYear(maxDateObj.getFullYear() + 1)
 const maxDate = maxDateObj.toISOString().split("T")[0]
 
+/* =========================
+   ON MOUNT (FIXED CLEAN VERSION)
+========================= */
 onMounted(() => {
-  const payment = JSON.parse(localStorage.getItem("gg-payment"))
-  const cart = JSON.parse(localStorage.getItem("gg-cart"))
+  const paymentConfirmed = localStorage.getItem("paymentConfirmed")
+  const cart = JSON.parse(localStorage.getItem("gg-cart")) || []
 
-  if (!payment) {
+  // 🔒 must have payment
+  if (!paymentConfirmed) {
     alert("You must complete payment first")
     router.push("/cart")
     return
   }
 
-  const serviceItem = cart?.find(i => i.type === "service")
+  // 🔒 must have service in cart
+  const serviceItem = cart.find(i => i.type === "service")
+
   if (!serviceItem) {
     alert("No service found in cart")
-    router.push("/")
+    router.push("/cart")
     return
   }
 
   cartService.value = serviceItem.name
   selectedService.value = serviceItem.name
 
+  // 👤 autofill user if exists
   const user = JSON.parse(localStorage.getItem("gg-user"))
   if (user) {
     form.name = user.name || ""
@@ -165,31 +173,57 @@ onMounted(() => {
   }
 })
 
+/* =========================
+   HELPERS
+========================= */
 function initials(name) {
-  return name.split(" ").map(w => w[0]).join("").slice(0, 2)
+  return name
+    .split(" ")
+    .map(w => w[0])
+    .join("")
+    .slice(0, 2)
 }
 
+/* =========================
+   STEP 1 VALIDATION
+========================= */
 function goStep2() {
-  if (form.name.length < 3) return alert("Enter valid name")
-  if (!form.email.includes("@")) return alert("Enter valid email")
-  if (form.phone.length < 8) return alert("Enter valid phone")
+  if (form.name.trim().length < 3)
+    return alert("Enter valid name")
+
+  if (!form.email.includes("@"))
+    return alert("Enter valid email")
+
+  if (form.phone.trim().length < 8)
+    return alert("Enter valid phone")
+
   step.value = 2
 }
 
+/* =========================
+   SERVICE SELECT
+========================= */
 function selectService(s) {
   if (cartService.value) return
   selectedService.value = s
   selectedSpecialist.value = ""
 }
 
+/* =========================
+   TOGGLES
+========================= */
 function toggle(type) {
   if (type === "rem24") rem24.value = !rem24.value
   if (type === "wa") remWa.value = !remWa.value
 }
 
+/* =========================
+   CONFIRM BOOKING
+========================= */
 function confirm() {
   if (!selectedService.value || !selectedSpecialist.value)
     return alert("Select service + specialist")
+
   if (!form.date || !form.time)
     return alert("Select date + time")
 
@@ -204,8 +238,10 @@ function confirm() {
   }
 
   localStorage.setItem("gg-booking", JSON.stringify(booking))
-  step.value = 3
+
+  // clean cart AFTER booking
   localStorage.removeItem("gg-cart")
-  localStorage.removeItem("gg-payment")
+
+  step.value = 3
 }
 </script>

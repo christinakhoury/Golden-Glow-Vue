@@ -19,17 +19,6 @@ const routes = [
      CART + BOOKING FLOW
   ========================= */
 
-  {
-    path: "/book",
-    name: "book",
-    component: BookView
-  },
-
-{
-  path: "/cart",
-  name: "cart",
-  component: () => import("../views/CartView.vue")
-},
 
   {
     path: "/payment",
@@ -94,12 +83,30 @@ const routes = [
     name: "vip",
     component: () => import("../views/VIPView.vue"),
     meta: { hideLayout: true }
+  },
+  {
+  path: "/checkout",
+  name: "checkout",
+  component: () => importnpm ("../views/CheckoutView.vue")
+},
+{
+  path: "/products",
+  name: "products",
+  component: () => import("../views/ProductsView.vue")
+},
+
+  {
+    path: '/wishlist',
+    name: 'Wishlist',
+    component: () => import('../views/WishlistView.vue'),
+  },
+    {
+    path: '/cart',
+    name: 'cart',
+    component: () => import('../views/CartView.vue'),
   }
 ]
 
-/* =========================
-   ROUTER
-========================= */
 
 const router = createRouter({
   history: createWebHistory(),
@@ -143,6 +150,15 @@ router.beforeEach((to, from, next) => {
     return next("/giftcards")
   }
 
+  const paymentConfirmed =
+  localStorage.getItem("paymentConfirmed")
+
+if (
+  to.name === "booking" &&
+  !paymentConfirmed
+) {
+  return next("/cart")
+}
   next()
 })
 
