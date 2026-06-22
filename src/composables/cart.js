@@ -72,21 +72,9 @@ export const useCartStore = defineStore('cart', () => {
   }
   
   // Actions
-  function addToCart(product, isAuthenticated, openAuthModal) {
+function addToCart(product, isAuthenticated, openAuthModal) {
     console.log(`🛒 ADD TO CART: ${product.name}, authenticated: ${isAuthenticated}`)
-    
-    // Check if user is logged in
-    if (!isAuthenticated) {
-      // Store the product to add after login
-      pendingProduct.value = product
-      // Set message for toast notification
-      authRequiredMessage.value = 'Please login or signup to add items to cart'
-      setTimeout(() => {
-        authRequiredMessage.value = ''
-      }, 3000)
-      console.log(`⚠️ Not authenticated, product saved for later:`, product.name)
-      return { success: false, message: 'Please login to add items to cart' }
-    }
+  
     
     const existingItem = items.value.find(item => item.id === product.id)
     
@@ -104,13 +92,17 @@ export const useCartStore = defineStore('cart', () => {
     lastAddedMessage.value = `${product.name} added to cart!`
     saveToLocalStorage()
     
+    // OPTIONAL: If you want to force an auth modal popup but STILL save their item to the guest cart:
+    if (!isAuthenticated && openAuthModal) {
+      openAuthModal()
+    }
+    
     setTimeout(() => {
       lastAddedMessage.value = ''
     }, 2000)
     
     return { success: true, message: `${product.name} added to cart!` }
   }
-  
   function addPendingAfterLogin() {
     if (pendingProduct.value) {
       console.log(`🔄 Adding pending product after login: ${pendingProduct.value.name}`)

@@ -14,12 +14,6 @@ const routes = [
     name: "home",
     component: HomeView
   },
-
-  /* =========================
-     CART + BOOKING FLOW
-  ========================= */
-
-
   {
     path: "/payment",
     name: "payment",
@@ -31,10 +25,6 @@ const routes = [
     name: "booking",
     component: () => import("../views/BookView.vue")
   },
-
-  /* =========================
-     SERVICES
-  ========================= */
 
   {
     path: "/services/:type",
@@ -48,10 +38,6 @@ const routes = [
     name: "specialists",
     component: () => import("../views/SpecialistsView.vue")
   },
-
-  /* =========================
-     GIFT CARDS FLOW
-  ========================= */
 
   {
     path: "/giftcards",
@@ -67,9 +53,6 @@ const routes = [
     meta: { hideLayout: true }
   },
 
-  /* =========================
-     AUTH + VIP
-  ========================= */
 
   {
     path: "/login",
@@ -84,10 +67,10 @@ const routes = [
     component: () => import("../views/VIPView.vue"),
     meta: { hideLayout: true }
   },
-  {
+{
   path: "/checkout",
   name: "checkout",
-  component: () => importnpm ("../views/CheckoutView.vue")
+  component: () => import("../views/CheckoutView.vue") // 
 },
 {
   path: "/products",

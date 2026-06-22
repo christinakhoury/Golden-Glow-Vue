@@ -107,19 +107,32 @@
 <script setup>
 import { ref, computed, onMounted } from "vue"
 import { useRouter } from "vue-router"
+import { useCartStore } from "../composables/cart" // 🛒 Connect Pinia cart store
+import { useAuthStore } from "../composables/auth" // 🔐 Connect Pinia auth store
 
 const router = useRouter()
-
-const cart = ref([])
+const cartStore = useCartStore()
+const authStore = useAuthStore()
 
 const paymentMethod = ref("card")
 
 /* =========================
-   LOAD CART
+   SECURITY GUARD
 ========================= */
 onMounted(() => {
-  cart.value = JSON.parse(localStorage.getItem("gg-cart")) || []
+  // If a guest directly types /checkout or bypasses the button, kick them out
+  if (!authStore.isAuthenticated) {
+    console.warn("⛔ Guest blocked from accessing checkout.")
+    router.replace("/cart")
+    authStore.openAuthModal("login")
+  }
 })
+
+/* =========================
+   REACTIVE CART DATA
+========================= */
+// Pull items directly from your reactive Pinia store instead of stale localStorage keys
+const cart = computed(() => cartStore.items)
 
 /* =========================
    CHECK TYPES
@@ -163,8 +176,9 @@ function pay() {
   // 💳 mark payment as confirmed
   localStorage.setItem("paymentConfirmed", "true")
 
-  // 🧾 store order
+  // 🧾 store order (using authenticated user's email if available)
   const order = {
+    user: authStore.currentUser?.email || "Guest",
     items: cart.value,
     total: total.value,
     paymentMethod: paymentMethod.value,
@@ -173,8 +187,16 @@ function pay() {
 
   localStorage.setItem("gg-order", JSON.stringify(order))
 
-  // 🧹 clear cart AFTER payment
-  localStorage.removeItem("gg-cart")
+  // 🧹 Use your store's built-in empty action instead of manual localStorage wipes
+  // This cleans both state memory and the browser storage properly!
+  if (typeof cartStore.clearCart === 'function') {
+    cartStore.clearCart()
+  } else {
+    cartStore.items = []
+    if (typeof cartStore.saveToLocalStorage === 'function') {
+      cartStore.saveToLocalStorage()
+    }
+  }
 
   // 🔀 redirect logic
   if (hasServices.value) {

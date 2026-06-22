@@ -2,15 +2,13 @@
   <main class="bg-secondary pt-32 pb-20 px-5">
     <div class="max-w-7xl mx-auto">
 
-      <!-- PAGE TITLE -->
       <div class="text-center mb-12">
         <h1 class="font-playfair text-4xl md:text-5xl font-light text-stone-800 mb-3">
-           Shopping Cart
+          Shopping Cart
         </h1>
         <div class="w-20 h-0.5 bg-[#D4AF37] mx-auto rounded-full"></div>
       </div>
 
-      <!-- EMPTY CART -->
       <div v-if="!cartStore.items.length" class="text-center py-16 text-stone-400">
         <i class="fas fa-shopping-bag text-5xl mb-4 opacity-50"></i>
         <p>Your cart is empty</p>
@@ -23,18 +21,14 @@
         </router-link>
       </div>
 
-      <!-- CART CONTENT -->
       <div v-else class="flex flex-col lg:flex-row gap-10">
 
-        <!-- LEFT: ITEMS -->
         <div class="flex-1 bg-white rounded-2xl shadow-md overflow-hidden">
-
           <div class="divide-y divide-amber-100">
 
-            <!-- 🛒 PRODUCTS -->
             <div
               v-for="item in productItems"
-              :key="item.id"
+              :key="'product-' + item.id"
               class="p-5 flex gap-4 items-center"
             >
               <img :src="item.image" class="w-24 h-24 object-cover rounded-xl" />
@@ -49,32 +43,30 @@
                 </p>
 
                 <div class="flex items-center gap-3 mt-2">
-
                   <button
                     @click="decreaseQty(item.id)"
-                    class="w-8 h-8 rounded-full bg-amber-100 hover:bg-amber-600 hover:text-white"
+                    class="w-8 h-8 rounded-full bg-amber-100 hover:bg-amber-600 hover:text-white transition-colors"
                   >
                     -
                   </button>
 
-                  <span class="w-8 text-center">
+                  <span class="w-8 text-center font-medium">
                     {{ item.quantity }}
                   </span>
 
                   <button
                     @click="increaseQty(item.id)"
-                    class="w-8 h-8 rounded-full bg-amber-100 hover:bg-amber-600 hover:text-white"
+                    class="w-8 h-8 rounded-full bg-amber-100 hover:bg-amber-600 hover:text-white transition-colors"
                   >
                     +
                   </button>
 
                   <button
                     @click="removeItem(item.id)"
-                    class="ml-4 text-stone-400 hover:text-red-500 text-sm"
+                    class="ml-4 text-stone-400 hover:text-red-500 text-sm transition-colors"
                   >
                     <i class="fas fa-trash-alt"></i> Remove
                   </button>
-
                 </div>
               </div>
 
@@ -83,10 +75,9 @@
               </div>
             </div>
 
-            <!-- 💼 SERVICES -->
             <div
               v-for="item in serviceItems"
-              :key="item.id"
+              :key="'service-' + item.id"
               class="p-5 flex justify-between items-center bg-amber-50/30"
             >
               <div>
@@ -102,7 +93,7 @@
 
               <button
                 @click="removeItem(item.id)"
-                class="text-red-500 hover:text-red-700 text-sm"
+                class="text-red-500 hover:text-red-700 text-sm font-medium transition-colors"
               >
                 Remove
               </button>
@@ -111,43 +102,36 @@
           </div>
         </div>
 
-        <!-- RIGHT: SUMMARY -->
         <div class="lg:w-96">
-
           <div class="bg-white rounded-2xl shadow-md p-6 sticky top-32">
-
             <h3 class="text-xl font-playfair font-semibold mb-4">
               Order Summary
             </h3>
 
-            <div class="space-y-3 border-b pb-4">
-
+            <div class="space-y-3 border-b pb-4 text-stone-600">
               <div class="flex justify-between">
                 <span>Subtotal</span>
-                <span>${{ subtotal.toLocaleString() }}</span>
+                <span class="font-medium text-stone-800">${{ subtotal.toLocaleString() }}</span>
               </div>
 
               <div class="flex justify-between">
                 <span>Tax (8%)</span>
-                <span>${{ tax.toFixed(2) }}</span>
+                <span class="font-medium text-stone-800">${{ tax.toFixed(2) }}</span>
               </div>
-
             </div>
 
-            <div class="flex justify-between font-bold text-lg pt-4">
+            <div class="flex justify-between font-bold text-lg pt-4 text-stone-800">
               <span>Total</span>
-              <span>${{ total.toFixed(2) }}</span>
+              <span class="text-amber-700">${{ total.toFixed(2) }}</span>
             </div>
 
-            <router-link
-              to="/checkout"
-              class="block w-full mt-6 bg-amber-600 text-white py-3 rounded-full text-center hover:scale-[1.02] transition"
+            <button 
+              @click="handleCheckout" 
+              class="block w-full mt-6 bg-amber-600 text-white py-3 rounded-full text-center hover:bg-amber-700 transition transform hover:scale-[1.01] cursor-pointer font-medium text-sm"
             >
               Checkout
-            </router-link>
-
+            </button>
           </div>
-
         </div>
 
       </div>
@@ -157,38 +141,81 @@
 
 <script setup>
 import { computed } from 'vue'
+import { useRouter } from 'vue-router'
 import { useCartStore } from '../composables/cart'
+import { useAuthStore } from '../composables/auth'
 
+const router = useRouter()
 const cartStore = useCartStore()
+const authStore = useAuthStore()
 
-// 🛒 PRODUCTS ONLY
+/* =========================
+   CHECKOUT INTERCEPTOR
+========================= */
+const handleCheckout = () => {
+  console.log("Button clicked! Auth state:", authStore.isAuthenticated)
+  
+  if (!authStore.isAuthenticated) {
+    // 🔐 Open the login modal if not logged in
+    if (typeof authStore.openAuthModal === 'function') {
+      authStore.openAuthModal('login')
+    } else {
+      // Fallback if modal state mapping is unmounted
+      alert("Please log in to proceed to checkout.")
+    }
+  } else {
+    // 🚀 Authenticated user moves forward
+    console.log("Attempting vue-router redirection...")
+    
+    router.push('/checkout').catch(err => {
+      console.warn("Vue Router failed to redirect. Firing window location fallback.", err)
+      // Hard fallback bypass if Vue Router is misconfigured or cached
+      window.location.href = '/checkout'
+    })
+  }
+}
+
+/* =========================
+   FILTERED ITEMS
+========================= */
 const productItems = computed(() =>
   cartStore.items.filter(i => i.type === 'product')
 )
 
-// 💼 SERVICES ONLY
 const serviceItems = computed(() =>
   cartStore.items.filter(i => i.type === 'service')
 )
 
-// ➕ INCREASE
+/* =========================
+   CART ACTIONS (WITH AUTO-SAVE)
+========================= */
 function increaseQty(id) {
   const item = cartStore.items.find(i => i.id === id)
-  if (item) item.quantity++
+  if (item) {
+    item.quantity++
+    if (typeof cartStore.saveToLocalStorage === 'function') {
+      cartStore.saveToLocalStorage()
+    }
+  }
 }
 
-// ➖ DECREASE
 function decreaseQty(id) {
   const item = cartStore.items.find(i => i.id === id)
-  if (item && item.quantity > 1) item.quantity--
+  if (item && item.quantity > 1) {
+    item.quantity--
+    if (typeof cartStore.saveToLocalStorage === 'function') {
+      cartStore.saveToLocalStorage()
+    }
+  }
 }
 
-// 🗑 REMOVE
 function removeItem(id) {
   cartStore.removeItem(id)
 }
 
-// 💰 SUBTOTAL
+/* =========================
+   FINANCIAL CALCULATIONS
+========================= */
 const subtotal = computed(() => {
   return cartStore.items.reduce((sum, item) => {
     const qty = item.type === 'product' ? item.quantity : 1
@@ -196,9 +223,6 @@ const subtotal = computed(() => {
   }, 0)
 })
 
-// 🧾 TAX
 const tax = computed(() => subtotal.value * 0.08)
-
-// 💵 TOTAL
 const total = computed(() => subtotal.value + tax.value)
 </script>
