@@ -1,5 +1,5 @@
 <template>
-  <section id="home" class="relative bg-white pt-14 md:pt-16 overflow-hidden">
+  <section id="home" class="relative bg-[#FAF8F5]  pt-14 md:pt-16 overflow-hidden">
     <div class="grid grid-cols-1 md:grid-cols-2 min-h-[80vh] md:min-h-screen">
 
       <!-- Hero Carousel -->
@@ -25,7 +25,7 @@
       </div>
 
       <!-- Right Image -->
-      <div class="bg-secondary flex items-center justify-center p-6 md:p-12 min-h-[40vh] md:min-h-screen relative overflow-hidden">
+      <div class="bg-[#FAF8F5]  flex items-center justify-center p-6 md:p-12 min-h-[40vh] md:min-h-screen relative overflow-hidden">
 
         <!-- Animated background particles -->
         <div class="absolute inset-0 overflow-hidden">

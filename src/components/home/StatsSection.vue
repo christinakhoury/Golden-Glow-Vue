@@ -15,6 +15,7 @@
 
       <div v-for="stat in stats" :key="stat.label">
         <h2 class="text-5xl font-bold text-[#D4AF37]">
+          
           {{ stat.display }}
         </h2>
         <p class="mt-3 text-secondary">
