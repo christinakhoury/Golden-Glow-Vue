@@ -180,116 +180,186 @@ import { useRoute } from "vue-router";
 const route = useRoute();
 const serviceType = route.params.type;
 
-const data = {
-  hair: {
-    title: "Hair Architecture",
-    desc: "Luxury structural cuts, clean coloring, multi-tonal hand balayage and structural hair treatments.",
+const data ={
+ hair: {
+    title: "Hair Services",
+    desc: "Luxury cuts, coloring & styling.",
     services: [
-      { name:"Precision Haircut", slug:"haircut", desc:"Bespoke sculptural hair architecture tailored precisely to profile parameters.", price:"$30 - $80", time:"30-60 min" },
-      { name:"Artisanal Coloring", slug:"coloring", desc:"Fine multi-dimensional premium balayage and complete safe saturation tinting.", price:"$60 - $200", time:"1-3 hrs" },
-      { name:"Restructuring Therapy", slug:"treatments", desc:"Intense micro-keratin structural repairs, profound root hydration, and botanical scalp balances.", price:"$50 - $150", time:"45-120 min" },
-      { name:"Event Red-Carpet Styling", slug:"event-styling", desc:"Impeccable high-fashion bridal styling and special assignment updos.", price:"$80 - $300", time:"1-3 hrs" },
+      { icon:"✂️", name:"Haircut", slug:"haircut", desc:"Precision cuts", price:"$30-$80", time:"30-60 min" },
+      { icon:"🎨", name:"Coloring", slug:"coloring", desc:"Balayage & dye", price:"$60-$200", time:"1-3 hrs" },
+      { icon:"💆", name:"Treatments", slug:"treatments", desc:" Keratin, repair, hydration & scalp care.", price:"$50-$150", time:"45-120 min" },
+      { icon:"👰", name:"Event Styling", slug:"event-styling", desc:"Bridal & special occasion styling", price:"$80-$300", time:"1-3 hrs" },
     ],
     specialists: [
-      { name:"Sarah Akiki", role:"Master Barber & Stylist", rating:"4.9", exp:3, img:"/images/sarah.jpg" }, 
-      { name:"Miriam Younes", role:"Color Chemist Specialist", rating:"4.8", exp:4, img:"/images/miriam.jpg" },
-      { name:"Nelly Rizk", role:"Editorial Event Stylist", rating:"5.0", exp:6, img:"/images/nelly.jpg" }
+      { name:"Sarah Akiki", role:"Stylist", rating:"4.9", exp:3, img:"/images/sarah.jpg" }, 
+      {name:"Miriam Younes", role:"Color Specialist", rating:"4.8", exp:4, img:"/images/miriam.jpg"},
+      {name:"Nelly Rizk", role:"Event Stylist", rating:"5", exp:6, img:"/images/nelly.jpg"}
     ],
-    benefitsTitle: "The Hair Treatment Philosophy",
-    benefits: [
-      { title: "Elite Artisans", desc: "Our specialists track global high-fashion technical movements to maintain design mastery." },
-      { title: "Pristine Pharmacy", desc: "Using advanced organic blends completely free from aggressive processing toxins." },
-      { title: "Bespoke Geometry", desc: "Every clean layer is structured against your physical facial alignment attributes." },
-      { title: "Refined Solitude", desc: "Indulge in peaceful individual environments designed around restorative privacy." }
-    ]
+
+    benefitsTitle: "Why Choose Our Hair Services?",
+benefits: [
+  {
+    title: "Expert Stylists",
+    desc: "Professional hair specialists trained in the latest cutting, coloring, and styling techniques."
   },
+  {
+    title: "Premium Products",
+    desc: "High-quality haircare products that protect, nourish, and enhance your hair."
+  },
+  {
+    title: "Personalized Consultation",
+    desc: "Every service is tailored to your hair type, face shape, and personal style."
+  },
+  {
+    title: "Luxury Experience",
+    desc: "Relax in a welcoming environment while enjoying exceptional care and attention."
+  }
+]
+  },
+
   nails: {
-    title: "Nail Artistry",
-    desc: "Impeccable clinical manicures, profound treatment pedicuring, and luxury line overlay extensions.",
+    title: "Nail Services",
+    desc: "  Elegant manicures, luxury pedicures, and creative nail art designed to match your unique style.",
     services: [
-      { name:"Classic Clean Manicure", slug:"manicure", desc:"Meticulous cuticle restoration, profile shaping, and nourishing botanical hand balances.", price:"$20 - $40", time:"45-90 min" },
-      { name:"Restorative Pedicure", slug:"pedicure", desc:"Luxury thermal foot soaks, high-grade organic exfoliation, and targeted surface smoothing.", price:"$25 - $50", time:"60-120 min" },
-      { name:"Avant-Garde Nail Art", slug:"nail-art", desc:"Bespoke hand-painted luxury detailing tailored completely to personal taste profiles.", price:"$15 - $60", time:"30-90 min" },
-      { name:"Premium Gel & Acrylic", slug:"gel-acrylic", desc:"Lightweight, ultra-durable structurally safe extensions with flawless premium high-gloss top layers.", price:"$40 - $90", time:"60-120 min" }
+      { icon:"💅", name:"Manicure", slug:"manicure", desc:"Classic manicure with professional nail care.", price:"$20-$40", time:"45-90 min" },
+      { icon:"🦶", name:"Pedicure", slug:"pedicure", desc:"Luxury foot care and relaxing treatment.", price:"$25-$50", time:"60-120 min" },
+      { icon:"🎨", name:"Nail Art", slug:"nail-art", desc:"Creative designs customized to your taste.", price:"$15-$60", time:"30-90 min" },
+      { icon:"✨", name:"Gel & Acrylic", slug:"gel-acrylic", desc:"Long-lasting extensions and premium finishes.", price:"$40-$90", time:"60-120 min" }
     ],
     specialists: [
-      { name:"Maya Rahme", role:"Senior Technical Nail Artist", rating:"4.9", exp:4, img:"/images/maya.jpg" },
-      { name:"Rita Khoury", role:"Micro Fine Art Specialist", rating:"4.8", exp:5, img:"/images/rita.jpg" },
-      { name:"Jessica Haddad", role:"Polymer Extension Expert", rating:"5.0", exp:6, img:"/images/jessica.jpg" }
+      { name:"Maya Rahme", role:"Senior Nail Artist", rating:"4.9", exp:4, img:"/images/maya.jpg" },
+       { name:"Rita Khoury", role:" Nail Art Specialist", rating:"4.8", exp:5, img:"/images/rita.jpg" },
+        { name:"Jessica Haddad", role:"Gel & Acrylic Expert", rating:"5", exp:6, img:"/images/jessica.jpg" }
+        
     ],
-    benefitsTitle: "The Hand & Foot Manifesto",
-    benefits: [
-      { title: "Sterilized Medical Care", desc: "Surpassing industry benchmarks with strict premium dental-grade sanitization setups." },
-      { title: "Fine Line Precision", desc: "Masterful application techniques ensuring ultra-clean borders and uniform symmetry." },
-      { title: "Resilient Structural Integrity", desc: "Durable, premium formulations that safeguard natural nail-bed health over long cycles." },
-      { title: "Curated Pigment Libraries", desc: "Access to a wide collection of rare, high-fashion luxury colors and tones." }
-    ]   
+
+
+    benefitsTitle: "Why Choose Our Nail Services?",
+benefits: [
+  {
+    title: "Clean & Safe",
+    desc: "Strict hygiene and sterilized tools."
   },
+  {
+    title: "Creative Designs",
+    desc: "From simple to artistic nail styles."
+  },
+  {
+    title: "Long-Lasting Finish",
+    desc: "Durable, high-quality results."
+  },
+  {
+    title: "Skilled Technicians",
+    desc: "Precise and detail-focused specialists."
+  }
+]   
+  },
+
   makeup: {
-    title: "Cosmetic Architecture",
-    desc: "Bespoke high-definition makeup applications engineered to celebrate and frame natural aesthetics.",
+    title: "Makeup Services",
+    desc: " Professional makeup services designed to enhance your natural beauty for every occasion.",
     services: [
-      { name:"Signature Bridal Luxury", slug:"bridal-makeup", desc:"High-end radiant contouring and timeless bridal glow frameworks customized for your day.", price:"$120 - $350", time:"2-3 hrs" },
-      { name:"High-Glamour Event Profiles", slug:"event-makeup", desc:"Striking focus eyes and seamless complexions for formal luxury gatherings.", price:"$70 - $150", time:"1-2 hrs" },
-      { name:"Minimalist Soft Focus", slug:"natural-makeup", desc:"Barely-there radiant day-wear formulation focusing on pure skin illumination.", price:"$50 - $100", time:"1-2 hrs" },
-      { name:"Studio Camera Ready", slug:"photoshoot-makeup", desc:"Advanced texture-balanced matte compositions optimized carefully for studio flashes.", price:"$80 - $180", time:"1-2 hrs" }
+      { icon:"💄", name:"Bridal Makeup", slug:"bridal-makeup", desc:"Luxury bridal looks tailored for your special day.", price:"$120-$350", time:"2-3 hrs" },
+      { icon:"✨", name:"Event Makeup", slug:"event-makeup", desc:"Glamorous makeup for parties and special occasions.", price:"$70-$150", time:"1-2 hrs" },
+      { icon:"🌸", name:"Natural Makeup", slug:"natural-makeup", desc:"Soft and elegant everyday beauty looks.", price:"$50-$100", time:"1-2 hrs" },
+      { icon:"📸", name:"Photoshoot Makeup", slug:"photoshoot-makeup", desc:"Camera-ready professional makeup application.", price:"$80-$180", time:"1-2 hrs" }
     ],
     specialists: [
-      { name:"Charbel Obeid", role:"Senior High-Fashion Artist", rating:"5.0", exp:8, img:"/images/charbel.jpg" },
-      { name:"Lara Haddad", role:"Bridal Lookbook Architect", rating:"4.9", exp:6, img:"/images/lara.jpg" },
-      { name:"Julia Khoury", role:"Commercial Project Artist", rating:"4.8", exp:5, img:"/images/julia.jpg" },
+      { name:"Charbel Obeid", role:"Senior Makeup Artist", rating:"5.0", exp:8, img:"/images/charbel.jpg" },
+      { name:"Lara Haddad", role:"Bridal Makeup Expert", rating:"4.9", exp:6, img:"/images/lara.jpg" },
+      { name:"Julia Khoury", role:"Event Makeup Artist", rating:"4.8", exp:5, img:"/images/julia.jpg" },
     ],
-    benefitsTitle: "The Aesthetics Philosophy",
-    benefits: [
-      { title: "High-Definition Artisans", desc: "Artists specializing in camera illumination and adaptive portrait cosmetics." },
-      { title: "Hypoallergenic Formulations", desc: "Exclusive luxury skincare-infused cosmetic products suitable for highly reactive skin." },
-      { title: "True Color Symmetry", desc: "Precise custom blending matching underlying natural pigment variations." },
-      { title: "Longevity Engineering", desc: "Advanced locking techniques that maintain fresh look placement for long durations." }
-    ]
+    benefitsTitle: "Why Choose Our Makeup Services?",
+benefits: [
+  {
+    title: "Pro Artists",
+    desc: "Experienced in bridal and event makeup."
   },
+  {
+    title: "Quality Products",
+    desc: "Long-lasting, premium cosmetics."
+  },
+  {
+    title: "Custom Looks",
+    desc: "Makeup adapted to your features."
+  },
+  {
+    title: "All Occasions",
+    desc: "Perfect for events, weddings, and photoshoots."
+  }
+]
+  },
+
   massage: {
-    title: "Body Restorative Rituals",
-    desc: "Decompress, target tension nodes, and reinstate holistic alignment with therapeutic touch therapies.",
+    title: "Massage Services",
+    desc: "   Relax, recharge, and restore your wellbeing with our luxury massage treatments.",
     services: [
-      { name:"Classic Swedish Treatment", slug:"swedish-massage", desc:"Long fluid strokes designed to alleviate general stress and normalize local blood flows.", price:"$50 - $90", time:"60-120 min" },
-      { name:"Anatomical Deep Tissue", slug:"deep-tissue", desc:"Intense structural deep node pressure addressing chronic muscular stress.", price:"$70 - $120", time:"60-90 min" },
-      { name:"Thermal Volcanic Stone", slug:"hot-stone", desc:"Smoothed basalt volcanic stones releasing steady thermal heat directly into core pathways.", price:"$80 - $130", time:"75 min" },
-      { name:"Botanical Aromatherapy", slug:"aromatherapy", desc:"Rare cold-pressed herbal extractions diffusing calming notes into your private session.", price:"$60 - $100", time:"60 min" }
+      { icon:"🌿", name:"Swedish Massage", slug:"swedish-massage", desc:"Gentle full-body relaxation therapy.", price:"$50-$90", time:"60-120 min" },
+      { icon:"💪", name:"Deep Tissue", slug:"deep-tissue", desc:"Target muscle tension and chronic pain.", price:"$70-$120", time:"60-90 min" },
+      { icon:"🔥", name:"Hot Stone", slug:"hot-stone", desc:"Heated stones for deep relaxation.", price:"$80-$130", time:"75 min" },
+      { icon:"🌸", name:"Aromatherapy", slug:"aromatherapy", desc:"Essential oils for mind and body balance.", price:"$60-$100", time:"60 min" }
     ],
     specialists: [
-      { name:"Amir Hannah", role:"Senior Neuromuscular Therapist", rating:"4.9", exp:7, img:"/images/amir.jpg" },
-      { name:"Nour Abou Khalil", role:"Holistic Kinetic Specialist", rating:"5.0", exp:8, img:"/images/nour.jpg" },
-      { name:"Elie Haddad", role:"Deep Node Recovery Expert", rating:"4.8", exp:6, img:"/images/elie.jpg" },
+       { name:"Amir Hannah", role:"Senior Therapist", rating:"4.9", exp:7, img:"/images/amir.jpg" },
+       { name:"Nour Abou Khalil", role:"Wellness Specialist", rating:"5.0", exp:8, img:"/images/nour.jpg" },
+       { name:"Elie Haddad", role:"Deep Tissue Expert", rating:"4.8", exp:6, img:"/images/elie.jpg" },
+      
     ],
-    benefitsTitle: "The Somatic Sanctuary Values",
-    benefits: [
-      { title: "Licensed Kinesiologists", desc: "Therapists possessing extensive, verified clinical training in muscular recovery." },
-      { title: "Deep Node Stress Relief", desc: "Systematic tension dissolution that helps realign everyday posture baselines." },
-      { title: "Tailored Muscular Pressure", desc: "Varying manual weight distribution based entirely on personal comfort metrics." },
-      { title: "Acoustic Silence", desc: "Soundproofed environments providing absolute mental restoration and privacy." }
-    ]
+    benefitsTitle: "Why Choose Our Massage Services?",
+benefits: [
+  {
+    title: "Certified Therapists",
+    desc: "Trained wellness professionals."
   },
+  {
+    title: "Stress Relief",
+    desc: "Reduces tension and fatigue."
+  },
+  {
+    title: "Personal Sessions",
+    desc: "Customized to your needs."
+  },
+  {
+    title: "Calm Space",
+    desc: "Relaxing and peaceful environment."
+  }
+]
+
+  },
+
   laser: {
-    title: "Laser Epilatory & Dermal Tech",
-    desc: "Advanced non-invasive thermal laser systems prioritizing exceptional texture uniformity and clarity.",
+    title: "Laser Services",
+    desc: "Advanced laser technology for smooth skin, rejuvenation, and long-lasting confidence.",
     services: [
-      { name:"Precision Epilatory Clearance", slug:"laser-hair-removal", desc:"State-of-the-art cooling diode technology safely targeting deep root structures.", price:"$40 - $250", time:"30-90 min" },
-      { name:"Epidermal Rejuvenation", slug:"laser-skin-rejuvenation", desc:"Non-ablative structural skin tone refinement clearing subtle fine lines.", price:"$80 - $180", time:"45-60 min" },
-      { name:"Targeted Dermal Purifying", slug:"laser-acne-treatment", desc:"Deep light wavelengths clearing blockages and calming hyperactive sebaceous glands.", price:"$70 - $150", time:"30-60 min" },
-      { name:"Melanin Path Correction", slug:"laser-pigmentation-removal", desc:"Controlled pulse cycles addressing dark sun spots and localized uneven skin tones.", price:"$90 - $200", time:"45-75 min" }
+      { icon:"✨", name:"Hair Removal", slug:"laser-hair-removal", desc:"Long-lasting smooth skin with professional laser treatment.", price:"$40-$250", time:"30-90 min" },
+    { icon:"🌟", name:"Skin Rejuvenation", slug:"laser-skin-rejuvenation", desc:" Improve skin texture, tone, and youthful appearance.", price:"$80-$180", time:"45-60 min" },
+    { icon:"💎", name:"Acne Treatment", slug:"laser-acne-treatment", desc:"Reduce acne and improve skin clarity using laser therapy.", price:"$70-$150", time:"30-60 min" },
+    { icon:"☀️", name:"Pigmentation Removal", slug:"laser-pigmentation-removal", desc:"Target dark spots and uneven skin tone.", price:"$90-$200", time:"45-75 min" }
     ],
     specialists: [
-      { name:"Rania Khoury", role:"Senior Medical Laser Operator", rating:"5.0", exp:8, img:"/images/rania.jpg" },
-      { name:"Carla Saad", role:"Dermal Refinement Practitioner", rating:"4.9", exp:6, img:"/images/carla.jpg" },
-      { name:"Melissa Nader", role:"Advanced Light Wave Specialist", rating:"4.8", exp:5, img:"/images/melissa.jpg" },
+       { name:"Rania Khoury", role:"Senior Laser Technician", rating:"5", exp:8, img:"/images/rania.jpg" },
+      { name:"Carla Saad", role:"Skin Rejuvenation Expert", rating:"4.9", exp:6, img:"/images/carla.jpg" },
+      { name:"Melissa Nader", role:"Advanced Laser Specialist", rating:"4.8", exp:5, img:"/images/melissa.jpg" },
     ],
-    benefitsTitle: "The Clinical Light Standard",
-    benefits: [
-      { title: "FDA-Cleared Systems", desc: "Advanced medical-grade laser hardware with active epidermal cooling shields." },
-      { title: "Sustainable Smoothness", desc: "Progressive, long-lasting reduction in density and texturing variations." },
-      { title: "Certified Clinical Safety", desc: "All processes executed under strict skin safety operational guidelines." },
-      { title: "Custom Pulse Mapping", desc: "Every setting is individually configured to align safely with your skin profile." }
-    ]
+    benefitsTitle: "Why Choose Our Laser Treatments?",
+benefits: [
+  {
+    title: "Safe Technology",
+    desc: "FDA-approved equipment and procedures."
+  },
+  {
+    title: "Long-Term Results",
+    desc: "Noticeable improvements after a few sessions."
+  },
+  {
+    title: "Expert Specialists",
+    desc: "Treatments performed by trained professionals."
+  },
+  {
+    title: "Personalized Care",
+    desc: "Customized plans based on your skin needs."
+  }
+]
   }
 };
 

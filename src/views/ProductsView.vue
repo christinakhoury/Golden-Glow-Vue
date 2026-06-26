@@ -274,7 +274,7 @@ const sampleProducts = [
   { id: 207, category: 'Nails', subcategory: 'Nails Tools', name: 'Ceel Set', price: 30.00,  image: '/images/nt1.jpg' },
   { id: 208, category: 'Nails', subcategory: 'Nails Tools', name: 'Luxy Scissors (pack of 2)', price: 25.00,  image: '/images/nt2.jpg' },
   { id: 209, category: 'Nails', subcategory: 'Nails Tools', name: 'Vroom vroom ', price: 40.00,  image: '/images/nt3.jpg' },
-  { id: 210, category: 'Nails', subcategory: 'Nails Tools', name: 'Mooz ditsie', price: 20.00,  image: '/images/nt4.jpg' },
+  { id: 210, category: 'Nails', subcategory: 'Nails Tools', name: 'Mooz ditsie', price: 8.00,  image: '/images/nt4.jpg' },
   //care
   { id: 211, category: 'Nails', subcategory: 'Nail Care', name: 'Cuticle Oil', price: 28.00,  image: '/images/nc1.jpg' },
   { id: 212, category: 'Nails', subcategory: 'Nail Care', name: 'Nail Oil', price: 30.00,  image: '/images/nc2.jpg' },
@@ -334,9 +334,9 @@ const sampleProducts = [
   { id: 506, category: 'Laser', subcategory: 'Machine', name: 'La Machina', price: 150.00, image: '/images/lm3.jpeg' },
   
   // 'Soothing cream'
-    { id: 507, category: 'Laser', subcategory: 'Soothing cream', name: 'Soothing cream', price: 20.00, image: '/images/ls1.jpeg' },
-    { id: 508, category: 'Laser', subcategory: 'Soothing cream', name: 'Soothing cream', price: 20.00, image: '/images/ls2.jpeg' },
-{ id: 509, category: 'Laser', subcategory: 'Soothing cream', name: 'Soothing cream', price: 22.00, image: '/images/ls3.jpeg' },
+    { id: 507, category: 'Laser', subcategory: 'Soothing cream', name: 'Biri cream', price: 20.00, image: '/images/ls1.jpeg' },
+    { id: 508, category: 'Laser', subcategory: 'Soothing cream', name: 'Laravene cream', price: 20.00, image: '/images/ls2.jpeg' },
+{ id: 509, category: 'Laser', subcategory: 'Soothing cream', name: 'Coco cream', price: 22.00, image: '/images/ls3.jpeg' },
 
 ]
 

@@ -100,23 +100,22 @@
 </template>
 
 <script setup>
-const offers = [
-  {
-    title: "Hair + Nails Integration",
+const offers = [ {
+    title: "Hair + Nails",
     discount: "10% OFF",
-    desc: "A beautifully synchronized curation for a comprehensive structural and cosmetic refresh.",
+    desc: "Perfect combo for a full glow-up.",
     link: "/book?offer=hair-nails"
   },
   {
-    title: "Laser + Deep Tissue Therapy",
+    title: "Laser + Massage",
     discount: "15% OFF",
-    desc: "Recharge your skin vitality while targeting muscular tension nodes in a unified afternoon.",
+    desc: "Relax & refresh your body.",
     link: "/book?offer=laser-massage"
   },
   {
-    title: "The Bridal Lookbook Suite",
+    title: "Bridal Package",
     discount: "20% OFF",
-    desc: "Complete luxury configuration covering hair engineering, radiant cosmetics, and pristine nail care.",
+    desc: "Hair + Makeup + Nails luxury package.",
     link: "/book?offer=bridal-package"
   }
 ]

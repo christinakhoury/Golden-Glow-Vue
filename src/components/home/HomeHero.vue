@@ -12,14 +12,14 @@
         ]"
       >
         <div class="relative w-full h-full">
-          <img
-            v-for="(image, index) in heroImages"
-            :key="index"
-            :src="image.src"
-            :alt="image.alt"
-            class="absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ease-in-out"
-            :class="{ 'opacity-100 z-10': currentSlide === index, 'opacity-0 z-0': currentSlide !== index }"
-          >
+        <img
+  v-for="(image, index) in heroImages"
+  :key="index"
+  :src="image.src"
+  :alt="image.alt"
+  class="absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ease-in-out"
+  :class="{ 'opacity-100 z-10': currentSlide === index, 'opacity-0 z-0': currentSlide !== index }"
+>
           <div class="absolute inset-0 bg-gradient-to-r from-black/10 to-transparent pointer-events-none z-20"></div>
         </div>
       </div>
@@ -131,34 +131,62 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
+import { loadStudioBanners } from '../../services/banner.js' // Adjust this path if your files are in a different folder
 
-const heroImages = [
-  { src: '/images/hero1.jpg', alt: 'Hero model 1' },
-  { src: '/images/hero2.jpg', alt: 'Hero model 2' },
-  { src: '/images/hero3.jpg', alt: 'Hero model 3' },
-  { src: '/images/hero4.jpg', alt: 'Hero model 4' },
-  { src: '/images/hero6.jpg', alt: 'Hero model 6' },
-  { src: '/images/hero7.jpg', alt: 'Hero model 7' },
-  { src: '/images/hero8.jpg', alt: 'Hero model 8' },
-  { src: '/images/hero9.jpg', alt: 'Hero model 9' }
-]
-
+// 1. Initialize with an empty array or dynamic fallback
+const heroImages = ref([])
 const currentSlide = ref(0)
 const isAnimated = ref(false)
+const loading = ref(true)
 let interval = null
 
 const startCarousel = () => {
+  // Only spin up the carousel if we actually have images loaded
+  if (heroImages.value.length === 0) return
+
   interval = setInterval(() => {
-    currentSlide.value = (currentSlide.value + 1) % heroImages.length
+    currentSlide.value = (currentSlide.value + 1) % heroImages.value.length
   }, 3000)
 }
 
-onMounted(() => {
+onMounted(async () => {
+  // Trigger entry animation layout properties
   setTimeout(() => {
     isAnimated.value = true
   }, 100)
-  startCarousel()
+
+  try {
+    // 2. FETCH data from your new banner setup
+    const apiBanners = await loadStudioBanners()
+
+    if (apiBanners && apiBanners.length > 0) {
+      // 3. Map the data structure to match your template's expectation of :src and :alt
+      heroImages.value = apiBanners.map((banner, index) => ({
+        // Adjust 'banner.image' or 'banner.image_url' depending on what osimart returns
+        src: banner.image || banner.image_url || '/images/hero1.jpg', 
+        alt: banner.title || `Golden Glow Banner ${index + 1}`
+      }))
+    } else {
+      // CATCH condition: Fallback to local assets if API returns empty
+      useFallbackImages()
+    }
+  } catch (error) {
+    console.error("Error setting up hero banners:", error)
+    useFallbackImages()
+  } finally {
+    loading.value = false
+    startCarousel() // Always kickstart loop after data is set
+  }
 })
+
+// Helper function to keep your elegant local layouts if the internet cuts out
+const useFallbackImages = () => {
+  heroImages.value = [
+    { src: '/images/hero1.jpg', alt: 'Hero model 1' },
+    { src: '/images/hero2.jpg', alt: 'Hero model 2' },
+    { src: '/images/hero3.jpg', alt: 'Hero model 3' }
+  ]
+}
 
 onUnmounted(() => {
   if (interval) clearInterval(interval)
