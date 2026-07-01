@@ -312,6 +312,9 @@ const filteredServices = computed(() => {
   if (!products.value.length) return []
 
   const normType = normalize(serviceType)
+  
+  // Get alternative singular keywords (e.g., if normType is "nails", keywords will include "nail")
+  const keywords = SERVICE_MAP[normType] || [normType]
 
   return products.value.filter((p) => {
     const category = p.categories?.[0]?.category
@@ -324,16 +327,14 @@ const filteredServices = computed(() => {
     // 1. MUST be under Services
     if (parent !== "services") return false
 
-    // 2. STRONG MATCH using slug (this is the real fix)
-    const matchesType =
-      slug.includes(`services-${normType}`) ||
-      slug.startsWith(`services-${normType}`) ||
-      name.includes(normType)
+    // 2. Match if the slug or category name contains ANY of our keywords
+    const matchesType = keywords.some(keyword => 
+      slug.includes(keyword) || name.includes(keyword)
+    )
 
     return matchesType
   })
 })
-
 /* ================= VARIANTS (PEDICURE / MANICURE / ETC) ================= */
 const derivedTiers = computed(() => {
   if (!selectedService.value) return []
