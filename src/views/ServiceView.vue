@@ -174,15 +174,63 @@
 </template>
 
 <script setup>
-import { computed } from "vue";
-import { useRoute } from "vue-router";
+import { computed, ref, onMounted } from "vue"
+import { useRoute } from "vue-router"
+import { loadStudioServices } from "../services/service"
 
-const route = useRoute();
-const serviceType = route.params.type;
+const route = useRoute()
+const serviceType = route.params.type
+
+const services = ref([])
+
+/* ================= NORMALIZER ================= */
+const normalize = (str) =>
+  (str || "")
+    .toString()
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, " ")
+
+/* ================= LOAD API SERVICES ================= */
+onMounted(async () => {
+  try {
+    console.log("📡 Loading services...")
+
+    const data = await loadStudioServices()
+
+    console.log("📦 SERVICES API:", data)
+
+    if (Array.isArray(data)) {
+      services.value = data
+    } else {
+      services.value = []
+    }
+
+  } catch (err) {
+    console.error("❌ Failed to load services:", err)
+    services.value = []
+  }
+})
+
+/* ================= FIXED FILTER (IMPORTANT) ================= */
+const filteredServices = computed(() => {
+  if (!services.value.length) return []
+
+  return services.value.filter((s) => {
+    const category =
+      s.category?.name ||   // API style 1
+      s.category ||         // API style 2
+      s.service_category?.name || // API style 3
+      ""
+
+    return normalize(category) === normalize(serviceType)
+  })
+})
+
 
 const data ={
  hair: {
-    title: "Hair Services",
+    title: "Hair Service",
     desc: "Luxury cuts, coloring & styling.",
     services: [
       { icon:"✂️", name:"Haircut", slug:"haircut", desc:"Precision cuts", price:"$30-$80", time:"30-60 min" },
@@ -218,7 +266,7 @@ benefits: [
   },
 
   nails: {
-    title: "Nail Services",
+    title: "Nail Service",
     desc: "  Elegant manicures, luxury pedicures, and creative nail art designed to match your unique style.",
     services: [
       { icon:"💅", name:"Manicure", slug:"manicure", desc:"Classic manicure with professional nail care.", price:"$20-$40", time:"45-90 min" },
@@ -256,7 +304,7 @@ benefits: [
   },
 
   makeup: {
-    title: "Makeup Services",
+    title: "Makeup Service",
     desc: " Professional makeup services designed to enhance your natural beauty for every occasion.",
     services: [
       { icon:"💄", name:"Bridal Makeup", slug:"bridal-makeup", desc:"Luxury bridal looks tailored for your special day.", price:"$120-$350", time:"2-3 hrs" },
@@ -291,7 +339,7 @@ benefits: [
   },
 
   massage: {
-    title: "Massage Services",
+    title: "Massage Service",
     desc: "   Relax, recharge, and restore your wellbeing with our luxury massage treatments.",
     services: [
       { icon:"🌿", name:"Swedish Massage", slug:"swedish-massage", desc:"Gentle full-body relaxation therapy.", price:"$50-$90", time:"60-120 min" },
@@ -328,7 +376,7 @@ benefits: [
   },
 
   laser: {
-    title: "Laser Services",
+    title: "Laser Service",
     desc: "Advanced laser technology for smooth skin, rejuvenation, and long-lasting confidence.",
     services: [
       { icon:"✨", name:"Hair Removal", slug:"laser-hair-removal", desc:"Long-lasting smooth skin with professional laser treatment.", price:"$40-$250", time:"30-90 min" },
@@ -362,6 +410,5 @@ benefits: [
 ]
   }
 };
-
-const current = computed(() => data[serviceType] || data.hair);
+const current = computed(() => data[serviceType] || data.hair)
 </script>

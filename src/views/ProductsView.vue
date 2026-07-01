@@ -186,21 +186,32 @@
 </template>
 
 <script setup>
-import { ref, computed, nextTick } from 'vue'
+import { ref, computed, nextTick, onMounted } from 'vue'
 import { useWishlistStore } from '../composables/wishlist'
 import { useCartStore } from '../composables/cart'
 import { useAuthStore } from '../composables/auth'
 import { useScrollAnimation } from '../composables/useScrollAnimation'
+import { loadStudioProducts } from '../services/product.js'
 
-// Global Pinia / Composable Stores 
+/* ================= STORES ================= */
 const wishlistStore = useWishlistStore()
 const cartStore = useCartStore()
 const authStore = useAuthStore()
 
-// State controllers
+/* ================= STATE ================= */
 const activeCategory = ref(null)
 const activeSubcategory = ref(null)
+const products = ref([])
+const loading = ref(true)
 const addingToCartId = ref(null)
+
+/* ================= NORMALIZER ================= */
+const normalize = (str) =>
+  (str || '')
+    .toString()
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, ' ')
 
 // Core Dataset Configuration
 const categoryConfigs = [
@@ -209,21 +220,21 @@ const categoryConfigs = [
     name: 'Hair',
     tagline: 'Timeless Hair Care',
     description: 'Discover curated essentials designed to nourish, protect and restore ultimate strength into every dynamic strand.',
-    subcategories: ['Hair oils', 'Dry shampoo', 'Hair mists','Accessories']
+    subcategories: ['Hair Oils', 'Dry Shampoo', 'Hair Mists','Accessories']
   },
   {
     id: 'nails',
     name: 'Nails',
     tagline: 'Symbol of Pure Elegance',
     description: 'Premium absolute nail treatments and master-grade apparatus designed to clean, sculpt and transform every profile view.',
-    subcategories: ['Press on nails', 'Nail care', 'Nails tools']
+    subcategories: ['Press On Nails', 'Nail Care', 'Nails Tools']
   },
   {
     id: 'makeup',
     name: 'Makeup',
     tagline: 'Architectural Framing Beauty',
     description: 'From velvet soft-focus structure complexions to high-impact pigmented shadows, create structural harmony.',
-    subcategories: ['Eyes', 'Lips', 'Face', 'Makeup tools']
+    subcategories: ['Eyes', 'Lips', 'Face', 'Makeup Tools']
   },
   {
     id: 'massage',
@@ -242,149 +253,144 @@ const categoryConfigs = [
 ]
 
 const sampleProducts = [
-  //hair product 
-  //accessories 
+  // hair accessories 
   { id: 101, category: 'Hair', subcategory: 'Accessories', name: 'Ola Set (4 pieces)', price: 35.00, image: '/images/ha1.jpeg' },
   { id: 102, category: 'Hair', subcategory: 'Accessories', name: 'Nivi Homa', price: 20.00, image: '/images/ha2.jpeg' },
   { id: 103, category: 'Hair', subcategory: 'Accessories', name: 'Minimalist', price: 18.00, image: '/images/ha3.jpeg' },
-//shampoo
-  { id: 104, category: 'Hair', subcategory: 'Dry shampoo', name: 'Jupiter Shampoo', price: 40.00, image: '/images/hs1.jpeg' },
-  { id: 105, category: 'Hair', subcategory: 'Dry shampoo', name: 'Power Buf Set', price: 60.00, image: '/images/hs2.jpeg' },
- { id: 106, category: 'Hair', subcategory: 'Dry shampoo', name: 'UNEEDMEE', price: 25.00, image: '/images/hs3.jpeg' },
- 
- //hair mist
-   { id: 107, category: 'Hair', subcategory: 'Hair mists', name: 'Coco Mist', price: 33.00, image: '/images/hm1.jpeg' },
+  // shampoo
+  { id: 104, category: 'Hair', subcategory: 'Dry Shampoo', name: 'Jupiter Shampoo', price: 40.00, image: '/images/hs1.jpeg' },
+  { id: 105, category: 'Hair', subcategory: 'Dry Shampoo', name: 'Power Buf Set', price: 60.00, image: '/images/hs2.jpeg' },
+  { id: 106, category: 'Hair', subcategory: 'Dry Shampoo', name: 'UNEEDMEE', price: 25.00, image: '/images/hs3.jpeg' },
+  // hair mist
+  { id: 107, category: 'Hair', subcategory: 'Hair mists', name: 'Coco Mist', price: 33.00, image: '/images/hm1.jpeg' },
   { id: 108, category: 'Hair', subcategory: 'Hair mists', name: 'Dreamy Mist', price: 35.00, image: '/images/hm2.jpeg' },
- { id: 109, category: 'Hair', subcategory: 'Hair mists', name: 'Eleganta Mist', price: 38.00, image: '/images/hm3.jpeg' },
-
- //hair oil
+  { id: 109, category: 'Hair', subcategory: 'Hair mists', name: 'Eleganta Mist', price: 38.00, image: '/images/hm3.jpeg' },
+  // hair oil
   { id: 110, category: 'Hair', subcategory: 'Hair oils', name: 'Oriko Oil', price: 18.00, image: '/images/ho1.jpeg' },
   { id: 111, category: 'Hair', subcategory: 'Hair oils', name: 'Dreamy Oil', price: 25.00, image: '/images/ho2.jpeg' },
- { id: 112, category: 'Hair', subcategory: 'Hair oils', name: 'Maeomo Oil', price: 20.00, image: '/images/ho3.jpeg' },
+  { id: 112, category: 'Hair', subcategory: 'Hair oils', name: 'Maeomo Oil', price: 20.00, image: '/images/ho3.jpeg' },
 
-  //Nail product
-  //press on
-  { id: 202, category: 'Nails', subcategory: 'Press on nails', name: 'Touche Deluxe Press-On Extensions', price: 15.00,  image: '/images/p1.jpg' },
-  { id: 203, category: 'Nails', subcategory: 'Press on nails', name: 'Lelegance Press-on Nails', price: 15.00,  image: '/images/p2.jpg' },
-  { id: 204, category: 'Nails', subcategory: 'Press on nails', name: 'Lala Press-On Extensions', price: 20.00,  image: '/images/p3.jpg' },
-  { id: 205, category: 'Nails', subcategory: 'Press on nails', name: 'Synddney Press-On Extensions', price: 20.00,  image: '/images/p4.jpg' },
-  { id: 206, category: 'Nails', subcategory: 'Press on nails', name: 'Georgette Press-On Extensions', price: 15.00,  image: '/images/p5.jpg' },
-  { id: 201, category: 'Nails', subcategory: 'Press on nails', name: 'Lilas Press-On Extensions', price: 18.00,  image: '/images/p6.jpg' },
-  //tools
-  { id: 207, category: 'Nails', subcategory: 'Nails Tools', name: 'Ceel Set', price: 30.00,  image: '/images/nt1.jpg' },
-  { id: 208, category: 'Nails', subcategory: 'Nails Tools', name: 'Luxy Scissors (pack of 2)', price: 25.00,  image: '/images/nt2.jpg' },
-  { id: 209, category: 'Nails', subcategory: 'Nails Tools', name: 'Vroom vroom ', price: 40.00,  image: '/images/nt3.jpg' },
-  { id: 210, category: 'Nails', subcategory: 'Nails Tools', name: 'Mooz ditsie', price: 8.00,  image: '/images/nt4.jpg' },
-  //care
-  { id: 211, category: 'Nails', subcategory: 'Nail Care', name: 'Cuticle Oil', price: 28.00,  image: '/images/nc1.jpg' },
-  { id: 212, category: 'Nails', subcategory: 'Nail Care', name: 'Nail Oil', price: 30.00,  image: '/images/nc2.jpg' },
-  { id: 213, category: 'Nails', subcategory: 'Nail Care', name: 'Honori Oil', price: 35.00,  image: '/images/nc3.jpg' },
+  // Nail product
+  { id: 202, category: 'Nails', subcategory: 'Press On Nails', name: 'Touche Deluxe Press-On Extensions', price: 15.00, image: '/images/p1.jpg' },
+  { id: 203, category: 'Nails', subcategory: 'Press On Nails', name: 'Lelegance Press-on Nails', price: 15.00, image: '/images/p2.jpg' },
+  { id: 204, category: 'Nails', subcategory: 'Press On Nails', name: 'Lala Press-On Extensions', price: 20.00, image: '/images/p3.jpg' },
+  { id: 205, category: 'Nails', subcategory: 'Press On Nails', name: 'Synddney Press-On Extensions', price: 20.00, image: '/images/p4.jpg' },
+  { id: 206, category: 'Nails', subcategory: 'Press On Nails', name: 'Georgette Press-On Extensions', price: 15.00, image: '/images/p5.jpg' },
+  { id: 201, category: 'Nails', subcategory: 'Press On Nails', name: 'Lilas Press-On Extensions', price: 18.00, image: '/images/p6.jpg' },
+  // nails tools
+  { id: 207, category: 'Nails', subcategory: 'Nails Tools', name: 'Ceel Set', price: 30.00, image: '/images/nt1.jpg' },
+  { id: 208, category: 'Nails', subcategory: 'Nails Tools', name: 'Luxy Scissors (pack of 2)', price: 25.00, image: '/images/nt2.jpg' },
+  { id: 209, category: 'Nails', subcategory: 'Nails Tools', name: 'Vroom vroom ', price: 40.00, image: '/images/nt3.jpg' },
+  { id: 210, category: 'Nails', subcategory: 'Nails Tools', name: 'Mooz ditsie', price: 8.00, image: '/images/nt4.jpg' },
+  // nails care
+  { id: 211, category: 'Nails', subcategory: 'Nail Care', name: 'Cuticle Oil', price: 28.00, image: '/images/nc1.jpg' },
+  { id: 212, category: 'Nails', subcategory: 'Nail Care', name: 'Nail Oil', price: 30.00, image: '/images/nc2.jpg' },
+  { id: 213, category: 'Nails', subcategory: 'Nail Care', name: 'Honori Oil', price: 35.00, image: '/images/nc3.jpg' },
   
-  
-  //Makeup product 
-  //eyes
+  // Makeup product 
   { id: 301, category: 'Makeup', subcategory: 'Eyes', name: 'Coco Maskara', price: 28.00, image:'/images/me2.jpeg' },
   { id: 302, category: 'Makeup', subcategory: 'Eyes', name: 'Lilo Eyeshadow', price: 48.00, image:'/images/me1.jpeg' },
   { id: 303, category: 'Makeup', subcategory: 'Eyes', name: 'Sienna Dilena ', price: 40.00, image:'/images/me3.jpeg' },
-//lips
-{ id: 304, category: 'Makeup', subcategory: 'Lips', name: 'Lollipop gloss ', price: 18.00, image:'/images/ml1.jpeg' },
-{ id: 305, category: 'Makeup', subcategory: 'Lips', name: 'Cherry On Top  ', price: 15.00, image:'/images/ml2.jpeg' },
-{ id: 306, category: 'Makeup', subcategory: 'Lips', name: 'Girlie Pop Set ', price: 20.00, image:'/images/ml3.jpeg' },
-{ id: 307, category: 'Makeup', subcategory: 'Lips', name: 'One Of A Kind ', price: 22.00, image:'/images/ml4.jpeg' },
-//face 
-{ id: 308, category: 'Makeup', subcategory: 'Face', name: ' Concealer ', price: 22.00, image:'/images/mf1.jpeg' },
-{ id: 309, category: 'Makeup', subcategory: 'Face', name:"Lara's Touch", price: 18.00, image:'/images/mf2.jpeg' },
-{ id: 310, category: 'Makeup', subcategory: 'Face', name: 'Setting Powder ', price: 20.00, image:'/images/mf3.jpeg' },
-//tools
-{ id: 310, category: 'Makeup', subcategory: 'Makeup tools', name: 'Dinia Set  ', price: 45.00, image:'/images/mt1.jpeg' },
-{ id: 311, category: 'Makeup', subcategory: 'Makeup tools', name: 'Bubbly pop (1piece) ', price: 8.00, image:'/images/mt2.jpeg' },
-{ id: 312, category: 'Makeup', subcategory: 'Makeup tools', name: 'DALANA Brushes (set) ', price: 55.00, image:'/images/mt3.jpeg' },
-
+  // lips
+  { id: 304, category: 'Makeup', subcategory: 'Lips', name: 'Lollipop gloss ', price: 18.00, image:'/images/ml1.jpeg' },
+  { id: 305, category: 'Makeup', subcategory: 'Lips', name: 'Cherry On Top  ', price: 15.00, image:'/images/ml2.jpeg' },
+  { id: 306, category: 'Makeup', subcategory: 'Lips', name: 'Girlie Pop Set ', price: 20.00, image:'/images/ml3.jpeg' },
+  { id: 307, category: 'Makeup', subcategory: 'Lips', name: 'One Of A Kind ', price: 22.00, image:'/images/ml4.jpeg' },
+  // face 
+  { id: 308, category: 'Makeup', subcategory: 'Face', name: ' Concealer ', price: 22.00, image:'/images/mf1.jpeg' },
+  { id: 309, category: 'Makeup', subcategory: 'Face', name:"Lara's Touch", price: 18.00, image:'/images/mf2.jpeg' },
+  { id: 310, category: 'Makeup', subcategory: 'Face', name: 'Setting Powder ', price: 20.00, image:'/images/mf3.jpeg' },
+  // makeup tools
+  { id: 311, category: 'Makeup', subcategory: 'Makeup tools', name: 'Dinia Set  ', price: 45.00, image:'/images/mt1.jpeg' },
+  { id: 312, category: 'Makeup', subcategory: 'Makeup tools', name: 'Bubbly pop (1piece) ', price: 8.00, image:'/images/mt2.jpeg' },
+  { id: 313, category: 'Makeup', subcategory: 'Makeup tools', name: 'DALANA Brushes (set) ', price: 55.00, image:'/images/mt3.jpeg' },
   
-//Massage
-//'Face rollers',
-{ id: 401, category: 'Massage', subcategory: 'Face rollers', name: 'Sculpting Nephrite Jade Gua Sha', price: 28.00, image:'/images/fmf1.jpeg'},
+  // Massage
+  { id: 401, category: 'Massage', subcategory: 'Face rollers', name: 'Sculpting Nephrite Jade Gua Sha', price: 28.00, image:'/images/fmf1.jpeg'},
   { id: 402, category: 'Massage', subcategory: 'Face rollers', name: 'Relaxia', price: 35.00, image:'/images/mf2f.jpeg'},
   { id: 403, category: 'Massage', subcategory: 'Face rollers', name: 'Laluna Set', price: 30.00, image:'/images/fmf3.jpeg'},
-//  'Massage oils', 
+  // massage oils 
   { id: 404, category: 'Massage', subcategory: 'Massage oils', name: 'Miisica', price: 8.00, image:'/images/mo1.jpeg'},
   { id: 405, category: 'Massage', subcategory: 'Massage oils', name: 'Leona Oil', price: 18.00, image:'/images/mo2.jpeg'},
   { id: 406, category: 'Massage', subcategory: 'Massage oils', name: 'Iona', price: 15.00, image:'/images/mo3.jpeg'},
+  // bath salts
+  { id: 407, category: 'Massage', subcategory: 'Bath salts', name: 'Vanilla Bath Salts', price: 20.00, image:'/images/ms1.jpeg'},
+  { id: 408, category: 'Massage', subcategory: 'Bath salts', name: 'Sculpa Bath Salts', price: 22.00, image:'/images/ms2.jpeg'},
+  { id: 409, category: 'Massage', subcategory: 'Bath salts', name: 'Aurora Bath Salts', price: 25.00, image:'/images/ms3.jpeg'},
+  // scented candles 
+  { id: 410, category: 'Massage', subcategory: 'Scented candles', name: 'Echante', price: 30.00, image:'/images/mc1.jpeg'},
+  { id: 411, category: 'Massage', subcategory: 'Scented candles', name: 'Anamolie', price: 30.00, image:'/images/mc2.jpeg'},
+  { id: 412, category: 'Massage', subcategory: 'Scented candles', name: 'Ilalai', price: 30.00, image:'/images/mc3.jpeg'},
 
-//'Bath salts',
- { id: 406, category: 'Massage', subcategory: 'Bath salts', name: 'Vanilla Bath Salts', price: 20.00, image:'/images/ms1.jpeg'},
- { id: 407, category: 'Massage', subcategory: 'Bath salts', name: 'Sculpa Bath Salts', price: 22.00, image:'/images/ms2.jpeg'},
-  { id: 408, category: 'Massage', subcategory: 'Bath salts', name: 'Aurora Bath Salts', price: 25.00, image:'/images/ms3.jpeg'},
-
-//  'Scented candles', 
-  { id: 409, category: 'Massage', subcategory: 'Scented candles', name: 'Echante', price: 30.00, image:'/images/mc1.jpeg'},
-  { id: 410, category: 'Massage', subcategory: 'Scented candles', name: 'Anamolie', price: 30.00, image:'/images/mc2.jpeg'},
-    { id: 411, category: 'Massage', subcategory: 'Scented candles', name: 'Ilalai', price: 30.00, image:'/images/mc3.jpeg'},
-
-
-  //laser product 
-  //'Gels', 
+  // laser product 
   { id: 501, category: 'Laser', subcategory: 'Gels', name: 'Post-Laser Hyper-Calming Complex', price: 32.00, image: '/images/lg1.jpeg' },
-   { id: 502, category: 'Laser', subcategory: 'Gels', name: 'Gel', price: 22.00, image: '/images/lg2.jpeg' },
-   { id: 503, category: 'Laser', subcategory: 'Gels', name: 'Post-Laser Gel', price: 25.00, image: '/images/lg3.jpeg' },
-  
-  // 'Machine', 
- { id: 504, category: 'Laser', subcategory: 'Machine', name: 'Luxury Machine', price: 100.00, image: '/images/lm1.jpeg' },
+  { id: 502, category: 'Laser', subcategory: 'Gels', name: 'Gel', price: 22.00, image: '/images/lg2.jpeg' },
+  { id: 503, category: 'Laser', subcategory: 'Gels', name: 'Post-Laser Gel', price: 25.00, image: '/images/lg3.jpeg' },
+  // machine 
+  { id: 504, category: 'Laser', subcategory: 'Machine', name: 'Luxury Machine', price: 100.00, image: '/images/lm1.jpeg' },
   { id: 505, category: 'Laser', subcategory: 'Machine', name: 'Machinia ', price: 125.00, image: '/images/lm2.jpeg' },
   { id: 506, category: 'Laser', subcategory: 'Machine', name: 'La Machina', price: 150.00, image: '/images/lm3.jpeg' },
-  
-  // 'Soothing cream'
-    { id: 507, category: 'Laser', subcategory: 'Soothing cream', name: 'Biri cream', price: 20.00, image: '/images/ls1.jpeg' },
-    { id: 508, category: 'Laser', subcategory: 'Soothing cream', name: 'Laravene cream', price: 20.00, image: '/images/ls2.jpeg' },
-{ id: 509, category: 'Laser', subcategory: 'Soothing cream', name: 'Coco cream', price: 22.00, image: '/images/ls3.jpeg' },
-
+  // soothing cream
+  { id: 507, category: 'Laser', subcategory: 'Soothing cream', name: ' cream', price: 20.00, image: '/images/ls1.jpeg' },
+  { id: 508, category: 'Laser', subcategory: 'Soothing cream', name: 'Soothing cream', price: 20.00, image: '/images/ls2.jpeg' },
+  { id: 509, category: 'Laser', subcategory: 'Soothing cream', name: 'Soothing cream', price: 22.00, image: '/images/ls3.jpeg' }
 ]
 
-// Computed filtering macros
-const currentSubcategories = computed(() => {
-  if (!activeCategory.value) return []
-  const target = categoryConfigs.find(c => c.name === activeCategory.value)
-  return target ? target.subcategories : []
-})
-
 const filteredProducts = computed(() => {
-  if (!activeCategory.value) return []
-  return sampleProducts.filter(product => {
-    const matchCategory = product.category === activeCategory.value
-    const matchSubcategory = !activeSubcategory.value || product.subcategory.toLowerCase() === activeSubcategory.value.toLowerCase()
-    return matchCategory && matchSubcategory
+  if (!products.value || products.value.length === 0) return []
+  if (!activeCategory.value) return products.value
+
+  const activeCat = normalize(activeCategory.value)
+  const activeSub = normalize(activeSubcategory.value)
+
+  return products.value.filter(product => {
+    const productCat = normalize(product.category)
+    const productSub = normalize(product.subcategory)
+
+    // 🔥 HIGH-END SAFE MATCHING: Check text strings or fallback to partial match
+    const isCategoryMatch = productCat === activeCat || productCat.includes(activeCat) || activeCat.includes(productCat)
+    if (!isCategoryMatch) return false
+
+    if (!activeSubcategory.value) return true
+
+    return productSub === activeSub || productSub.includes(activeSub)
   })
 })
 
-// Navigation methods
+/* ================= SUBCATEGORIES ================= */
+const currentSubcategories = computed(() => {
+  if (!activeCategory.value) return []
+  const found = categoryConfigs.find(
+    c => normalize(c.name) === normalize(activeCategory.value)
+  )
+  return found?.subcategories || []
+})
+
+/* ================= NAVIGATION ================= */
 const setActiveCategory = (categoryName) => {
   activeCategory.value = categoryName
   activeSubcategory.value = null
-  window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
+const setActiveSubcategory = (sub) => {
+  activeSubcategory.value = sub
+}
+
+/* ================= CLEAR ================= */
 const clearCategory = () => {
   activeCategory.value = null
   activeSubcategory.value = null
-  nextTick(() => { useScrollAnimation() })
+  nextTick(() => useScrollAnimation())
 }
 
-/* ========================================================
-   🛒 CORE STORE HOOK CONNECTORS (Add to Cart / Wishlist)
-=========================================================== */
+/* ================= WISHLIST ================= */
+const isItemInWishlist = (id) =>
+  wishlistStore.items?.some(item => item.id === id)
 
-// Check if an item is currently saved in the wishlist
-const isItemInWishlist = (productId) => {
-  if (!wishlistStore.items) return false
-  return wishlistStore.items.some(item => item.id === productId)
-}
-
-// Seamlessly toggle item in/out of shared local wishlistStore profile
 const handleWishlistToggle = (product) => {
   if (isItemInWishlist(product.id)) {
     wishlistStore.removeFromWishlist(product.id)
   } else {
-    // Add full data matching expected object mapping layout
     wishlistStore.addToWishlist({
       id: product.id,
       name: product.name,
@@ -395,10 +401,10 @@ const handleWishlistToggle = (product) => {
   }
 }
 
-// Dispatches item details into cart matching exact parameters expected by CartView
+/* ================= CART ================= */
 const handleAddToCart = (product) => {
   addingToCartId.value = product.id
-  
+
   cartStore.addToCart(
     {
       id: product.id,
@@ -406,19 +412,148 @@ const handleAddToCart = (product) => {
       price: product.price,
       image: product.image,
       quantity: 1,
-      type: 'product' // Important: ensures product item maps to productItems computing group
+      type: 'product'
     },
     authStore.isAuthenticated,
     authStore.openAuthModal
   )
 
-  // Remove microstate animation feedback hold after 1 sec
   setTimeout(() => {
     addingToCartId.value = null
-  }, 1000)
+  }, 800)
 }
 
+/* ================= INIT ================= */
 useScrollAnimation()
+
+
+
+onMounted(async () => {
+  loading.value = true
+
+  try {
+    console.log("📡 Fetching products...")
+    const liveData = await loadStudioProducts()
+    console.log("RAW API PRODUCTS:", liveData)
+
+    if (Array.isArray(liveData) && liveData.length > 0) {
+      products.value = liveData.map(item => {
+        console.log({
+  name: item.name,
+  apiCategories: item.categories?.map(c => c.category?.name),
+  varyBy: item.vary_by,
+})
+        // 1. Extract nested image path from main_image object
+        const rawImagePath = item.main_image?.path || item.image_url || item.image
+        let finalImage = '/images/p1.jpg'
+        
+        if (rawImagePath) {
+          if (rawImagePath.startsWith('http')) {
+            finalImage = rawImagePath
+          } else {
+            const cleanPath = rawImagePath.startsWith('/') ? rawImagePath.slice(1) : rawImagePath
+            finalImage = `https://api.osimart.com/${cleanPath}`
+          }
+        }
+        
+       const apiCategory =
+    item.categories?.[0]?.category?.name || ""
+const cat = apiCategory.toLowerCase()
+
+let categoryName = "Other"
+
+if (
+    cat.includes("makeup") ||
+    cat.includes("eyes") ||
+    cat.includes("eye") ||
+    cat.includes("lips") ||
+    cat.includes("face") ||
+    cat.includes("concealer") ||
+    cat.includes("brush")
+) {
+    categoryName = "Makeup"
+}
+
+else if (
+    cat.includes("hair") ||
+    cat.includes("dry shampoo") ||
+    cat.includes("hair oils") ||
+    cat.includes("hair mists") ||
+    cat.includes("accessories")
+) {
+    categoryName = "Hair"
+}
+
+else if (
+    cat.includes("laser") ||
+    cat.includes("gels") ||
+    cat.includes("machine") ||
+    cat.includes("soothing cream")
+) {
+    categoryName = "Laser"
+}
+
+else if (
+    cat.includes("massage") ||
+    cat.includes("roller") ||
+    cat.includes("bath") ||
+    cat.includes("candle")
+) {
+    categoryName = "Massage"
+}
+
+else if (
+    cat.includes("nail") ||
+    cat.includes("press on")
+) {
+    categoryName = "Nails"
+}
+const subcategoryName =
+    item.vary_by?.[0]?.name || apiCategory
+
+
+        // 3. Convert 'price_range' string (e.g., "60.0 - 130.0") into a baseline float number
+        let finalPrice = 0.00
+        if (item.price_range) {
+          const basePriceString = item.price_range.split('-')[0].trim()
+          finalPrice = parseFloat(basePriceString) || 0.00
+        } else if (item.price) {
+          finalPrice = parseFloat(item.price)
+        }
+
+        return {
+    id: item.id,
+    image: finalImage,
+    name: item.name,
+    category: categoryName,
+    subcategory: subcategoryName,
+    price: finalPrice
+}
+      })
+    } else {
+      console.warn("⚠️ No live array returned. Loading fallback catalog.");
+      products.value = sampleProducts
+    }
+
+    console.log("✅ PRODUCTS POPULATED:", products.value.length)
+    if (products.value.length > 0) {
+      console.table(
+  products.value.map(p => ({
+    name: p.name,
+    category: p.category,
+    subcategory: p.subcategory
+  }))
+)
+    }
+
+  } catch (err) {
+    console.error("❌ API CRASHED, safely loaded fallbacks:", err)
+    products.value = sampleProducts
+  } finally {
+    loading.value = false
+  }
+})
+
 </script>
 
 <style scoped>
