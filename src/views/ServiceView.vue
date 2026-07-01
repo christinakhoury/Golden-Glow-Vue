@@ -1,159 +1,199 @@
 <template>
   <div class="min-h-screen bg-[#FAF6F0] text-stone-800 antialiased pt-40 pb-32 relative overflow-hidden font-sans selection:bg-[#D4AF37]/10">
     
-    <!-- BRAND CANVAS FINE GRAPH LINES -->
     <div class="absolute inset-y-0 left-12 w-px bg-stone-200/40 hidden lg:block"></div>
     <div class="absolute inset-y-0 right-12 w-px bg-stone-200/40 hidden lg:block"></div>
 
-    <!-- HEADER HERO: Minimalist Luxury Split Layout -->
     <section class="max-w-7xl mx-auto px-6 lg:px-16 mb-24 relative z-10" data-aos="fade-up" data-aos-duration="1000">
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start border-b border-stone-200 pb-16">
         <div class="lg:col-span-7 space-y-4">
           <span class="text-[#D4AF37] tracking-[0.4em] text-xs uppercase font-bold inline-flex items-center gap-3">
             <span class="w-6 h-px bg-[#D4AF37]"></span> Salon Menu Portfolio
           </span>
-          <h1 class="text-5xl md:text-7xl font-light text-stone-900 tracking-tighter leading-none" style="font-family: 'Playfair Display', serif;">
-            {{ current.title }}
+          <h1 class="text-5xl md:text-7xl font-light text-stone-900 tracking-tighter leading-none capitalize" style="font-family: 'Playfair Display', serif;">
+            {{ serviceType }} Services
           </h1>
         </div>
         <div class="lg:col-span-5 lg:pt-8">
           <p class="text-stone-500 text-base font-light leading-relaxed border-l border-stone-300 pl-6">
-            {{ current.desc }}
+            Explore our custom collection of bespoke offerings curated specifically for your wellness and personal beauty profile.
           </p>
         </div>
       </div>
     </section>
 
-    <!-- RITUAL SERVICES: Architectural Alternating Cards -->
-    <section class="max-w-7xl mx-auto px-6 lg:px-16 mb-32 relative z-10">
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16">
+    <section v-if="isLoading" class="max-w-7xl mx-auto px-6 lg:px-16 text-center py-20 relative z-10">
+      <div class="inline-block w-8 h-8 border-2 border-[#D4AF37] border-t-transparent rounded-full animate-spin mb-4"></div>
+      <p class="text-xs font-mono tracking-widest text-stone-400 uppercase">Synchronizing with Maison Registry...</p>
+    </section>
+
+    <section v-else class="max-w-7xl mx-auto px-6 lg:px-16 mb-32 relative z-10">
+      <div v-if="filteredServices.length === 0" class="text-center py-12 border border-dashed border-stone-200 bg-white">
+        <p class="text-sm font-light text-stone-400">No active variants found matching this salon collection directory.</p>
+      </div>
+
+      <div v-else class="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16">
         <div 
-          v-for="(item, idx) in current.services" 
-          :key="item.name"
-          class="bg-white border border-stone-200/60 p-8 lg:p-10 transition-all duration-700 ease-out hover:border-[#D4AF37] hover:shadow-[0_30px_60px_-20px_rgba(212,175,55,0.05)] flex flex-col justify-between group relative"
+          v-for="(item, idx) in filteredServices" 
+          :key="item.id || item.name"
+          class="bg-white border border-stone-200/60 transition-all duration-700 ease-out hover:border-[#D4AF37] hover:shadow-[0_30px_60px_-20px_rgba(212,175,55,0.05)] flex flex-col justify-between group relative cursor-pointer overflow-hidden"
           data-aos="fade-up"
           :data-aos-delay="idx * 100"
+          @click="openServiceOptions(item)"
         >
-          <!-- Top Border Accent Animation -->
-          <div class="absolute top-0 left-0 w-full h-0.5 bg-[#D4AF37] scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left"></div>
+          <div class="absolute top-0 left-0 w-full h-0.5 bg-[#D4AF37] scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left z-20"></div>
 
           <div>
-            <div class="flex justify-between items-baseline gap-4 mb-4">
-              <h3 class="text-2xl text-stone-900 font-light tracking-tight group-hover:text-[#D4AF37] transition-colors duration-300" style="font-family: 'Playfair Display', serif;">
-                {{ item.name }}
-              </h3>
-              <span class="text-md font-serif font-medium text-stone-900 tracking-tight whitespace-nowrap border-b border-stone-200 pb-1">
-                {{ item.price }}
-              </span>
-            </div>
-            
-            <div class="flex items-center gap-2 mb-6">
-              <span class="w-1 h-1 rounded-full bg-[#D4AF37]"></span>
-              <span class="text-[10px] tracking-widest uppercase font-mono text-stone-400 font-semibold">
-                {{ item.time }}
-              </span>
+            <div class="w-full h-72 overflow-hidden relative bg-stone-100 border-b border-stone-100">
+              <img 
+                :src="getServiceImage(item)" 
+                :alt="item.name"
+                class="w-full h-full object-cover grayscale-[10%] contrast-[102%] group-hover:scale-105 transition-transform duration-1000 ease-out"
+              />
+              <div class="absolute inset-0 bg-gradient-to-t from-stone-900/10 via-transparent to-transparent pointer-events-none"></div>
             </div>
 
-            <p class="text-stone-500 text-sm font-light leading-relaxed mb-12">
-              {{ item.desc }}
-            </p>
+            <div class="p-8 lg:p-10">
+              <div class="flex justify-between items-baseline gap-4 mb-4">
+                <h3 class="text-2xl text-stone-900 font-light tracking-tight group-hover:text-[#D4AF37] transition-colors duration-300" style="font-family: 'Playfair Display', serif;">
+                  <span class="mr-2 text-xl inline-block transition-transform duration-300 group-hover:scale-110">✨</span>
+                  {{ item.name }}
+                </h3>
+                <span class="text-md font-serif font-medium text-stone-900 tracking-tight whitespace-nowrap border-b border-stone-200 pb-1">
+                  ${{ item.price || item.sale_price || 'Varies' }}
+                </span>
+              </div>
+              
+              <div class="flex items-center gap-2 mb-6">
+                <span class="w-1 h-1 rounded-full bg-[#D4AF37]"></span>
+                <span class="text-[10px] tracking-widest uppercase font-mono text-stone-400 font-semibold">
+                  SKU: {{ item.sku || 'Maison Standard' }}
+                </span>
+              </div>
+
+              <p class="text-stone-500 text-sm font-light leading-relaxed mb-4" v-html="item.description || 'Custom targeted application with tailored precision care profiles.'">
+              </p>
+            </div>
           </div>
 
-          <!-- Premium Minimalist CTA Trigger Button -->
-          <div class="pt-6 border-t border-stone-100 flex justify-end">
-            <router-link 
-              :to="`/book?service=${item.slug}`"
+          <div class="px-8 lg:px-10 pb-8 pt-6 border-t border-stone-100 flex justify-end">
+            <button 
+              @click.stop="openServiceOptions(item)"
               class="inline-flex items-center gap-4 text-[11px] tracking-[0.25em] uppercase font-bold text-white bg-stone-900 hover:bg-[#D4AF37] px-8 py-4 transition-all duration-300 rounded-none shadow-sm"
             >
               Book Session
               <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 transform transition-transform duration-300 group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
               </svg>
-            </router-link>
+            </button>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- RESIDENT ARTISANS: High-Fashion Alabaster Split-Pane Focus -->
-    <section class="py-32 bg-white text-stone-900 relative border-y border-stone-200">
-      <div class="max-w-7xl mx-auto px-6 lg:px-16">
-        
-        <div class="mb-24 grid grid-cols-1 lg:grid-cols-12 gap-8 items-end" data-aos="fade-up">
-          <div class="lg:col-span-8">
-            <span class="text-xs text-[#D4AF37] uppercase tracking-[0.4em] font-bold block mb-3">// The Guild</span>
-            <h2 class="text-4xl md:text-6xl font-light text-stone-900 tracking-tight" style="font-family: 'Playfair Display', serif;">
-              Resident Master Artisans
-            </h2>
-          </div>
-          <div class="lg:col-span-4">
-            <p class="text-stone-500 text-sm font-light leading-relaxed border-l-2 border-[#D4AF37] pl-4">
-              Entrust your experience to our internationally trained experts dedicated to personal wellness.
-            </p>
-          </div>
-        </div>
+    <Transition name="fade">
+      <div v-if="selectedService" class="fixed inset-0 z-50 flex items-center justify-end bg-stone-900/40 backdrop-blur-sm" @click.self="closeServiceOptions">
+        <Transition name="slide">
+          <div v-if="selectedService" class="w-full max-w-lg h-full bg-[#FAF6F0] shadow-2xl flex flex-col justify-between overflow-y-auto relative border-l border-stone-200">
+            
+            <button @click="closeServiceOptions" class="absolute top-6 right-6 text-stone-400 hover:text-stone-900 p-2 transition-transform duration-300 hover:rotate-90 z-30 bg-white/80 backdrop-blur-md rounded-full shadow-sm">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-12 lg:gap-16">
-          <div 
-            v-for="(spec, idx) in current.specialists" 
-            :key="spec.name"
-            class="flex flex-col justify-between group text-left relative"
-            data-aos="fade-up"
-            :data-aos-delay="idx * 150"
-          >
-            <div>
-              <!-- Image Holder: Archival Framed Box Portrait -->
-              <div class="relative aspect-[4/5] w-full overflow-hidden bg-stone-100 mb-8 border border-stone-200 p-2 transition-all duration-500 group-hover:border-[#D4AF37]">
-                <div class="absolute inset-0 bg-stone-900/5 group-hover:bg-transparent transition-colors z-10 m-2"></div>
-                <img v-if="spec.img" :src="spec.img" class="w-full h-full object-cover transition-transform duration-1000 ease-out group-hover:scale-[1.03]" />
+            <div class="space-y-8 pb-8">
+              <div class="w-full h-64 overflow-hidden relative bg-stone-200 border-b border-stone-200/40">
+                <img 
+                  :src="getServiceImage(selectedService)" 
+                  :alt="selectedService.name"
+                  class="w-full h-full object-cover"
+                />
+                <div class="absolute inset-0 bg-gradient-to-t from-[#FAF6F0] via-transparent to-transparent"></div>
               </div>
 
-              <div class="flex items-center justify-between gap-2 text-[10px] text-[#D4AF37] tracking-[0.2em] uppercase font-bold mb-3">
-                <span>{{ spec.role }}</span>
-                <span class="border border-stone-200 px-2 py-0.5 text-stone-400 font-mono tracking-normal">{{ spec.exp }} Yrs Exp</span>
+              <div class="space-y-2 px-8 md:px-10">
+                <span class="text-[#D4AF37] tracking-[0.3em] text-[10px] uppercase font-bold block">// Selected Service Ritual</span>
+                <h2 class="text-3xl font-light text-stone-900" style="font-family: 'Playfair Display', serif;">
+                  {{ selectedService.name }} Options
+                </h2>
+                <div class="text-stone-500 text-xs font-light leading-relaxed max-h-24 overflow-y-auto" v-html="selectedService.description || 'Premium standard menu options available for request.'">
+                </div>
               </div>
-              
-              <h3 class="text-2xl text-stone-900 font-light mb-4" style="font-family: 'Playfair Display', serif;">
-                {{ spec.name }}
-              </h3>
-              
-              <p class="text-stone-500 text-xs font-light leading-relaxed italic mb-8 border-l border-stone-200 pl-4">
-                "Dedicated to transforming structural balance while honoring the underlying health and texture profile of each individual visitor."
-              </p>
+
+              <div class="space-y-4 px-8 md:px-10">
+                <div 
+                  v-for="(tier, idx) in derivedTiers" 
+                  :key="idx"
+                  class="bg-white border border-stone-200/80 p-5 transition-all duration-300 hover:border-[#D4AF37] hover:shadow-md flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+                >
+                  <div>
+                    <h4 class="font-serif text-lg text-stone-900 font-light">{{ tier.name }}</h4>
+                    <p class="text-[11px] text-stone-400 font-mono tracking-wider mt-0.5">Custom Suite Tiers</p>
+                  </div>
+
+                  <div class="flex items-center justify-between sm:justify-end gap-4">
+                    <span class="text-lg font-serif text-stone-900 border-b border-stone-200 pb-0.5">${{ tier.price }}</span>
+                    
+                    <div class="flex items-center gap-2">
+                      <button 
+                        @click="toggleFavorite(tier.name)"
+                        class="p-2 border border-stone-200 text-stone-400 hover:text-rose-500 hover:border-rose-200 transition-all duration-300 active:scale-75"
+                        :class="{ 'text-rose-500 border-rose-200 bg-rose-50/50': isFavorite(tier.name) }"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 transition-transform duration-300" :class="{ 'scale-110': isFavorite(tier.name) }" :fill="isFavorite(tier.name) ? 'currentColor' : 'none'" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                        </svg>
+                      </button>
+
+                      <button 
+                        @click="addToCart(tier)"
+                        class="bg-stone-900 hover:bg-[#D4AF37] text-white text-[10px] tracking-widest uppercase font-bold px-3 py-2 transition-all duration-300 active:scale-95 flex items-center gap-1.5"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                        Add
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            <div class="pt-6 border-t border-stone-100">
+            <div class="p-8 md:p-10 pt-6 border-t border-stone-200 space-y-3 bg-[#FAF6F0] sticky bottom-0 z-20">
               <router-link 
-                :to="`/book?specialist=${spec.name}&service=${serviceType}`"
-                class="w-full text-center block border border-stone-900 hover:bg-stone-900 hover:text-white text-stone-900 text-[11px] tracking-widest uppercase font-bold py-4 transition-all duration-300"
+                :to="`/book?service=${selectedService.id}`"
+                class="w-full text-center block text-[11px] tracking-[0.25em] uppercase font-bold text-white bg-stone-900 hover:bg-[#D4AF37] py-4 transition-all duration-300"
               >
-                Reserve With {{ spec.name.split(' ')[0] }}
+                Book Session
               </router-link>
+              <button @click="closeServiceOptions" class="w-full text-center block text-[10px] tracking-widest uppercase font-bold text-stone-400 hover:text-stone-700 transition-colors py-1">
+                Close Menu
+              </button>
             </div>
+
           </div>
-        </div>
-
+        </Transition>
       </div>
-    </section>
+    </Transition>
 
-    <!-- CORE PHILOSOPHY: Grid of Values -->
     <section class="pt-32 max-w-7xl mx-auto px-6 lg:px-16 relative z-10" data-aos="fade-up" data-aos-duration="1000">
       <div class="bg-white border border-stone-200/60 p-10 md:p-16 relative overflow-hidden">
         
         <div class="max-w-3xl mb-20">
           <span class="text-xs text-[#D4AF37] uppercase tracking-[0.4em] font-bold block mb-3">// Our Signature Approach</span>
           <h3 class="text-3xl md:text-4xl text-stone-900 font-light tracking-tight" style="font-family: 'Playfair Display', serif;">
-            {{ current.benefitsTitle || 'The Maison Way' }}
+            The Maison Way
           </h3>
         </div>
         
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-8">
           <div 
-            v-for="(benefit, index) in current.benefits" 
+            v-for="(benefit, index) in standardBenefits" 
             :key="benefit.title"
             class="space-y-4 border-t border-stone-200 pt-6 relative group"
           >
-            <!-- Animated Gold Indicator underneath item rows -->
             <div class="absolute top-0 left-0 w-0 h-px bg-[#D4AF37] group-hover:w-full transition-all duration-500"></div>
 
             <span class="font-mono text-xs text-[#D4AF37] block font-bold">
@@ -170,19 +210,65 @@
       </div>
     </section>
 
+    <Transition name="pop">
+      <div v-if="toast" class="fixed bottom-10 left-1/2 transform -translate-x-1/2 bg-stone-900 text-[#FAF6F0] px-6 py-3 shadow-2xl z-50 text-[11px] font-mono tracking-widest uppercase border border-[#D4AF37]/20 flex items-center gap-3">
+        <span class="w-1.5 h-1.5 bg-[#D4AF37] rounded-full animate-ping"></span>
+        {{ toast }}
+      </div>
+    </Transition>
+
   </div>
 </template>
+
+
 
 <script setup>
 import { computed, ref, onMounted } from "vue"
 import { useRoute } from "vue-router"
-import { loadStudioServices } from "../services/service"
+import { loadStudioProducts } from "../services/service"
 
 const route = useRoute()
-const serviceType = route.params.type
+const serviceType = route.params.type || "hair"
 
-const services = ref([])
+const products = ref([])
+const isLoading = ref(true)
+const selectedService = ref(null)
+const favList = ref([])
+const toast = ref("")
 
+const getServiceImage = (item) => {
+  // 1. Target the exact structure: item.main_image.path
+  let imgPath = item?.main_image?.path || null
+
+  // 2. If main_image missing, check the fallback gallery array pattern: item.gallery[0].media.path
+  if (!imgPath && item?.gallery?.[0]) {
+    imgPath = item.gallery[0].media?.path || item.gallery[0].path || null
+  }
+
+  // 3. Fallback if no valid path string was discovered
+  if (!imgPath || typeof imgPath !== 'string') {
+    return "https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=800&q=80"
+  }
+
+  const cleanPath = imgPath.trim()
+
+  // 4. Attach base domain cleanly based on how the path starts
+  if (cleanPath.startsWith("/")) {
+    return `https://api.osimart.com${cleanPath}`
+  } else if (!cleanPath.startsWith("http://") && !cleanPath.startsWith("https://")) {
+    return `https://api.osimart.com/${cleanPath}`
+  }
+
+  return cleanPath
+}
+
+const SERVICE_MAP = {
+  hair: ["hair", "hair service", "haircut", "hair treatments", "hair coloring", "hair styling"],
+  nails: ["nail", "manicure", "pedicure", "gel", "acrylic"],
+  makeup: ["makeup", "bridal", "event makeup", "natural makeup", "eyes", "lips", "face"],
+  massage: ["massage", "aromatherapy", "deep tissue", "swedish", "hot stone"],
+  laser: ["laser", "pigmentation", "acne", "skin", "rejuvenation"]
+}
 /* ================= NORMALIZER ================= */
 const normalize = (str) =>
   (str || "")
@@ -191,62 +277,129 @@ const normalize = (str) =>
     .trim()
     .replace(/\s+/g, " ")
 
-/* ================= LOAD API SERVICES ================= */
+/* ================= LOAD API ================= */
 onMounted(async () => {
   try {
-    console.log("📡 Loading services...")
+    isLoading.value = true
 
-    const data = await loadStudioServices()
+    console.log("📡 Loading active studio products...")
+    const data = await loadStudioProducts()
 
-    console.log("📦 SERVICES API:", data)
+    products.value = Array.isArray(data) ? data : []
 
-    if (Array.isArray(data)) {
-      services.value = data
-    } else {
-      services.value = []
-    }
+    console.log("📦 PRODUCTS LOADED:", products.value.length)
+    console.log("🔍 FULL SAMPLE PRODUCT:", JSON.stringify(products.value[0], null, 2))
+
+    // 🔥 DEBUG TABLE (REQUESTED)
+   console.table(
+  products.value.map(p => ({
+    name: p.name,
+    category: p.categories?.[0]?.category?.name || "NO_CATEGORY",
+    parent: p.categories?.[0]?.category?.parent_category?.name || "NO_PARENT",
+    subcategory: p.categories?.[0]?.category?.slugified_name || "NO_SLUG"
+  }))
+)
 
   } catch (err) {
-    console.error("❌ Failed to load services:", err)
-    services.value = []
+    console.error("❌ API ERROR:", err)
+    products.value = []
+  } finally {
+    isLoading.value = false
   }
 })
 
-/* ================= FIXED FILTER (IMPORTANT) ================= */
 const filteredServices = computed(() => {
-  if (!services.value.length) return []
+  if (!products.value.length) return []
 
-  return services.value.filter((s) => {
-    const category =
-      s.category?.name ||   // API style 1
-      s.category ||         // API style 2
-      s.service_category?.name || // API style 3
-      ""
+  const normType = normalize(serviceType)
 
-    return normalize(category) === normalize(serviceType)
+  return products.value.filter((p) => {
+    const category = p.categories?.[0]?.category
+    if (!category) return false
+
+    const parent = normalize(category.parent_category?.name)
+    const slug = normalize(category.slugified_name || "")
+    const name = normalize(category.name || "")
+
+    // 1. MUST be under Services
+    if (parent !== "services") return false
+
+    // 2. STRONG MATCH using slug (this is the real fix)
+    const matchesType =
+      slug.includes(`services-${normType}`) ||
+      slug.startsWith(`services-${normType}`) ||
+      name.includes(normType)
+
+    return matchesType
   })
 })
 
+/* ================= VARIANTS (PEDICURE / MANICURE / ETC) ================= */
+const derivedTiers = computed(() => {
+  if (!selectedService.value) return []
 
-const data ={
- hair: {
-    title: "Hair Service",
-    desc: "Luxury cuts, coloring & styling.",
-    services: [
-      { icon:"✂️", name:"Haircut", slug:"haircut", desc:"Precision cuts", price:"$30-$80", time:"30-60 min" },
-      { icon:"🎨", name:"Coloring", slug:"coloring", desc:"Balayage & dye", price:"$60-$200", time:"1-3 hrs" },
-      { icon:"💆", name:"Treatments", slug:"treatments", desc:" Keratin, repair, hydration & scalp care.", price:"$50-$150", time:"45-120 min" },
-      { icon:"👰", name:"Event Styling", slug:"event-styling", desc:"Bridal & special occasion styling", price:"$80-$300", time:"1-3 hrs" },
-    ],
-    specialists: [
-      { name:"Sarah Akiki", role:"Stylist", rating:"4.9", exp:3, img:"/images/sarah.jpg" }, 
-      {name:"Miriam Younes", role:"Color Specialist", rating:"4.8", exp:4, img:"/images/miriam.jpg"},
-      {name:"Nelly Rizk", role:"Event Stylist", rating:"5", exp:6, img:"/images/nelly.jpg"}
-    ],
+  const variants =
+    selectedService.value.product_variants ||
+    selectedService.value.vary_by?.[0]?.values ||
+    []
 
-    benefitsTitle: "Why Choose Our Hair Services?",
-benefits: [
-  {
+  return variants.map(v => ({
+    name: v.name || v.values?.[0]?.name || "Option",
+    price: v.price || 0
+  }))
+})
+
+/* ================= SERVICE VARIANTS (OPTIONAL DRILLDOWN) ================= */
+const serviceVariants = computed(() => {
+  if (!selectedService.value) return []
+
+  const base = normalize(selectedService.value.name || "")
+
+  return products.value.filter((p) => {
+    if (p.id === selectedService.value.id) return false
+
+    const name = normalize(p.name || p.title || "")
+    const desc = normalize(p.description || "")
+
+    return name.includes(base) || desc.includes(base)
+  })
+})
+
+/* ================= ACTIONS ================= */
+const openServiceOptions = (item) => {
+  selectedService.value = item
+}
+
+const closeServiceOptions = () => {
+  selectedService.value = null
+}
+
+const toggleFavorite = (name) => {
+  if (favList.value.includes(name)) {
+    favList.value = favList.value.filter(x => x !== name)
+    triggerToast("Removed from favorites")
+  } else {
+    favList.value.push(name)
+    triggerToast("Saved to favorites ✨")
+  }
+}
+
+const isFavorite = (name) => favList.value.includes(name)
+
+const addToCart = (tier) => {
+  triggerToast(`Added ${tier.name} to Cart 🛍️`)
+}
+
+const triggerToast = (msg) => {
+  toast.value = msg
+  setTimeout(() => {
+    if (toast.value === msg) toast.value = ""
+  }, 2300)
+}
+
+/* ================= STATIC DATA ================= */
+const data = {
+  hair: { benefits: [ {
     title: "Expert Stylists",
     desc: "Professional hair specialists trained in the latest cutting, coloring, and styling techniques."
   },
@@ -261,30 +414,8 @@ benefits: [
   {
     title: "Luxury Experience",
     desc: "Relax in a welcoming environment while enjoying exceptional care and attention."
-  }
-]
-  },
-
-  nails: {
-    title: "Nail Service",
-    desc: "  Elegant manicures, luxury pedicures, and creative nail art designed to match your unique style.",
-    services: [
-      { icon:"💅", name:"Manicure", slug:"manicure", desc:"Classic manicure with professional nail care.", price:"$20-$40", time:"45-90 min" },
-      { icon:"🦶", name:"Pedicure", slug:"pedicure", desc:"Luxury foot care and relaxing treatment.", price:"$25-$50", time:"60-120 min" },
-      { icon:"🎨", name:"Nail Art", slug:"nail-art", desc:"Creative designs customized to your taste.", price:"$15-$60", time:"30-90 min" },
-      { icon:"✨", name:"Gel & Acrylic", slug:"gel-acrylic", desc:"Long-lasting extensions and premium finishes.", price:"$40-$90", time:"60-120 min" }
-    ],
-    specialists: [
-      { name:"Maya Rahme", role:"Senior Nail Artist", rating:"4.9", exp:4, img:"/images/maya.jpg" },
-       { name:"Rita Khoury", role:" Nail Art Specialist", rating:"4.8", exp:5, img:"/images/rita.jpg" },
-        { name:"Jessica Haddad", role:"Gel & Acrylic Expert", rating:"5", exp:6, img:"/images/jessica.jpg" }
-        
-    ],
-
-
-    benefitsTitle: "Why Choose Our Nail Services?",
-benefits: [
-  {
+  }] },
+  nails: { benefits: [  {
     title: "Clean & Safe",
     desc: "Strict hygiene and sterilized tools."
   },
@@ -299,27 +430,8 @@ benefits: [
   {
     title: "Skilled Technicians",
     desc: "Precise and detail-focused specialists."
-  }
-]   
-  },
-
-  makeup: {
-    title: "Makeup Service",
-    desc: " Professional makeup services designed to enhance your natural beauty for every occasion.",
-    services: [
-      { icon:"💄", name:"Bridal Makeup", slug:"bridal-makeup", desc:"Luxury bridal looks tailored for your special day.", price:"$120-$350", time:"2-3 hrs" },
-      { icon:"✨", name:"Event Makeup", slug:"event-makeup", desc:"Glamorous makeup for parties and special occasions.", price:"$70-$150", time:"1-2 hrs" },
-      { icon:"🌸", name:"Natural Makeup", slug:"natural-makeup", desc:"Soft and elegant everyday beauty looks.", price:"$50-$100", time:"1-2 hrs" },
-      { icon:"📸", name:"Photoshoot Makeup", slug:"photoshoot-makeup", desc:"Camera-ready professional makeup application.", price:"$80-$180", time:"1-2 hrs" }
-    ],
-    specialists: [
-      { name:"Charbel Obeid", role:"Senior Makeup Artist", rating:"5.0", exp:8, img:"/images/charbel.jpg" },
-      { name:"Lara Haddad", role:"Bridal Makeup Expert", rating:"4.9", exp:6, img:"/images/lara.jpg" },
-      { name:"Julia Khoury", role:"Event Makeup Artist", rating:"4.8", exp:5, img:"/images/julia.jpg" },
-    ],
-    benefitsTitle: "Why Choose Our Makeup Services?",
-benefits: [
-  {
+  }] },
+  makeup: { benefits: [ {
     title: "Pro Artists",
     desc: "Experienced in bridal and event makeup."
   },
@@ -334,28 +446,8 @@ benefits: [
   {
     title: "All Occasions",
     desc: "Perfect for events, weddings, and photoshoots."
-  }
-]
-  },
-
-  massage: {
-    title: "Massage Service",
-    desc: "   Relax, recharge, and restore your wellbeing with our luxury massage treatments.",
-    services: [
-      { icon:"🌿", name:"Swedish Massage", slug:"swedish-massage", desc:"Gentle full-body relaxation therapy.", price:"$50-$90", time:"60-120 min" },
-      { icon:"💪", name:"Deep Tissue", slug:"deep-tissue", desc:"Target muscle tension and chronic pain.", price:"$70-$120", time:"60-90 min" },
-      { icon:"🔥", name:"Hot Stone", slug:"hot-stone", desc:"Heated stones for deep relaxation.", price:"$80-$130", time:"75 min" },
-      { icon:"🌸", name:"Aromatherapy", slug:"aromatherapy", desc:"Essential oils for mind and body balance.", price:"$60-$100", time:"60 min" }
-    ],
-    specialists: [
-       { name:"Amir Hannah", role:"Senior Therapist", rating:"4.9", exp:7, img:"/images/amir.jpg" },
-       { name:"Nour Abou Khalil", role:"Wellness Specialist", rating:"5.0", exp:8, img:"/images/nour.jpg" },
-       { name:"Elie Haddad", role:"Deep Tissue Expert", rating:"4.8", exp:6, img:"/images/elie.jpg" },
-      
-    ],
-    benefitsTitle: "Why Choose Our Massage Services?",
-benefits: [
-  {
+  }] },
+  massage: { benefits: [  {
     title: "Certified Therapists",
     desc: "Trained wellness professionals."
   },
@@ -370,28 +462,8 @@ benefits: [
   {
     title: "Calm Space",
     desc: "Relaxing and peaceful environment."
-  }
-]
-
-  },
-
-  laser: {
-    title: "Laser Service",
-    desc: "Advanced laser technology for smooth skin, rejuvenation, and long-lasting confidence.",
-    services: [
-      { icon:"✨", name:"Hair Removal", slug:"laser-hair-removal", desc:"Long-lasting smooth skin with professional laser treatment.", price:"$40-$250", time:"30-90 min" },
-    { icon:"🌟", name:"Skin Rejuvenation", slug:"laser-skin-rejuvenation", desc:" Improve skin texture, tone, and youthful appearance.", price:"$80-$180", time:"45-60 min" },
-    { icon:"💎", name:"Acne Treatment", slug:"laser-acne-treatment", desc:"Reduce acne and improve skin clarity using laser therapy.", price:"$70-$150", time:"30-60 min" },
-    { icon:"☀️", name:"Pigmentation Removal", slug:"laser-pigmentation-removal", desc:"Target dark spots and uneven skin tone.", price:"$90-$200", time:"45-75 min" }
-    ],
-    specialists: [
-       { name:"Rania Khoury", role:"Senior Laser Technician", rating:"5", exp:8, img:"/images/rania.jpg" },
-      { name:"Carla Saad", role:"Skin Rejuvenation Expert", rating:"4.9", exp:6, img:"/images/carla.jpg" },
-      { name:"Melissa Nader", role:"Advanced Laser Specialist", rating:"4.8", exp:5, img:"/images/melissa.jpg" },
-    ],
-    benefitsTitle: "Why Choose Our Laser Treatments?",
-benefits: [
-  {
+  }] },
+  laser: { benefits: [{
     title: "Safe Technology",
     desc: "FDA-approved equipment and procedures."
   },
@@ -406,9 +478,42 @@ benefits: [
   {
     title: "Personalized Care",
     desc: "Customized plans based on your skin needs."
-  }
-]
-  }
-};
+  }] }
+}
+
 const current = computed(() => data[serviceType] || data.hair)
+const standardBenefits = computed(() => current.value.benefits)
 </script>
+
+<style scoped>
+/* High-End Drawer Panel Transitions */
+.fade-enter-active, .fade-leave-active {
+  transition: opacity 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+}
+.fade-enter-from, .fade-leave-to {
+  opacity: 0;
+}
+
+.slide-enter-active, .slide-leave-active {
+  transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.slide-enter-from, .slide-leave-to {
+  transform: translateX(100%);
+}
+
+/* Fluid Micro-Toast Pop Notice */
+.pop-enter-active {
+  animation: pop-up 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.pop-leave-active {
+  transition: opacity 0.25s linear;
+}
+.pop-leave-to {
+  opacity: 0;
+}
+
+@keyframes pop-up {
+  0% { transform: translate(-50%, 1.5rem) scale(0.9); opacity: 0; }
+  100% { transform: translate(-50%, 0) scale(1); opacity: 1; }
+}
+</style>
