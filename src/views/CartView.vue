@@ -9,7 +9,7 @@
         <div class="w-20 h-0.5 bg-[#D4AF37] mx-auto rounded-full"></div>
       </div>
 
-      <div v-if="!cartStore.items.length" class="text-center py-16 text-stone-400">
+      <div v-if="!allCartItems.length" class="text-center py-16 text-stone-400">
         <i class="fas fa-shopping-bag text-5xl mb-4 opacity-50"></i>
         <p>Your cart is empty</p>
 
@@ -34,13 +34,8 @@
               <img :src="item.image" class="w-24 h-24 object-cover rounded-xl" />
 
               <div class="flex-1">
-                <h3 class="font-semibold text-stone-800">
-                  {{ item.name }}
-                </h3>
-
-                <p class="text-amber-700 font-bold mt-1">
-                  ${{ item.price.toLocaleString() }}
-                </p>
+                <h3 class="font-semibold text-stone-800">{{ item.name }}</h3>
+                <p class="text-amber-700 font-bold mt-1">${{ item.price.toLocaleString() }}</p>
 
                 <div class="flex items-center gap-3 mt-2">
                   <button
@@ -50,9 +45,7 @@
                     -
                   </button>
 
-                  <span class="w-8 text-center font-medium">
-                    {{ item.quantity }}
-                  </span>
+                  <span class="w-8 text-center font-medium">{{ item.quantity }}</span>
 
                   <button
                     @click="increaseQty(item.id)"
@@ -81,15 +74,11 @@
               class="p-5 flex justify-between items-center bg-amber-50/30"
             >
               <div>
-                <h3 class="font-semibold text-stone-800">
-                  {{ item.name }}
-                </h3>
+                <h3 class="font-semibold text-stone-800">{{ item.name }}</h3>
                 <p class="text-sm text-stone-500">Service</p>
               </div>
 
-              <div class="font-bold text-amber-700">
-                ${{ item.price.toLocaleString() }}
-              </div>
+              <div class="font-bold text-amber-700">${{ item.price.toLocaleString() }}</div>
 
               <button
                 @click="removeItem(item.id)"
@@ -104,9 +93,7 @@
 
         <div class="lg:w-96">
           <div class="bg-white rounded-2xl shadow-md p-6 sticky top-32">
-            <h3 class="text-xl font-playfair font-semibold mb-4">
-              Order Summary
-            </h3>
+            <h3 class="text-xl font-playfair font-semibold mb-4">Order Summary</h3>
 
             <div class="space-y-3 border-b pb-4 text-stone-600">
               <div class="flex justify-between">
@@ -142,87 +129,50 @@
 <script setup>
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { useCartStore } from '../composables/cart'
+import { useCart } from '../composables/useCart'
 import { useAuthStore } from '../composables/auth'
 
 const router = useRouter()
-const cartStore = useCartStore()
 const authStore = useAuthStore()
+const cartStore = useCart()
 
-/* =========================
-   CHECKOUT INTERCEPTOR
-========================= */
 const handleCheckout = () => {
-  console.log("Button clicked! Auth state:", authStore.isAuthenticated)
-  
   if (!authStore.isAuthenticated) {
-    // 🔐 Open the login modal if not logged in
     if (typeof authStore.openAuthModal === 'function') {
       authStore.openAuthModal('login')
     } else {
-      // Fallback if modal state mapping is unmounted
       alert("Please log in to proceed to checkout.")
     }
   } else {
-    // 🚀 Authenticated user moves forward
-    console.log("Attempting vue-router redirection...")
-    
-    router.push('/checkout').catch(err => {
-      console.warn("Vue Router failed to redirect. Firing window location fallback.", err)
-      // Hard fallback bypass if Vue Router is misconfigured or cached
+    router.push('/checkout').catch(() => {
       window.location.href = '/checkout'
     })
   }
 }
 
-/* =========================
-   FILTERED ITEMS
-========================= */
-const productItems = computed(() =>
-  cartStore.items.filter(i => i.type === 'product')
-)
+/* ====================================
+   DATA MAPPING (Unwrapped reactive refs)
+==================================== */
+const allCartItems = computed(() => cartStore.cart.value)
+const productItems = computed(() => cartStore.productItems.value)
+const serviceItems = computed(() => cartStore.serviceItems.value)
 
-const serviceItems = computed(() =>
-  cartStore.items.filter(i => i.type === 'service')
-)
-
-/* =========================
-   CART ACTIONS (WITH AUTO-SAVE)
-========================= */
-function increaseQty(id) {
-  const item = cartStore.items.find(i => i.id === id)
-  if (item) {
-    item.quantity++
-    if (typeof cartStore.saveToLocalStorage === 'function') {
-      cartStore.saveToLocalStorage()
-    }
-  }
-}
-
-function decreaseQty(id) {
-  const item = cartStore.items.find(i => i.id === id)
-  if (item && item.quantity > 1) {
-    item.quantity--
-    if (typeof cartStore.saveToLocalStorage === 'function') {
-      cartStore.saveToLocalStorage()
-    }
-  }
-}
-
-function removeItem(id) {
-  cartStore.removeItem(id)
-}
-
-/* =========================
-   FINANCIAL CALCULATIONS
-========================= */
-const subtotal = computed(() => {
-  return cartStore.items.reduce((sum, item) => {
-    const qty = item.type === 'product' ? item.quantity : 1
-    return sum + item.price * qty
-  }, 0)
-})
-
+const subtotal = computed(() => cartStore.totalPrice.value)
 const tax = computed(() => subtotal.value * 0.08)
 const total = computed(() => subtotal.value + tax.value)
+
+/* ====================================
+   ACTIONS
+==================================== */
+async function increaseQty(id) {
+  await cartStore.increaseQuantity(id)
+}
+
+async function decreaseQty(id) {
+  await cartStore.decreaseQuantity(id)
+}
+
+async function removeItem(id) {
+  await cartStore.removeFromCart(id)
+}
 </script>

@@ -94,12 +94,12 @@
 <script setup>
 import { ref } from 'vue'
 import { useWishlistStore } from '../../composables/wishlist'
-import { useCartStore } from '../../composables/cart'
+import { useCart } from '../../composables/useCart'
 import { useAuthStore } from '../../composables/auth'
 
 // Stores Hook Connectors
 const wishlistStore = useWishlistStore()
-const cartStore = useCartStore()
+const cartStore = useCart()
 const authStore = useAuthStore()
 
 const addingToCartId = ref(null)

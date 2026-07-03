@@ -227,6 +227,7 @@ import { computed, ref, onMounted } from "vue"
 import { useRoute } from "vue-router"
 import { loadStudioProducts } from "../services/service"
 
+
 const route = useRoute()
 const serviceType = route.params.type || "hair"
 

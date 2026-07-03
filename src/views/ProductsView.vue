@@ -188,15 +188,15 @@
 <script setup>
 import { ref, computed, nextTick, onMounted } from 'vue'
 import { useWishlistStore } from '../composables/wishlist'
-import { useCartStore } from '../composables/cart'
+import { useCart } from '../composables/useCart'
 import { useAuthStore } from '../composables/auth'
 import { useScrollAnimation } from '../composables/useScrollAnimation'
 import { loadStudioProducts } from '../services/product.js'
 
 /* ================= STORES ================= */
 const wishlistStore = useWishlistStore()
-const cartStore = useCartStore()
 const authStore = useAuthStore()
+const cartStore = useCart()
 
 /* ================= STATE ================= */
 const activeCategory = ref(null)
@@ -403,11 +403,13 @@ const handleWishlistToggle = (product) => {
 
 /* ================= CART ================= */
 const handleAddToCart = (product) => {
+  console.log("[PRODUCTS] Add to cart clicked:", product.name, "variantId:", product.variantId)
   addingToCartId.value = product.id
 
   cartStore.addToCart(
     {
       id: product.id,
+      variantId: product.variantId, // FIXED: cart API needs the ProductVariant id, not the product id
       name: product.name,
       price: product.price,
       image: product.image,
@@ -439,10 +441,16 @@ onMounted(async () => {
     if (Array.isArray(liveData) && liveData.length > 0) {
       products.value = liveData.map(item => {
         console.log({
-  name: item.name,
-  apiCategories: item.categories?.map(c => c.category?.name),
-  varyBy: item.vary_by,
-})
+          name: item.name,
+          apiCategories: item.categories?.map(c => c.category?.name),
+          varyBy: item.vary_by,
+        })
+        console.log("VARIANTS for", item.name, ":", JSON.stringify(item.product_variants, null, 2))
+
+        // FIXED: grab the variant id — the cart API requires this, not the product id
+        const variantId = item.product_variants?.[0]?.id || item.id
+        console.log("[PRODUCT MAP] resolved variantId for", item.name, ":", variantId)
+
         // 1. Extract nested image path from main_image object
         const rawImagePath = item.main_image?.path || item.image_url || item.image
         let finalImage = '/images/p1.jpg'
@@ -523,6 +531,7 @@ const subcategoryName =
 
         return {
     id: item.id,
+    variantId, // FIXED: carried through to cart add so useCart.js can sync with the real variant id
     image: finalImage,
     name: item.name,
     category: categoryName,
@@ -541,7 +550,8 @@ const subcategoryName =
   products.value.map(p => ({
     name: p.name,
     category: p.category,
-    subcategory: p.subcategory
+    subcategory: p.subcategory,
+    variantId: p.variantId
   }))
 )
     }
