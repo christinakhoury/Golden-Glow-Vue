@@ -1,7 +1,6 @@
 <template>
   <main class="min-h-screen bg-[#faf8f5] text-stone-800 font-sans antialiased selection:bg-amber-200">
     
-    <!-- HEADER HERO SECTION -->
     <section class="pt-28 md:pt-36 pb-12 md:pb-16 px-5 bg-gradient-to-br from-[#f5e6d8] via-[#fdfbf7] to-[#efe0d2] relative overflow-hidden">
       <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(212,175,55,0.05),transparent_50%)]"></div>
       <div class="max-w-7xl mx-auto text-center relative z-10">
@@ -27,10 +26,8 @@
       </div>
     </section>
 
-    <!-- CONTENT FLOW WRAPPER -->
     <transition name="fade-slide" mode="out-in">
       
-      <!-- VIEW A: COLLECTIONS DASHBOARD -->
       <div v-if="!activeCategory" key="dashboard" class="space-y-0">
         <section 
           v-for="(config, index) in categoryConfigs" 
@@ -93,10 +90,8 @@
         </section>
       </div>
 
-      <!-- VIEW B: FILTERED PRODUCTS SHOWCASE -->
       <div v-else key="filtered-showcase" class="max-w-7xl mx-auto px-5 md:px-8 py-12">
         
-        <!-- Subcategory Navigation Pill Filter Bar -->
         <div class="flex flex-wrap justify-center gap-3 mb-16">
           <button 
             @click="activeSubcategory = null"
@@ -116,14 +111,12 @@
           </button>
         </div>
 
-        <!-- Products Grid Layout -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-6 gap-y-12">
           <div 
             v-for="product in filteredProducts" 
             :key="product.id"
             class="group relative flex flex-col justify-between bg-white border border-stone-100 p-3 shadow-sm hover:shadow-xl transition-all duration-500"
           >
-            <!-- Media & Interaction Anchor Layout -->
             <div class="w-full aspect-[3/4] bg-stone-50 relative overflow-hidden mb-4">
               <img 
                 :src="product.image" 
@@ -134,7 +127,6 @@
                 {{ product.subcategory }}
               </span>
               
-              <!-- Wishlist Store Trigger Button -->
               <button 
                 @click="handleWishlistToggle(product)"
                 class="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 backdrop-blur-xs shadow-md flex items-center justify-center transition-colors duration-300 z-20"
@@ -144,38 +136,73 @@
               </button>
             </div>
 
-            <!-- Details Description & Store CTA Actions -->
             <div class="px-1 flex-1 flex flex-col justify-between">
               <div>
                 <h3 class="font-playfair text-lg text-stone-900 mb-1 group-hover:text-[#D4AF37] transition-colors duration-300">
                   {{ product.name }}
                 </h3>
-                <p class="text-stone-400 text-xs font-light tracking-wide mb-4 capitalize">
+                <p class="text-stone-400 text-xs font-light tracking-wide mb-3 capitalize">
                   Premium curated selection
                 </p>
+
+                <div v-if="product.variants && product.variants.length > 1" class="mb-4">
+  <span class="text-[10px] uppercase tracking-wider text-stone-400 block mb-1.5 font-medium">
+    Select Option:
+  </span>
+  <div class="flex flex-wrap gap-1.5">
+    <button
+  v-for="variant in product.variants"
+  :key="variant.id"
+  @click="product.selectedVariant = variant"
+  class="px-2.5 py-1 text-[11px] font-light tracking-wide border transition-all duration-300 rounded-none relative"
+  :class="product.selectedVariant?.id === variant.id 
+    ? 'border-stone-900 bg-stone-900 text-white font-normal shadow-xs' 
+    : 'border-stone-200 text-stone-600 bg-stone-50/50 hover:border-stone-400'"
+>
+  <!-- checks every potential backend naming path -->
+  {{ 
+    variant.value || 
+    variant.attribute_value || 
+    variant.option_value ||
+    variant.attribute_values?.[0]?.value || 
+    variant.values?.[0]?.name ||
+    'Premium Option'
+  }}
+</button>
+  </div>
+</div>
               </div>
               
               <div class="flex items-center justify-between border-t border-stone-100 pt-4 mt-auto">
                 <span class="text-stone-900 font-medium text-sm font-serif">
-                  ${{ product.price.toFixed(2) }}
+                  ${{ (product.selectedVariant ? parseFloat(product.selectedVariant.price) : product.price).toFixed(2) }}
                 </span>
                 
-                <!-- Cart Store Trigger Button with feedback states -->
                 <button 
                   @click="handleAddToCart(product)"
                   class="text-xs tracking-widest uppercase font-medium transition-all duration-300 flex items-center gap-1.5"
-                  :class="addingToCartId === product.id ? 'text-emerald-600 scale-95' : 'text-stone-900 hover:text-[#D4AF37]'"
+                  :class="[
+                    addingToCartId === product.id ? 'text-emerald-600 scale-95' : 'text-stone-900 hover:text-[#D4AF37]',
+                    (!product.selectedVariant && product.variants && product.variants.length > 1) ? 'opacity-60 text-stone-400' : ''
+                  ]"
                   :disabled="addingToCartId === product.id"
                 >
                   <i :class="addingToCartId === product.id ? 'fas fa-check-circle' : 'fas fa-shopping-bag text-[11px]'"></i>
-                  {{ addingToCartId === product.id ? 'Added' : 'Add to Cart' }}
+                  <span>
+                    {{ 
+                      addingToCartId === product.id 
+                        ? 'Added' 
+                        : (!product.selectedVariant && product.variants && product.variants.length > 1) 
+                          ? 'Select Option' 
+                          : 'Add to Cart' 
+                    }}
+                  </span>
                 </button>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Fallback Placeholder Context State -->
         <div v-if="filteredProducts.length === 0" class="text-center py-24 border border-dashed border-stone-200">
           <p class="text-stone-400 font-light text-sm">No exclusive selections available matching this category segment right now.</p>
         </div>
@@ -252,90 +279,6 @@ const categoryConfigs = [
   }
 ]
 
-const sampleProducts = [
-  // hair accessories 
-  { id: 101, category: 'Hair', subcategory: 'Accessories', name: 'Ola Set (4 pieces)', price: 35.00, image: '/images/ha1.jpeg' },
-  { id: 102, category: 'Hair', subcategory: 'Accessories', name: 'Nivi Homa', price: 20.00, image: '/images/ha2.jpeg' },
-  { id: 103, category: 'Hair', subcategory: 'Accessories', name: 'Minimalist', price: 18.00, image: '/images/ha3.jpeg' },
-  // shampoo
-  { id: 104, category: 'Hair', subcategory: 'Dry Shampoo', name: 'Jupiter Shampoo', price: 40.00, image: '/images/hs1.jpeg' },
-  { id: 105, category: 'Hair', subcategory: 'Dry Shampoo', name: 'Power Buf Set', price: 60.00, image: '/images/hs2.jpeg' },
-  { id: 106, category: 'Hair', subcategory: 'Dry Shampoo', name: 'UNEEDMEE', price: 25.00, image: '/images/hs3.jpeg' },
-  // hair mist
-  { id: 107, category: 'Hair', subcategory: 'Hair mists', name: 'Coco Mist', price: 33.00, image: '/images/hm1.jpeg' },
-  { id: 108, category: 'Hair', subcategory: 'Hair mists', name: 'Dreamy Mist', price: 35.00, image: '/images/hm2.jpeg' },
-  { id: 109, category: 'Hair', subcategory: 'Hair mists', name: 'Eleganta Mist', price: 38.00, image: '/images/hm3.jpeg' },
-  // hair oil
-  { id: 110, category: 'Hair', subcategory: 'Hair oils', name: 'Oriko Oil', price: 18.00, image: '/images/ho1.jpeg' },
-  { id: 111, category: 'Hair', subcategory: 'Hair oils', name: 'Dreamy Oil', price: 25.00, image: '/images/ho2.jpeg' },
-  { id: 112, category: 'Hair', subcategory: 'Hair oils', name: 'Maeomo Oil', price: 20.00, image: '/images/ho3.jpeg' },
-
-  // Nail product
-  { id: 202, category: 'Nails', subcategory: 'Press On Nails', name: 'Touche Deluxe Press-On Extensions', price: 15.00, image: '/images/p1.jpg' },
-  { id: 203, category: 'Nails', subcategory: 'Press On Nails', name: 'Lelegance Press-on Nails', price: 15.00, image: '/images/p2.jpg' },
-  { id: 204, category: 'Nails', subcategory: 'Press On Nails', name: 'Lala Press-On Extensions', price: 20.00, image: '/images/p3.jpg' },
-  { id: 205, category: 'Nails', subcategory: 'Press On Nails', name: 'Synddney Press-On Extensions', price: 20.00, image: '/images/p4.jpg' },
-  { id: 206, category: 'Nails', subcategory: 'Press On Nails', name: 'Georgette Press-On Extensions', price: 15.00, image: '/images/p5.jpg' },
-  { id: 201, category: 'Nails', subcategory: 'Press On Nails', name: 'Lilas Press-On Extensions', price: 18.00, image: '/images/p6.jpg' },
-  // nails tools
-  { id: 207, category: 'Nails', subcategory: 'Nails Tools', name: 'Ceel Set', price: 30.00, image: '/images/nt1.jpg' },
-  { id: 208, category: 'Nails', subcategory: 'Nails Tools', name: 'Luxy Scissors (pack of 2)', price: 25.00, image: '/images/nt2.jpg' },
-  { id: 209, category: 'Nails', subcategory: 'Nails Tools', name: 'Vroom vroom ', price: 40.00, image: '/images/nt3.jpg' },
-  { id: 210, category: 'Nails', subcategory: 'Nails Tools', name: 'Mooz ditsie', price: 8.00, image: '/images/nt4.jpg' },
-  // nails care
-  { id: 211, category: 'Nails', subcategory: 'Nail Care', name: 'Cuticle Oil', price: 28.00, image: '/images/nc1.jpg' },
-  { id: 212, category: 'Nails', subcategory: 'Nail Care', name: 'Nail Oil', price: 30.00, image: '/images/nc2.jpg' },
-  { id: 213, category: 'Nails', subcategory: 'Nail Care', name: 'Honori Oil', price: 35.00, image: '/images/nc3.jpg' },
-  
-  // Makeup product 
-  { id: 301, category: 'Makeup', subcategory: 'Eyes', name: 'Coco Maskara', price: 28.00, image:'/images/me2.jpeg' },
-  { id: 302, category: 'Makeup', subcategory: 'Eyes', name: 'Lilo Eyeshadow', price: 48.00, image:'/images/me1.jpeg' },
-  { id: 303, category: 'Makeup', subcategory: 'Eyes', name: 'Sienna Dilena ', price: 40.00, image:'/images/me3.jpeg' },
-  // lips
-  { id: 304, category: 'Makeup', subcategory: 'Lips', name: 'Lollipop gloss ', price: 18.00, image:'/images/ml1.jpeg' },
-  { id: 305, category: 'Makeup', subcategory: 'Lips', name: 'Cherry On Top  ', price: 15.00, image:'/images/ml2.jpeg' },
-  { id: 306, category: 'Makeup', subcategory: 'Lips', name: 'Girlie Pop Set ', price: 20.00, image:'/images/ml3.jpeg' },
-  { id: 307, category: 'Makeup', subcategory: 'Lips', name: 'One Of A Kind ', price: 22.00, image:'/images/ml4.jpeg' },
-  // face 
-  { id: 308, category: 'Makeup', subcategory: 'Face', name: ' Concealer ', price: 22.00, image:'/images/mf1.jpeg' },
-  { id: 309, category: 'Makeup', subcategory: 'Face', name:"Lara's Touch", price: 18.00, image:'/images/mf2.jpeg' },
-  { id: 310, category: 'Makeup', subcategory: 'Face', name: 'Setting Powder ', price: 20.00, image:'/images/mf3.jpeg' },
-  // makeup tools
-  { id: 311, category: 'Makeup', subcategory: 'Makeup tools', name: 'Dinia Set  ', price: 45.00, image:'/images/mt1.jpeg' },
-  { id: 312, category: 'Makeup', subcategory: 'Makeup tools', name: 'Bubbly pop (1piece) ', price: 8.00, image:'/images/mt2.jpeg' },
-  { id: 313, category: 'Makeup', subcategory: 'Makeup tools', name: 'DALANA Brushes (set) ', price: 55.00, image:'/images/mt3.jpeg' },
-  
-  // Massage
-  { id: 401, category: 'Massage', subcategory: 'Face rollers', name: 'Sculpting Nephrite Jade Gua Sha', price: 28.00, image:'/images/fmf1.jpeg'},
-  { id: 402, category: 'Massage', subcategory: 'Face rollers', name: 'Relaxia', price: 35.00, image:'/images/mf2f.jpeg'},
-  { id: 403, category: 'Massage', subcategory: 'Face rollers', name: 'Laluna Set', price: 30.00, image:'/images/fmf3.jpeg'},
-  // massage oils 
-  { id: 404, category: 'Massage', subcategory: 'Massage oils', name: 'Miisica', price: 8.00, image:'/images/mo1.jpeg'},
-  { id: 405, category: 'Massage', subcategory: 'Massage oils', name: 'Leona Oil', price: 18.00, image:'/images/mo2.jpeg'},
-  { id: 406, category: 'Massage', subcategory: 'Massage oils', name: 'Iona', price: 15.00, image:'/images/mo3.jpeg'},
-  // bath salts
-  { id: 407, category: 'Massage', subcategory: 'Bath salts', name: 'Vanilla Bath Salts', price: 20.00, image:'/images/ms1.jpeg'},
-  { id: 408, category: 'Massage', subcategory: 'Bath salts', name: 'Sculpa Bath Salts', price: 22.00, image:'/images/ms2.jpeg'},
-  { id: 409, category: 'Massage', subcategory: 'Bath salts', name: 'Aurora Bath Salts', price: 25.00, image:'/images/ms3.jpeg'},
-  // scented candles 
-  { id: 410, category: 'Massage', subcategory: 'Scented candles', name: 'Echante', price: 30.00, image:'/images/mc1.jpeg'},
-  { id: 411, category: 'Massage', subcategory: 'Scented candles', name: 'Anamolie', price: 30.00, image:'/images/mc2.jpeg'},
-  { id: 412, category: 'Massage', subcategory: 'Scented candles', name: 'Ilalai', price: 30.00, image:'/images/mc3.jpeg'},
-
-  // laser product 
-  { id: 501, category: 'Laser', subcategory: 'Gels', name: 'Post-Laser Hyper-Calming Complex', price: 32.00, image: '/images/lg1.jpeg' },
-  { id: 502, category: 'Laser', subcategory: 'Gels', name: 'Gel', price: 22.00, image: '/images/lg2.jpeg' },
-  { id: 503, category: 'Laser', subcategory: 'Gels', name: 'Post-Laser Gel', price: 25.00, image: '/images/lg3.jpeg' },
-  // machine 
-  { id: 504, category: 'Laser', subcategory: 'Machine', name: 'Luxury Machine', price: 100.00, image: '/images/lm1.jpeg' },
-  { id: 505, category: 'Laser', subcategory: 'Machine', name: 'Machinia ', price: 125.00, image: '/images/lm2.jpeg' },
-  { id: 506, category: 'Laser', subcategory: 'Machine', name: 'La Machina', price: 150.00, image: '/images/lm3.jpeg' },
-  // soothing cream
-  { id: 507, category: 'Laser', subcategory: 'Soothing cream', name: ' cream', price: 20.00, image: '/images/ls1.jpeg' },
-  { id: 508, category: 'Laser', subcategory: 'Soothing cream', name: 'Soothing cream', price: 20.00, image: '/images/ls2.jpeg' },
-  { id: 509, category: 'Laser', subcategory: 'Soothing cream', name: 'Soothing cream', price: 22.00, image: '/images/ls3.jpeg' }
-]
-
 const filteredProducts = computed(() => {
   if (!products.value || products.value.length === 0) return []
   if (!activeCategory.value) return products.value
@@ -347,7 +290,6 @@ const filteredProducts = computed(() => {
     const productCat = normalize(product.category)
     const productSub = normalize(product.subcategory)
 
-    // 🔥 HIGH-END SAFE MATCHING: Check text strings or fallback to partial match
     const isCategoryMatch = productCat === activeCat || productCat.includes(activeCat) || activeCat.includes(productCat)
     if (!isCategoryMatch) return false
 
@@ -372,10 +314,6 @@ const setActiveCategory = (categoryName) => {
   activeSubcategory.value = null
 }
 
-const setActiveSubcategory = (sub) => {
-  activeSubcategory.value = sub
-}
-
 /* ================= CLEAR ================= */
 const clearCategory = () => {
   activeCategory.value = null
@@ -388,13 +326,19 @@ const isItemInWishlist = (id) =>
   wishlistStore.items?.some(item => item.id === id)
 
 const handleWishlistToggle = (product) => {
+  // If product has variants, wishlist the currently selected variant properties or fall back cleanly
+  const currentPrice = product.selectedVariant ? parseFloat(product.selectedVariant.price) : product.price
+  const currentName = product.selectedVariant 
+    ? `${product.name} (${product.selectedVariant.title || product.selectedVariant.name})`
+    : product.name
+
   if (isItemInWishlist(product.id)) {
     wishlistStore.removeFromWishlist(product.id)
   } else {
     wishlistStore.addToWishlist({
       id: product.id,
-      name: product.name,
-      price: product.price,
+      name: currentName,
+      price: currentPrice,
       image: product.image,
       badge: 'Luxury'
     })
@@ -403,15 +347,30 @@ const handleWishlistToggle = (product) => {
 
 /* ================= CART ================= */
 const handleAddToCart = (product) => {
-  console.log("[PRODUCTS] Add to cart clicked:", product.name, "variantId:", product.variantId)
+  if (product.variants && product.variants.length > 1 && !product.selectedVariant) {
+    console.warn("⚠️ Option required before addition can be completed.")
+    return
+  }
+
+  const finalVariantId = product.selectedVariant?.id || product.variantId
+  
+  // Resolve the elegant variant label name
+const variantLabel = product.selectedVariant 
+  ? (product.selectedVariant.value || 
+     product.selectedVariant.attribute_value || 
+     product.selectedVariant.attribute_values?.[0]?.value || 
+     'Premium')
+  : ''
+
+  console.log("[PRODUCTS] Add to cart clicked:", product.name, "variantId:", finalVariantId)
   addingToCartId.value = product.id
 
   cartStore.addToCart(
     {
       id: product.id,
-      variantId: product.variantId, // FIXED: cart API needs the ProductVariant id, not the product id
-      name: product.name,
-      price: product.price,
+      variantId: finalVariantId, 
+      name: variantLabel ? `${product.name} (${variantLabel})` : product.name,
+      price: product.selectedVariant ? parseFloat(product.selectedVariant.price) : product.price,
       image: product.image,
       quantity: 1,
       type: 'product'
@@ -428,8 +387,6 @@ const handleAddToCart = (product) => {
 /* ================= INIT ================= */
 useScrollAnimation()
 
-
-
 onMounted(async () => {
   loading.value = true
 
@@ -440,18 +397,10 @@ onMounted(async () => {
 
     if (Array.isArray(liveData) && liveData.length > 0) {
       products.value = liveData.map(item => {
-        console.log({
-          name: item.name,
-          apiCategories: item.categories?.map(c => c.category?.name),
-          varyBy: item.vary_by,
-        })
-        console.log("VARIANTS for", item.name, ":", JSON.stringify(item.product_variants, null, 2))
-
-        // FIXED: grab the variant id — the cart API requires this, not the product id
-        const variantId = item.product_variants?.[0]?.id || item.id
-        console.log("[PRODUCT MAP] resolved variantId for", item.name, ":", variantId)
-
-        // 1. Extract nested image path from main_image object
+        // Base baseline variant defaults
+        const initialVariantId = item.product_variants?.[0]?.id || item.id
+        
+        // Extract nested image configurations safely
         const rawImagePath = item.main_image?.path || item.image_url || item.image
         let finalImage = '/images/p1.jpg'
         
@@ -462,65 +411,28 @@ onMounted(async () => {
             const cleanPath = rawImagePath.startsWith('/') ? rawImagePath.slice(1) : rawImagePath
             finalImage = `https://api.osimart.com/${cleanPath}`
           }
+          console.log("VARIANTS for", item.name, ":", JSON.stringify(item.product_variants, null, 2))
         }
         
-       const apiCategory =
-    item.categories?.[0]?.category?.name || ""
-const cat = apiCategory.toLowerCase()
+        const apiCategory = item.categories?.[0]?.category?.name || ""
+        const cat = apiCategory.toLowerCase()
+        let categoryName = "Other"
 
-let categoryName = "Other"
+        if (cat.includes("makeup") || cat.includes("eyes") || cat.includes("eye") || cat.includes("lips") || cat.includes("face") || cat.includes("concealer") || cat.includes("brush")) {
+            categoryName = "Makeup"
+        } else if (cat.includes("hair") || cat.includes("dry shampoo") || cat.includes("hair oils") || cat.includes("hair mists") || cat.includes("accessories")) {
+            categoryName = "Hair"
+        } else if (cat.includes("laser") || cat.includes("gels") || cat.includes("machine") || cat.includes("soothing cream")) {
+            categoryName = "Laser"
+        } else if (cat.includes("massage") || cat.includes("roller") || cat.includes("bath") || cat.includes("candle")) {
+            categoryName = "Massage"
+        } else if (cat.includes("nail") || cat.includes("press on")) {
+            categoryName = "Nails"
+        }
+        
+        const subcategoryName = item.vary_by?.[0]?.name || apiCategory
 
-if (
-    cat.includes("makeup") ||
-    cat.includes("eyes") ||
-    cat.includes("eye") ||
-    cat.includes("lips") ||
-    cat.includes("face") ||
-    cat.includes("concealer") ||
-    cat.includes("brush")
-) {
-    categoryName = "Makeup"
-}
-
-else if (
-    cat.includes("hair") ||
-    cat.includes("dry shampoo") ||
-    cat.includes("hair oils") ||
-    cat.includes("hair mists") ||
-    cat.includes("accessories")
-) {
-    categoryName = "Hair"
-}
-
-else if (
-    cat.includes("laser") ||
-    cat.includes("gels") ||
-    cat.includes("machine") ||
-    cat.includes("soothing cream")
-) {
-    categoryName = "Laser"
-}
-
-else if (
-    cat.includes("massage") ||
-    cat.includes("roller") ||
-    cat.includes("bath") ||
-    cat.includes("candle")
-) {
-    categoryName = "Massage"
-}
-
-else if (
-    cat.includes("nail") ||
-    cat.includes("press on")
-) {
-    categoryName = "Nails"
-}
-const subcategoryName =
-    item.vary_by?.[0]?.name || apiCategory
-
-
-        // 3. Convert 'price_range' string (e.g., "60.0 - 130.0") into a baseline float number
+        // Fallback pricing configuration logic
         let finalPrice = 0.00
         if (item.price_range) {
           const basePriceString = item.price_range.split('-')[0].trim()
@@ -529,41 +441,28 @@ const subcategoryName =
           finalPrice = parseFloat(item.price)
         }
 
-        return {
-    id: item.id,
-    variantId, // FIXED: carried through to cart add so useCart.js can sync with the real variant id
-    image: finalImage,
-    name: item.name,
-    category: categoryName,
-    subcategory: subcategoryName,
-    price: finalPrice
-}
+        // Generate full product state model
+        return ref({
+          id: item.id,
+          variantId: initialVariantId, 
+          image: finalImage,
+          name: item.name,
+          category: categoryName,
+          subcategory: subcategoryName,
+          price: finalPrice,
+          // NEW PROPERTIES: Expose all backend alternatives and hold room for active selection
+          variants: item.product_variants || [],
+          selectedVariant: item.product_variants && item.product_variants.length === 1 ? item.product_variants[0] : null
+        }).value
       })
-    } else {
-      console.warn("⚠️ No live array returned. Loading fallback catalog.");
-      products.value = sampleProducts
     }
-
     console.log("✅ PRODUCTS POPULATED:", products.value.length)
-    if (products.value.length > 0) {
-      console.table(
-  products.value.map(p => ({
-    name: p.name,
-    category: p.category,
-    subcategory: p.subcategory,
-    variantId: p.variantId
-  }))
-)
-    }
-
   } catch (err) {
-    console.error("❌ API CRASHED, safely loaded fallbacks:", err)
-    products.value = sampleProducts
+    console.error("❌ API CRASHED:", err)
   } finally {
     loading.value = false
   }
 })
-
 </script>
 
 <style scoped>
@@ -582,7 +481,6 @@ const subcategoryName =
   }
 }
 
-/* Luxury View Transitions swapping dashboard layout for grids smoothly */
 .fade-slide-enter-active,
 .fade-slide-leave-active {
   transition: all 0.5s ease;
@@ -596,7 +494,6 @@ const subcategoryName =
   transform: translateY(-20px);
 }
 
-/* Intersectional Scroll Animations */
 .fade-on-scroll {
   opacity: 0;
   transition: all 0.9s cubic-bezier(0.25, 1, 0.5, 1);
