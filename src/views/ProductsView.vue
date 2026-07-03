@@ -159,15 +159,9 @@
     ? 'border-stone-900 bg-stone-900 text-white font-normal shadow-xs' 
     : 'border-stone-200 text-stone-600 bg-stone-50/50 hover:border-stone-400'"
 >
-  <!-- checks every potential backend naming path -->
-  {{ 
-    variant.value || 
-    variant.attribute_value || 
-    variant.option_value ||
-    variant.attribute_values?.[0]?.value || 
-    variant.values?.[0]?.name ||
-    'Premium Option'
-  }}
+  <!-- FIXED: now uses the same shared resolver as cart/wishlist, so the label
+       shown here always matches what gets saved -->
+  {{ getVariantLabel(variant) }}
 </button>
   </div>
 </div>
@@ -239,6 +233,26 @@ const normalize = (str) =>
     .toLowerCase()
     .trim()
     .replace(/\s+/g, ' ')
+
+/* ================= VARIANT LABEL RESOLVER (FIXED) =================
+   Single source of truth for "what do we call this variant".
+   Previously the option button, handleAddToCart, and handleWishlistToggle
+   each checked a different subset of possible API field names, so the
+   label shown on the button could silently differ from what got saved
+   into the cart or wishlist. Now everything calls this one function. */
+const getVariantLabel = (variant) => {
+  if (!variant) return ''
+  return (
+    variant.value ||
+    variant.attribute_value ||
+    variant.option_value ||
+    variant.attribute_values?.[0]?.value ||
+    variant.values?.[0]?.name ||
+    variant.title ||
+    variant.name ||
+    'Premium Option'
+  )
+}
 
 // Core Dataset Configuration
 const categoryConfigs = [
@@ -326,11 +340,15 @@ const isItemInWishlist = (id) =>
   wishlistStore.items?.some(item => item.id === id)
 
 const handleWishlistToggle = (product) => {
-  // If product has variants, wishlist the currently selected variant properties or fall back cleanly
+  // FIXED: now uses the shared getVariantLabel() resolver instead of
+  // only checking .title/.name, so it matches the button + cart label
   const currentPrice = product.selectedVariant ? parseFloat(product.selectedVariant.price) : product.price
-  const currentName = product.selectedVariant 
-    ? `${product.name} (${product.selectedVariant.title || product.selectedVariant.name})`
+  const variantLabel = product.selectedVariant ? getVariantLabel(product.selectedVariant) : ''
+  const currentName = variantLabel
+    ? `${product.name} (${variantLabel})`
     : product.name
+
+  console.log("[WISHLIST]", isItemInWishlist(product.id) ? "removing" : "adding", currentName)
 
   if (isItemInWishlist(product.id)) {
     wishlistStore.removeFromWishlist(product.id)
@@ -353,16 +371,12 @@ const handleAddToCart = (product) => {
   }
 
   const finalVariantId = product.selectedVariant?.id || product.variantId
-  
-  // Resolve the elegant variant label name
-const variantLabel = product.selectedVariant 
-  ? (product.selectedVariant.value || 
-     product.selectedVariant.attribute_value || 
-     product.selectedVariant.attribute_values?.[0]?.value || 
-     'Premium')
-  : ''
 
-  console.log("[PRODUCTS] Add to cart clicked:", product.name, "variantId:", finalVariantId)
+  // FIXED: now uses the shared getVariantLabel() resolver so this always
+  // matches the label shown on the option button
+  const variantLabel = product.selectedVariant ? getVariantLabel(product.selectedVariant) : ''
+
+  console.log("[PRODUCTS] Add to cart clicked:", product.name, "variant:", variantLabel, "variantId:", finalVariantId)
   addingToCartId.value = product.id
 
   cartStore.addToCart(

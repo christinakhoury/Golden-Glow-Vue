@@ -31,7 +31,13 @@
               :key="'product-' + item.id"
               class="p-5 flex gap-4 items-center"
             >
-              <img :src="item.image" class="w-24 h-24 object-cover rounded-xl" />
+              <div class="w-24 h-24 bg-stone-50 rounded-xl p-1 flex items-center justify-center flex-shrink-0 border border-stone-100">
+                <img 
+                  :src="item.image || item.image_url || item.imageUrl" 
+                  :alt="item.name"
+                  class="max-w-full max-h-full object-contain rounded-lg" 
+                />
+              </div>
 
               <div class="flex-1">
                 <h3 class="font-semibold text-stone-800">{{ item.name }}</h3>
@@ -151,7 +157,7 @@ const handleCheckout = () => {
 }
 
 /* ====================================
-   DATA MAPPING (Unwrapped reactive refs)
+    DATA MAPPING (Unwrapped reactive refs)
 ==================================== */
 const allCartItems = computed(() => cartStore.cart.value)
 const productItems = computed(() => cartStore.productItems.value)
@@ -162,7 +168,7 @@ const tax = computed(() => subtotal.value * 0.08)
 const total = computed(() => subtotal.value + tax.value)
 
 /* ====================================
-   ACTIONS
+    ACTIONS
 ==================================== */
 async function increaseQty(id) {
   await cartStore.increaseQuantity(id)

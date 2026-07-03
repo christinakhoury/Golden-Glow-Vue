@@ -44,6 +44,15 @@ const normalize = (item) => {
     return null
   }
 
+  // 1. Get the raw image path from the object
+  let rawImage = item.image || item.product?.image || "";
+
+  // 2. THE FIX: If it's a relative path starting with 'static/', 
+  // attach the Osimart API domain to the front of it!
+  if (rawImage && rawImage.startsWith("static/")) {
+    rawImage = `https://api.osimart.com/${rawImage}`;
+  }
+
   const result = {
     id: unifiedId,
     variantId,
@@ -51,7 +60,7 @@ const normalize = (item) => {
     price: Number(item.price || item.product?.price) || 0,
     quantity: item.quantity || 1,
     type: item.type || "product",
-    image: item.image || item.product?.image || ""
+    image: rawImage // This will now be a complete, clickable URL path!
   }
 
   console.log("[NORMALIZE] in:", item, "-> out:", result)
