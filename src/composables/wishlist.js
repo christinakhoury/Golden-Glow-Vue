@@ -23,10 +23,20 @@ export const useWishlistStore = defineStore('wishlist', () => {
   
   // Add item to wishlist
   function addToWishlist(product) {
-    const exists = items.value.some(item => item.id === product.id)
+    // Identity must include the variant, otherwise two different variants
+    // of the same product/service (different price, different options)
+    // get treated as the same wishlist entry — and once moved into the
+    // cart, the variant info is gone and the wrong price gets used.
+    const variantId = product.variantId || product.product_variant_id || product.id
+
+    const exists = items.value.some(
+      item => item.id === product.id && (item.variantId || item.id) === variantId
+    )
     if (!exists) {
       items.value.push({
         id: product.id,
+        variantId,
+        type: product.type || 'product',
         name: product.name,
         price: product.price,
         image: product.image,

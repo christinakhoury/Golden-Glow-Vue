@@ -33,13 +33,13 @@ watch(cart, () => {
 }, { deep: true })
 
 /* ======================
-NORMALIZE (NO VARIANTS)
+NORMALIZE (VARIANT-AWARE)
 ====================== */
 const normalize = (item) => {
-  const unifiedId = item.id || item.product_id || item.product?.id
-  const variantId = item.variantId || item.product_variant_id || unifiedId
+  const productId = item.id || item.product_id || item.product?.id
+  const variantId = item.variantId || item.product_variant_id || productId
 
-  if (!unifiedId) {
+  if (!productId) {
     console.warn("[NORMALIZE] skipped item, no id found:", item)
     return null
   }
@@ -54,12 +54,16 @@ const normalize = (item) => {
   }
 
   const result = {
-    id: unifiedId,
+    // The cart LINE identity is the variant, not the parent product/service.
+    // Two different variants of the same product/service must never collapse
+    // into one line, and the same variant added twice must always merge.
+    id: variantId,
+    productId,
     variantId,
     name: item.name || item.product?.name || "Unknown Item",
-    price: Number(item.price || item.product?.price) || 0,
+    price: Number(item.price ?? item.product?.price ?? 0),
     quantity: item.quantity || 1,
-    type: item.type || "product",
+    type: item.type || item.product?.type || "product",
     image: rawImage // This will now be a complete, clickable URL path!
   }
 
@@ -138,10 +142,15 @@ const addToCart = async (item) => {
     return
   }
 
-  const existing = cart.value.find(i => i.id === n.id && i.type === n.type)
+  // Match on variant identity (n.id) — this is what makes "same variant added
+  // twice from different places" merge instead of duplicating with two prices.
+  const existing = cart.value.find(i => i.id === n.id)
 
   if (existing) {
     existing.quantity += n.quantity
+    // Keep the price in sync with the latest known variant price too, in case
+    // the two add-paths had drifted (e.g. stale price cached on one of them).
+    existing.price = n.price
     console.log("[ADD] existing item found, new quantity:", existing.quantity)
     await syncItem(existing.variantId, n.quantity, "add")
   } else {
