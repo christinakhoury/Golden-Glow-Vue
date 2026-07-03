@@ -136,12 +136,13 @@
                     <span class="text-lg font-serif text-stone-900 border-b border-stone-200 pb-0.5">${{ tier.price }}</span>
                     
                     <div class="flex items-center gap-2">
+                      <!-- Wishlist Synchronization Toggle Button -->
                       <button 
-                        @click="toggleFavorite(tier.name)"
+                        @click="handleWishlistToggle(tier)"
                         class="p-2 border border-stone-200 text-stone-400 hover:text-rose-500 hover:border-rose-200 transition-all duration-300 active:scale-75"
-                        :class="{ 'text-rose-500 border-rose-200 bg-rose-50/50': isFavorite(tier.name) }"
+                        :class="{ 'text-rose-500 border-rose-200 bg-rose-50/50': isItemInWishlist(tier.id) }"
                       >
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 transition-transform duration-300" :class="{ 'scale-110': isFavorite(tier.name) }" :fill="isFavorite(tier.name) ? 'currentColor' : 'none'" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 transition-transform duration-300" :class="{ 'scale-110': isItemInWishlist(tier.id) }" :fill="isItemInWishlist(tier.id) ? 'currentColor' : 'none'" viewBox="0 0 24 24" stroke="currentColor">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                         </svg>
                       </button>
@@ -162,7 +163,6 @@
             </div>
 
             <div class="p-8 md:p-10 pt-6 border-t border-stone-200 space-y-3 bg-[#FAF6F0] sticky bottom-0 z-20">
-              
               <button @click="closeServiceOptions" class="w-full text-center block text-[10px] tracking-widest uppercase font-bold text-stone-400 hover:text-stone-700 transition-colors py-1">
                 Close Menu
               </button>
@@ -215,8 +215,6 @@
   </div>
 </template>
 
-
-
 <script setup>
 import { computed, ref, onMounted } from "vue"
 import { useRoute } from "vue-router"
@@ -235,26 +233,21 @@ const serviceType = route.params.type || "hair"
 const products = ref([])
 const isLoading = ref(true)
 const selectedService = ref(null)
-const favList = ref([])
 const toast = ref("")
 
 const getServiceImage = (item) => {
-  // 1. Target the exact structure: item.main_image.path
   let imgPath = item?.main_image?.path || null
 
-  // 2. If main_image missing, check the fallback gallery array pattern: item.gallery[0].media.path
   if (!imgPath && item?.gallery?.[0]) {
     imgPath = item.gallery[0].media?.path || item.gallery[0].path || null
   }
 
-  // 3. Fallback if no valid path string was discovered
   if (!imgPath || typeof imgPath !== 'string') {
     return "https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=800&q=80"
   }
 
   const cleanPath = imgPath.trim()
 
-  // 4. Attach base domain cleanly based on how the path starts
   if (cleanPath.startsWith("/")) {
     return `https://api.osimart.com${cleanPath}`
   } else if (!cleanPath.startsWith("http://") && !cleanPath.startsWith("https://")) {
@@ -271,6 +264,7 @@ const SERVICE_MAP = {
   massage: ["massage", "aromatherapy", "deep tissue", "swedish", "hot stone"],
   laser: ["laser", "pigmentation", "acne", "skin", "rejuvenation"]
 }
+
 /* ================= NORMALIZER ================= */
 const normalize = (str) =>
   (str || "")
@@ -283,25 +277,18 @@ const normalize = (str) =>
 onMounted(async () => {
   try {
     isLoading.value = true
-
     console.log("📡 Loading active studio products...")
     const data = await loadStudioProducts()
-
     products.value = Array.isArray(data) ? data : []
 
-    console.log("📦 PRODUCTS LOADED:", products.value.length)
-    console.log("🔍 FULL SAMPLE PRODUCT:", JSON.stringify(products.value[0], null, 2))
-
-    // 🔥 DEBUG TABLE (REQUESTED)
-   console.table(
-  products.value.map(p => ({
-    name: p.name,
-    category: p.categories?.[0]?.category?.name || "NO_CATEGORY",
-    parent: p.categories?.[0]?.category?.parent_category?.name || "NO_PARENT",
-    subcategory: p.categories?.[0]?.category?.slugified_name || "NO_SLUG"
-  }))
-)
-
+    console.table(
+      products.value.map(p => ({
+        name: p.name,
+        category: p.categories?.[0]?.category?.name || "NO_CATEGORY",
+        parent: p.categories?.[0]?.category?.parent_category?.name || "NO_PARENT",
+        subcategory: p.categories?.[0]?.category?.slugified_name || "NO_SLUG"
+      }))
+    )
   } catch (err) {
     console.error("❌ API ERROR:", err)
     products.value = []
@@ -312,10 +299,7 @@ onMounted(async () => {
 
 const filteredServices = computed(() => {
   if (!products.value.length) return []
-
   const normType = normalize(serviceType)
-  
-  // Get alternative singular keywords (e.g., if normType is "nails", keywords will include "nail")
   const keywords = SERVICE_MAP[normType] || [normType]
 
   return products.value.filter((p) => {
@@ -326,18 +310,13 @@ const filteredServices = computed(() => {
     const slug = normalize(category.slugified_name || "")
     const name = normalize(category.name || "")
 
-    // 1. MUST be under Services
     if (parent !== "services") return false
 
-    // 2. Match if the slug or category name contains ANY of our keywords
-    const matchesType = keywords.some(keyword => 
-      slug.includes(keyword) || name.includes(keyword)
-    )
-
-    return matchesType
+    return keywords.some(keyword => slug.includes(keyword) || name.includes(keyword))
   })
 })
-/* ================= VARIANTS (PEDICURE / MANICURE / ETC) ================= */
+
+/* ================= VARIANTS SETUP ================= */
 const derivedTiers = computed(() => {
   if (!selectedService.value) return []
 
@@ -349,40 +328,46 @@ const derivedTiers = computed(() => {
   return variants.map(v => ({
     id: v.id,
     variantId: v.id,
-
-    name:
-      v.name ||
-      v.values?.[0]?.name ||
-      "Option",
-
-    price:
-      parseFloat(v.price) || 0,
-
+    name: v.name || v.values?.[0]?.name || "Option",
+    price: parseFloat(v.price) || 0,
     sku: v.sku,
-
     productId: selectedService.value.id,
-
     image: getServiceImage(selectedService.value)
   }))
 })
 
-/* ================= SERVICE VARIANTS (OPTIONAL DRILLDOWN) ================= */
-const serviceVariants = computed(() => {
-  if (!selectedService.value) return []
+/* ================= WISHLIST ACTIONS ================= */
+const isItemInWishlist = (id) => {
+  if (wishlistStore.isItemInWishlist) {
+    return wishlistStore.isItemInWishlist(id)
+  }
+  return wishlistStore.wishlistItems?.some(item => item.id === id) || false
+}
 
-  const base = normalize(selectedService.value.name || "")
+const handleWishlistToggle = (tier) => {
+  const itemPayload = {
+    id: tier.id,
+    variantId: tier.variantId,
+    name: `${selectedService.value.name} - ${tier.name}`,
+    image: tier.image,
+    price: tier.price,
+    type: "service"
+  }
 
-  return products.value.filter((p) => {
-    if (p.id === selectedService.value.id) return false
+  if (wishlistStore.toggleWishlist) {
+    wishlistStore.toggleWishlist(itemPayload)
+  } else if (wishlistStore.handleWishlistToggle) {
+    wishlistStore.handleWishlistToggle(itemPayload)
+  }
 
-    const name = normalize(p.name || p.title || "")
-    const desc = normalize(p.description || "")
+  if (isItemInWishlist(tier.id)) {
+    triggerToast("Saved to wishlist ✨")
+  } else {
+    triggerToast("Removed from wishlist")
+  }
+}
 
-    return name.includes(base) || desc.includes(base)
-  })
-})
-
-/* ================= ACTIONS ================= */
+/* ================= GENERAL ACTIONS ================= */
 const openServiceOptions = (item) => {
   selectedService.value = item
 }
@@ -391,47 +376,20 @@ const closeServiceOptions = () => {
   selectedService.value = null
 }
 
-const toggleFavorite = (name) => {
-  if (favList.value.includes(name)) {
-    favList.value = favList.value.filter(x => x !== name)
-    triggerToast("Removed from favorites")
-  } else {
-    favList.value.push(name)
-    triggerToast("Saved to favorites ✨")
-  }
-}
-
-const isFavorite = (name) => favList.value.includes(name)
-
 const addToCart = (tier) => {
-
-  console.log("🛒 SERVICE ADD")
-  console.log("Service:", selectedService.value.name)
-  console.log("Variant:", tier)
-
   cartStore.addToCart(
     {
       id: tier.productId,
-
       variantId: tier.variantId,
-
-      name:
-        `${selectedService.value.name} - ${tier.name}`,
-
+      name: `${selectedService.value.name} - ${tier.name}`,
       image: tier.image,
-
       price: tier.price,
-
       quantity: 1,
-
       type: "service"
     },
-
     authStore.isAuthenticated,
-
     authStore.openAuthModal
   )
-
   triggerToast(`${tier.name} added to cart 🛍️`)
 }
 
@@ -444,86 +402,36 @@ const triggerToast = (msg) => {
 
 /* ================= STATIC DATA ================= */
 const data = {
-  hair: { benefits: [ {
-    title: "Expert Stylists",
-    desc: "Professional hair specialists trained in the latest cutting, coloring, and styling techniques."
-  },
-  {
-    title: "Premium Products",
-    desc: "High-quality haircare products that protect, nourish, and enhance your hair."
-  },
-  {
-    title: "Personalized Consultation",
-    desc: "Every service is tailored to your hair type, face shape, and personal style."
-  },
-  {
-    title: "Luxury Experience",
-    desc: "Relax in a welcoming environment while enjoying exceptional care and attention."
-  }] },
-  nails: { benefits: [  {
-    title: "Clean & Safe",
-    desc: "Strict hygiene and sterilized tools."
-  },
-  {
-    title: "Creative Designs",
-    desc: "From simple to artistic nail styles."
-  },
-  {
-    title: "Long-Lasting Finish",
-    desc: "Durable, high-quality results."
-  },
-  {
-    title: "Skilled Technicians",
-    desc: "Precise and detail-focused specialists."
-  }] },
-  makeup: { benefits: [ {
-    title: "Pro Artists",
-    desc: "Experienced in bridal and event makeup."
-  },
-  {
-    title: "Quality Products",
-    desc: "Long-lasting, premium cosmetics."
-  },
-  {
-    title: "Custom Looks",
-    desc: "Makeup adapted to your features."
-  },
-  {
-    title: "All Occasions",
-    desc: "Perfect for events, weddings, and photoshoots."
-  }] },
-  massage: { benefits: [  {
-    title: "Certified Therapists",
-    desc: "Trained wellness professionals."
-  },
-  {
-    title: "Stress Relief",
-    desc: "Reduces tension and fatigue."
-  },
-  {
-    title: "Personal Sessions",
-    desc: "Customized to your needs."
-  },
-  {
-    title: "Calm Space",
-    desc: "Relaxing and peaceful environment."
-  }] },
-  laser: { benefits: [{
-    title: "Safe Technology",
-    desc: "FDA-approved equipment and procedures."
-  },
-  {
-    title: "Long-Term Results",
-    desc: "Noticeable improvements after a few sessions."
-  },
-  {
-    title: "Expert Specialists",
-    desc: "Treatments performed by trained professionals."
-  },
-  {
-    title: "Personalized Care",
-    desc: "Customized plans based on your skin needs."
-  }] }
+  hair: { benefits: [
+    { title: "Expert Stylists", desc: "Professional hair specialists trained in the latest cutting, coloring, and styling techniques." },
+    { title: "Premium Products", desc: "High-quality haircare products that protect, nourish, and enhance your hair." },
+    { title: "Personalized Consultation", desc: "Every service is tailored to your hair type, face shape, and personal style." },
+    { title: "Luxury Experience", desc: "Relax in a welcoming environment while enjoying exceptional care and attention." }
+  ]},
+  nails: { benefits: [
+    { title: "Clean & Safe", desc: "Strict hygiene and sterilized tools." },
+    { title: "Creative Designs", desc: "From simple to artistic nail styles." },
+    { title: "Long-Lasting Finish", desc: "Durable, high-quality results." },
+    { title: "Skilled Technicians", desc: "Precise and detail-focused specialists." }
+  ]},
+  makeup: { benefits: [
+    { title: "Pro Artists", desc: "Experienced in bridal and event makeup." },
+    { title: "Quality Products", desc: "Long-lasting, premium cosmetics." },
+    { title: "Custom Looks", desc: "Makeup adapted to your features." },
+    { title: "All Occasions", desc: "Perfect for events, weddings, and photoshoots." }
+  ]},
+  massage: { benefits: [
+    { title: "Certified Therapists", desc: "Trained wellness professionals." },
+    { title: "Stress Relief", desc: "Reduces tension and fatigue." },
+    { title: "Personal Sessions", desc: "Customized to your needs." },
+    { title: "Calm Space", desc: "Relaxing and peaceful environment." }
+  ]},
+  laser: { benefits: [
+    { title: "Safe Technology", desc: "FDA-approved equipment and procedures." },
+    { title: "Long-Term Results", desc: "Noticeable improvements after a few sessions." },
+    { title: "Expert Specialists", desc: "Treatments performed by trained professionals." },
+    { title: "Personalized Care", desc: "Customized plans based on your skin needs." }
+  ]}
 }
 
 const current = computed(() => data[serviceType] || data.hair)
@@ -531,7 +439,6 @@ const standardBenefits = computed(() => current.value.benefits)
 </script>
 
 <style scoped>
-/* High-End Drawer Panel Transitions */
 .fade-enter-active, .fade-leave-active {
   transition: opacity 0.4s cubic-bezier(0.25, 1, 0.5, 1);
 }
@@ -546,7 +453,6 @@ const standardBenefits = computed(() => current.value.benefits)
   transform: translateX(100%);
 }
 
-/* Fluid Micro-Toast Pop Notice */
 .pop-enter-active {
   animation: pop-up 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
