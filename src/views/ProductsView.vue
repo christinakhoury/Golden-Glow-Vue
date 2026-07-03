@@ -410,66 +410,74 @@ onMounted(async () => {
     console.log("RAW API PRODUCTS:", liveData)
 
     if (Array.isArray(liveData) && liveData.length > 0) {
-      products.value = liveData.map(item => {
-        // Base baseline variant defaults
-        const initialVariantId = item.product_variants?.[0]?.id || item.id
-        
-        // Extract nested image configurations safely
-        const rawImagePath = item.main_image?.path || item.image_url || item.image
-        let finalImage = '/images/p1.jpg'
-        
-        if (rawImagePath) {
-          if (rawImagePath.startsWith('http')) {
-            finalImage = rawImagePath
-          } else {
-            const cleanPath = rawImagePath.startsWith('/') ? rawImagePath.slice(1) : rawImagePath
-            finalImage = `https://api.osimart.com/${cleanPath}`
-          }
-          console.log("VARIANTS for", item.name, ":", JSON.stringify(item.product_variants, null, 2))
-        }
-        
-        const apiCategory = item.categories?.[0]?.category?.name || ""
-        const cat = apiCategory.toLowerCase()
-        let categoryName = "Other"
+  products.value = liveData
+    .map(item => {
+      const apiCategory = item.categories?.[0]?.category?.name || ""
+      const catLower = apiCategory.toLowerCase()
 
-        if (cat.includes("makeup") || cat.includes("eyes") || cat.includes("eye") || cat.includes("lips") || cat.includes("face") || cat.includes("concealer") || cat.includes("brush")) {
-            categoryName = "Makeup"
-        } else if (cat.includes("hair") || cat.includes("dry shampoo") || cat.includes("hair oils") || cat.includes("hair mists") || cat.includes("accessories")) {
-            categoryName = "Hair"
-        } else if (cat.includes("laser") || cat.includes("gels") || cat.includes("machine") || cat.includes("soothing cream")) {
-            categoryName = "Laser"
-        } else if (cat.includes("massage") || cat.includes("roller") || cat.includes("bath") || cat.includes("candle")) {
-            categoryName = "Massage"
-        } else if (cat.includes("nail") || cat.includes("press on")) {
-            categoryName = "Nails"
-        }
-        
-        const subcategoryName = item.vary_by?.[0]?.name || apiCategory
+      // NEW: skip services — only keep actual products
+      if (catLower.includes('service')) {
+        return null
+      }
 
-        // Fallback pricing configuration logic
-        let finalPrice = 0.00
-        if (item.price_range) {
-          const basePriceString = item.price_range.split('-')[0].trim()
-          finalPrice = parseFloat(basePriceString) || 0.00
-        } else if (item.price) {
-          finalPrice = parseFloat(item.price)
+      // Base baseline variant defaults
+      const initialVariantId = item.product_variants?.[0]?.id || item.id
+      
+      // Extract nested image configurations safely
+      const rawImagePath = item.main_image?.path || item.image_url || item.image
+      let finalImage = '/images/p1.jpg'
+      
+      if (rawImagePath) {
+        if (rawImagePath.startsWith('http')) {
+          finalImage = rawImagePath
+        } else {
+          const cleanPath = rawImagePath.startsWith('/') ? rawImagePath.slice(1) : rawImagePath
+          finalImage = `https://api.osimart.com/${cleanPath}`
         }
+        console.log("VARIANTS for", item.name, ":", JSON.stringify(item.product_variants, null, 2))
+      }
 
-        // Generate full product state model
-        return ref({
-          id: item.id,
-          variantId: initialVariantId, 
-          image: finalImage,
-          name: item.name,
-          category: categoryName,
-          subcategory: subcategoryName,
-          price: finalPrice,
-          // NEW PROPERTIES: Expose all backend alternatives and hold room for active selection
-          variants: item.product_variants || [],
-          selectedVariant: item.product_variants && item.product_variants.length === 1 ? item.product_variants[0] : null
-        }).value
-      })
-    }
+      const cat = catLower
+      let categoryName = "Other"
+
+      if (cat.includes("makeup") || cat.includes("eyes") || cat.includes("eye") || cat.includes("lips") || cat.includes("face") || cat.includes("concealer") || cat.includes("brush")) {
+          categoryName = "Makeup"
+      } else if (cat.includes("hair") || cat.includes("dry shampoo") || cat.includes("hair oils") || cat.includes("hair mists") || cat.includes("accessories")) {
+          categoryName = "Hair"
+      } else if (cat.includes("laser") || cat.includes("gels") || cat.includes("machine") || cat.includes("soothing cream")) {
+          categoryName = "Laser"
+      } else if (cat.includes("massage") || cat.includes("roller") || cat.includes("bath") || cat.includes("candle")) {
+          categoryName = "Massage"
+      } else if (cat.includes("nail") || cat.includes("press on")) {
+          categoryName = "Nails"
+      }
+      
+      const subcategoryName = item.vary_by?.[0]?.name || apiCategory
+
+      // Fallback pricing configuration logic
+      let finalPrice = 0.00
+      if (item.price_range) {
+        const basePriceString = item.price_range.split('-')[0].trim()
+        finalPrice = parseFloat(basePriceString) || 0.00
+      } else if (item.price) {
+        finalPrice = parseFloat(item.price)
+      }
+
+      return {
+        id: item.id,
+        variantId: initialVariantId, 
+        image: finalImage,
+        name: item.name,
+        category: categoryName,
+        subcategory: subcategoryName,
+        price: finalPrice,
+        variants: item.product_variants || [],
+        selectedVariant: item.product_variants && item.product_variants.length === 1 ? item.product_variants[0] : null
+      }
+    })
+    .filter(Boolean) // NEW: drop the nulls (services) out of the final list
+}
+
     console.log("✅ PRODUCTS POPULATED:", products.value.length)
   } catch (err) {
     console.error("❌ API CRASHED:", err)
