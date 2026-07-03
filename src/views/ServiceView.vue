@@ -162,12 +162,7 @@
             </div>
 
             <div class="p-8 md:p-10 pt-6 border-t border-stone-200 space-y-3 bg-[#FAF6F0] sticky bottom-0 z-20">
-              <router-link 
-                :to="`/book?service=${selectedService.id}`"
-                class="w-full text-center block text-[11px] tracking-[0.25em] uppercase font-bold text-white bg-stone-900 hover:bg-[#D4AF37] py-4 transition-all duration-300"
-              >
-                Book Session
-              </router-link>
+              
               <button @click="closeServiceOptions" class="w-full text-center block text-[10px] tracking-widest uppercase font-bold text-stone-400 hover:text-stone-700 transition-colors py-1">
                 Close Menu
               </button>
@@ -226,7 +221,13 @@
 import { computed, ref, onMounted } from "vue"
 import { useRoute } from "vue-router"
 import { loadStudioProducts } from "../services/service"
+import { useCart } from "../composables/useCart"
+import { useAuthStore } from "../composables/auth"
+import { useWishlistStore } from '../composables/wishlist'
 
+const cartStore = useCart()
+const authStore = useAuthStore()
+const wishlistStore = useWishlistStore()
 
 const route = useRoute()
 const serviceType = route.params.type || "hair"
@@ -346,8 +347,22 @@ const derivedTiers = computed(() => {
     []
 
   return variants.map(v => ({
-    name: v.name || v.values?.[0]?.name || "Option",
-    price: v.price || 0
+    id: v.id,
+    variantId: v.id,
+
+    name:
+      v.name ||
+      v.values?.[0]?.name ||
+      "Option",
+
+    price:
+      parseFloat(v.price) || 0,
+
+    sku: v.sku,
+
+    productId: selectedService.value.id,
+
+    image: getServiceImage(selectedService.value)
   }))
 })
 
@@ -389,7 +404,35 @@ const toggleFavorite = (name) => {
 const isFavorite = (name) => favList.value.includes(name)
 
 const addToCart = (tier) => {
-  triggerToast(`Added ${tier.name} to Cart 🛍️`)
+
+  console.log("🛒 SERVICE ADD")
+  console.log("Service:", selectedService.value.name)
+  console.log("Variant:", tier)
+
+  cartStore.addToCart(
+    {
+      id: tier.productId,
+
+      variantId: tier.variantId,
+
+      name:
+        `${selectedService.value.name} - ${tier.name}`,
+
+      image: tier.image,
+
+      price: tier.price,
+
+      quantity: 1,
+
+      type: "service"
+    },
+
+    authStore.isAuthenticated,
+
+    authStore.openAuthModal
+  )
+
+  triggerToast(`${tier.name} added to cart 🛍️`)
 }
 
 const triggerToast = (msg) => {

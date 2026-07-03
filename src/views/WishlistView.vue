@@ -67,12 +67,12 @@
 
 <script setup>
 import { useWishlistStore } from '../composables/wishlist'
-import { useCartStore } from '../composables/cart'
+import { useCart } from "../composables/useCart"
 import { useAuthStore } from '../composables/auth'
 import { useScrollAnimation } from '../composables/useScrollAnimation'
 
 const wishlistStore = useWishlistStore()
-const cartStore = useCartStore()
+const cartStore = useCart()
 const authStore = useAuthStore()
 useScrollAnimation()
 

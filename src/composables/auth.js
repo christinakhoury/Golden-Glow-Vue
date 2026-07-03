@@ -5,7 +5,7 @@ import { useCart } from './useCart'
 export const useAuthStore = defineStore('auth', () => {
   // State
   const user = ref(null)
-  const isAuthenticated = ref(true)
+  const isAuthenticated = ref(false)
   const showAuthModal = ref(false)
   const authMode = ref('login')
   const cartStore = useCart()
