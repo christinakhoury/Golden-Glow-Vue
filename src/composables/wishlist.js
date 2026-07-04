@@ -10,7 +10,7 @@ export const useWishlistStore = defineStore('wishlist', () => {
   
   // Load wishlist from localStorage
   function loadWishlist() {
-    const savedWishlist = localStorage.getItem('soutou_wishlist')
+    const savedWishlist = localStorage.getItem('golden_wishlist')
     if (savedWishlist) {
       items.value = JSON.parse(savedWishlist)
     }
@@ -18,7 +18,7 @@ export const useWishlistStore = defineStore('wishlist', () => {
   
   // Save wishlist to localStorage
   function saveWishlist() {
-    localStorage.setItem('soutou_wishlist', JSON.stringify(items.value))
+    localStorage.setItem('golden_wishlist', JSON.stringify(items.value))
   }
   
   // Add item to wishlist
@@ -28,6 +28,7 @@ export const useWishlistStore = defineStore('wishlist', () => {
     // get treated as the same wishlist entry — and once moved into the
     // cart, the variant info is gone and the wrong price gets used.
     const variantId = product.variantId || product.product_variant_id || product.id
+    const variantName = product.variantName || product.variant_name || product.variant?.name || null
 
     const exists = items.value.some(
       item => item.id === product.id && (item.variantId || item.id) === variantId
@@ -36,6 +37,7 @@ export const useWishlistStore = defineStore('wishlist', () => {
       items.value.push({
         id: product.id,
         variantId,
+        variantName,
         type: product.type || 'product',
         name: product.name,
         price: product.price,

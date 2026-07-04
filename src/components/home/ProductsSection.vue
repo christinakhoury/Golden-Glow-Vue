@@ -1,5 +1,5 @@
 <template>
-  <section id="products" class="py-24 bg-[#FAF8F5]  overflow-hidden">
+  <section id="products" class="py-24 bg-[#FAF8F5] overflow-hidden">
     <div class="max-w-7xl mx-auto px-6">
       
       <div class="text-center mb-16 fade-on-scroll">
@@ -11,11 +11,15 @@
         </h2>
         <div class="w-16 h-[1px] bg-[#D4AF37] mx-auto mb-6"></div>
         <p class="text-stone-600 text-sm md:text-base max-w-2xl mx-auto font-light leading-relaxed">
-         Elevate your aura with treatments and specialized formulas favored by our masters
+          Elevate your aura with treatments and specialized formulas favored by our masters
         </p>
       </div>
 
-      <div class="relative w-full overflow-hidden py-4">
+      <div v-if="isLoading" class="text-center py-12 text-stone-500 font-light text-sm tracking-wide">
+        Loading exquisite collections...
+      </div>
+
+      <div v-else-if="recommendedProducts.length" class="relative w-full overflow-hidden py-4">
         <div class="absolute inset-y-0 left-0 w-16 bg-gradient-to-r from-[#faf8f5] to-transparent z-10 pointer-events-none"></div>
         <div class="absolute inset-y-0 right-0 w-16 bg-gradient-to-l from-[#faf8f5] to-transparent z-10 pointer-events-none"></div>
 
@@ -28,11 +32,11 @@
           >
             <div class="w-full aspect-[3/4] bg-stone-50 relative overflow-hidden mb-4">
               <img 
-                :src="product.image" 
+                :src="product.image || '/images/placeholder.jpeg'" 
                 :alt="product.name" 
                 class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
               />
-              <span class="absolute top-3 left-3 bg-white/90 backdrop-blur-xs px-2 py-0.5 text-[9px] tracking-widest uppercase text-stone-500 font-medium">
+              <span v-if="product.subcategory" class="absolute top-3 left-3 bg-white/90 backdrop-blur-xs px-2 py-0.5 text-[9px] tracking-widest uppercase text-stone-500 font-medium">
                 {{ product.subcategory }}
               </span>
               
@@ -51,13 +55,13 @@
                   {{ product.name }}
                 </h3>
                 <p class="text-stone-400 text-xs font-light tracking-wide mb-4 line-clamp-1">
-                  {{ product.desc }}
+                  {{ product.desc || 'Exclusive premium formula' }}
                 </p>
               </div>
               
               <div class="flex items-center justify-between border-t border-stone-100 pt-4 mt-auto">
                 <span class="text-stone-900 font-medium text-sm font-serif">
-                  ${{ product.price.toFixed(2) }}
+                  ${{ Number(product.price).toFixed(2) }}
                 </span>
                 
                 <button 
@@ -92,66 +96,99 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useWishlistStore } from '../../composables/wishlist'
 import { useCart } from '../../composables/useCart'
 import { useAuthStore } from '../../composables/auth'
+import { loadStudioProducts } from '../../services/product.js'
 
-// Stores Hook Connectors
 const wishlistStore = useWishlistStore()
 const cartStore = useCart()
 const authStore = useAuthStore()
 
+const recommendedProducts = ref([])
 const addingToCartId = ref(null)
+const isLoading = ref(true)
 
-// Restructured Dataset to integrate natively with your inventory scheme layout
-const staticData = [
-  {
-    id: 110,
-    category: 'Hair',
-    subcategory: 'Hair oils',
-    name: "Oriko Hair Treatment Oil",
-    desc: "Restores deep structural shine and active strand strength.",
-    price: 18.00,
-    image: "/images/ho1.jpeg"
-  },
-  {
-    id: 211,
-    category: 'Nails',
-    subcategory: 'Nail Care',
-    name: "Premium Cuticle Strength Oil",
-    desc: "Nourishing formula for healthy, high-gloss strong profiles.",
-    price: 28.00,
-    image: "/images/nc1.jpg"
-  },
-  {
-    id: 308,
-    category: 'Makeup',
-    subcategory: 'Face',
-    name: "Luxury Soft-Focus Velvet Complexion",
-    desc: "Flawless weightless base glow and optimal hydration boost.",
-    price: 22.00,
-    image: "/images/mf1.jpeg"
-  },
-  {
-    id: 401,
-    category: 'Massage',
-    subcategory: 'Face rollers',
-    name: "Sculpting Jade Gua Sha",
-    desc: "Restorative deep tissue cooling facial framing tool.",
-    price: 28.00,
-    image: "/images/fmf1.jpeg"
+// Helper function to shuffle array items randomly (Fisher-Yates algorithm)
+const shuffleArray = (array) => {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]]
   }
-]
+  return array
+}
 
-// Appends explicit layout IDs to prevent duplication v-for keys clashes inside infinite track loops
-const recommendedProducts = staticData.map((item, index) => ({
-  ...item,
-  uniqueId: `recom-${item.id}-${index}`
-}))
+const fetchRecommended = async () => {
+  try {
+    isLoading.value = true
+    const liveData = await loadStudioProducts()
+
+    if (Array.isArray(liveData) && liveData.length > 0) {
+      // 1. Filter out services AND filter out items with multiple variants
+      let filteredProducts = liveData.filter(item => {
+        const catName = item.categories?.[0]?.category?.name?.toLowerCase() || ''
+        const isService = catName.includes('service')
+        
+        // Count how many variants this product has
+        const variantsCount = item.product_variants?.length || 0
+        
+        // If it has more than 1 variant, it means it has options (like multiple sizes/colors)
+        // Also check if the lone variant contains a distinct sub-title option (e.g. "Default Title" means no real custom variant options)
+        const hasRealVariants = variantsCount > 1 || (variantsCount === 1 && item.product_variants[0].title && item.product_variants[0].title !== 'Default Title' && item.product_variants[0].title !== 'Default')
+
+        return !isService && !hasRealVariants
+      })
+
+      // 2. Shuffle the variant-free products to randomize order
+      filteredProducts = shuffleArray(filteredProducts)
+
+      // 3. Map only the first 8 variant-free random products
+      recommendedProducts.value = filteredProducts
+        .slice(0, 8) 
+        .map((item, index) => {
+          const initialVariant = item.product_variants?.[0]
+          const rawImagePath = item.main_image?.path || item.image_url || item.image
+          let finalImage = '/images/p1.jpg'
+          
+          if (rawImagePath) {
+            finalImage = rawImagePath.startsWith('http')
+              ? rawImagePath
+              : `https://api.osimart.com/${rawImagePath.replace(/^\//, '')}`
+          }
+
+          let finalPrice = 0.00
+          if (item.price_range) {
+            finalPrice = parseFloat(item.price_range.split('-')[0].trim()) || 0.00
+          } else if (item.price) {
+            finalPrice = parseFloat(item.price)
+          }
+
+          return {
+            id: item.id,
+            variantId: initialVariant?.id || item.id,
+            name: item.name || 'Premium Item',
+            subcategory: item.categories?.[0]?.category?.name || 'Luxury',
+            desc: item.description || item.short_description || '',
+            price: finalPrice,
+            image: finalImage,
+            uniqueId: `recom-${item.id}-${index}`
+          }
+        })
+    }
+  } catch (error) {
+    console.warn('Failed to load recommended products:', error)
+  } finally {
+    isLoading.value = false
+  }
+}
+
+onMounted(() => {
+  fetchRecommended()
+})
 
 /* ========================================================
-   🛒 STORE CONNECTOR HANDLERS
+    🛒 CART / WISHLIST HANDLERS
 =========================================================== */
 const isItemInWishlist = (productId) => {
   if (!wishlistStore.items) return false
@@ -172,45 +209,44 @@ const handleWishlistToggle = (product) => {
   }
 }
 
-const handleAddToCart = (product) => {
-  addingToCartId.value = product.id
-  
-  cartStore.addToCart(
-    {
-      id: product.id,
-      name: product.name,
-      price: product.price,
-      image: product.image,
-      quantity: 1,
-      type: 'product'
-    },
-    authStore.isAuthenticated,
-    authStore.openAuthModal
-  )
+const handleAddToCart = async (product) => {
+  if (typeof cartStore.addToCart !== 'function') return
 
-  setTimeout(() => {
-    addingToCartId.value = null
-  }, 1000)
+  addingToCartId.value = product.id
+
+  try {
+    await cartStore.addToCart(
+      {
+        id: product.id,
+        variantId: product.variantId || product.id,
+        name: product.name,
+        price: product.price,
+        image: product.image,
+        quantity: 1,
+        type: 'product'
+      },
+      authStore.isAuthenticated,
+      authStore.openAuthModal
+    )
+  } catch (err) {
+    console.error("Error dispatching add to cart action:", err)
+  } finally {
+    setTimeout(() => {
+      addingToCartId.value = null
+    }, 1000)
+  }
 }
 </script>
 
 <style scoped>
-/* Infinite Continuous Auto Scroll Animation Logic */
 @keyframes infiniteScroll {
-  0% {
-    transform: translateX(0);
-  }
-  100% {
-    transform: translateX(calc(-50% - 12px)); /* Perfectly loops right through halfway offset spacing */
-  }
+  0% { transform: translateX(0); }
+  100% { transform: translateX(calc(-50% - 12px)); }
 }
-
 .animate-infinite-carousel {
   display: flex;
   animation: infiniteScroll 25s linear infinite;
 }
-
-/* Line clamping to protect luxury alignment card consistency sizes */
 .line-clamp-1 {
   display: -webkit-box;
   -webkit-line-clamp: 1;
