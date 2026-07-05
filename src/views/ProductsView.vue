@@ -234,12 +234,6 @@ const normalize = (str) =>
     .trim()
     .replace(/\s+/g, ' ')
 
-/* ================= VARIANT LABEL RESOLVER (FIXED) =================
-   Single source of truth for "what do we call this variant".
-   Previously the option button, handleAddToCart, and handleWishlistToggle
-   each checked a different subset of possible API field names, so the
-   label shown on the button could silently differ from what got saved
-   into the cart or wishlist. Now everything calls this one function. */
 const getVariantLabel = (variant) => {
   if (!variant) return ''
   return (

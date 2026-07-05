@@ -23,7 +23,7 @@
 
       <div v-else class="flex flex-col lg:flex-row gap-10">
 
-        <div class="flex-1 bg-white rounded-2xl shadow-md overflow-hidden">
+        <div class="flex-1 bg-white rounded-2xl shadow-md overflow-hidden flex flex-col justify-between">
           <div class="divide-y divide-amber-100">
 
             <div
@@ -40,7 +40,18 @@
               </div>
 
               <div class="flex-1">
-                <h3 class="font-semibold text-stone-800">{{ item.name }}</h3>
+                <div class="flex flex-wrap items-center gap-2">
+                  <h3 class="font-semibold text-stone-800">
+                    {{ item.variantName ? item.baseName : item.name }}
+                  </h3>
+                  <span 
+                    v-if="item.variantName" 
+                    class="inline-block bg-stone-100 text-stone-600 text-xs px-2 py-0.5 rounded-md font-medium"
+                  >
+                    {{ item.variantName }}
+                  </span>
+                </div>
+
                 <p class="text-amber-700 font-bold mt-1">${{ item.price.toLocaleString() }}</p>
 
                 <div class="flex items-center gap-3 mt-2">
@@ -79,12 +90,20 @@
               :key="'service-' + item.id"
               class="p-5 flex justify-between items-center bg-amber-50/30"
             >
-              <div>
-                <h3 class="font-semibold text-stone-800">{{ item.name }}</h3>
-                <p class="text-sm text-stone-500">Service</p>
+              <div class="flex-1">
+                <div class="flex flex-wrap items-center gap-2">
+                  <h3 class="font-semibold text-stone-800">
+                    {{ item.variantName ? item.baseName : item.name }}
+                  </h3>
+                  <span 
+                    v-if="item.variantName" 
+                    class="inline-block bg-stone-100 text-stone-600 text-xs px-2 py-0.5 rounded-md font-medium"
+                  >
+                    {{ item.variantName }}
+                  </span>
+                </div>
+                <p class="text-amber-700 font-bold mt-1">${{ item.price.toLocaleString() }}</p>
               </div>
-
-              <div class="font-bold text-amber-700">${{ item.price.toLocaleString() }}</div>
 
               <button
                 @click="removeItem(item.id)"
@@ -94,6 +113,15 @@
               </button>
             </div>
 
+          </div>
+
+          <div class="p-4 bg-stone-50 border-t border-amber-100 flex justify-end">
+            <button 
+              @click="handleClearCart"
+              class="px-4 py-2 border border-red-200 text-red-500 rounded-lg text-sm font-medium hover:bg-red-50 transition-colors flex items-center gap-2"
+            >
+              <i class="fas fa-dumpster"></i> Clear Cart
+            </button>
           </div>
         </div>
 
@@ -153,6 +181,12 @@ const handleCheckout = () => {
     router.push('/checkout').catch(() => {
       window.location.href = '/checkout'
     })
+  }
+}
+
+async function handleClearCart() {
+  if (confirm("Are you sure you want to clear all items from your cart?")) {
+    await cartStore.clearCart()
   }
 }
 

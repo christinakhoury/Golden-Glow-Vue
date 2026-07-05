@@ -1,7 +1,8 @@
+
 import { ref, computed, watch } from "vue"
 import axios from "axios"
 
-const STORE_ID = "17781c3f-b746-4897-be7d-15d1ff48589e"
+const STORE_ID = "17781c3f-b46-4897-be7d-15d1ff48589e"
 
 const cart = ref([])
 const loading = ref(false)
@@ -36,35 +37,63 @@ watch(cart, () => {
 NORMALIZE (VARIANT-AWARE)
 ====================== */
 const normalize = (item) => {
-  const productId = item.id || item.product_id || item.product?.id
-  const variantId = item.variantId || item.product_variant_id || productId
+  const variantId = item.variantId ||
+                    item.product_variant_id ||
+                    item.product_variant?.id ||
+                    item.id;
 
-  if (!productId) {
-    console.warn("[NORMALIZE] skipped item, no id found:", item)
+  const productId = item.product_id ||
+                    item.product?.id ||
+                    (item.variantId ? item.id : item.id);
+
+  if (!variantId) {
+    console.warn("[NORMALIZE] skipped item, no variant identity found:", item)
     return null
   }
 
-  // 1. Get the raw image path from the object
   let rawImage = item.image || item.product?.image || "";
 
-  // 2. THE FIX: If it's a relative path starting with 'static/', 
-  // attach the Osimart API domain to the front of it!
   if (rawImage && rawImage.startsWith("static/")) {
     rawImage = `https://api.osimart.com/${rawImage}`;
   }
 
+const variantName =
+  item.variantName ??
+  item.variant_name ??
+  item.variant_title ??
+  item.variant?.name ??
+  item.variant?.title ??
+  item.product_variant?.name ??
+  item.product_variant?.title ??
+  item.product_variant_name ??
+  item.product_variant_title ??
+  (Array.isArray(item.values) ? item.values.join(" / ") : null) ??
+  null
+
+let baseName = item.name || item.product?.name || "Unknown Item"
+
+
+
+// Remove anything inside parentheses
+baseName = baseName.replace(/\s*\([^)]*\)/g, "").trim()
+
+const displayName = variantName
+  ? `${baseName} (${variantName})`
+  : baseName
+
+
+
   const result = {
-    // The cart LINE identity is the variant, not the parent product/service.
-    // Two different variants of the same product/service must never collapse
-    // into one line, and the same variant added twice must always merge.
     id: variantId,
     productId,
     variantId,
-    name: item.name || item.product?.name || "Unknown Item",
-    price: Number(item.price ?? item.product?.price ?? 0),
+    variantName,   
+    baseName,      
+    name: displayName, 
+    price: Number(item.price ?? item.product?.price ?? item.product_variant?.price ?? 0),
     quantity: item.quantity || 1,
     type: item.type || item.product?.type || "product",
-    image: rawImage // This will now be a complete, clickable URL path!
+    image: rawImage
   }
 
   console.log("[NORMALIZE] in:", item, "-> out:", result)
@@ -93,7 +122,7 @@ const fetchRemoteCart = async () => {
       : Object.values(res.data?.cart || {})
 
     console.log("[FETCH] raw cart array before normalize:", raw)
-
+console.log(JSON.stringify(raw[0], null, 2))
     cart.value = raw.map(normalize).filter(Boolean)
     console.log("[FETCH] final normalized cart:", cart.value)
   } catch (e) {
@@ -142,14 +171,10 @@ const addToCart = async (item) => {
     return
   }
 
-  // Match on variant identity (n.id) — this is what makes "same variant added
-  // twice from different places" merge instead of duplicating with two prices.
   const existing = cart.value.find(i => i.id === n.id)
 
   if (existing) {
     existing.quantity += n.quantity
-    // Keep the price in sync with the latest known variant price too, in case
-    // the two add-paths had drifted (e.g. stale price cached on one of them).
     existing.price = n.price
     console.log("[ADD] existing item found, new quantity:", existing.quantity)
     await syncItem(existing.variantId, n.quantity, "add")
@@ -202,11 +227,38 @@ const removeFromCart = async (id) => {
   await syncItem(variantId, fullQuantity, "remove")
 }
 
-const clearCart = () => {
-  console.log("[CLEAR] cart cleared")
-  cart.value = []
-}
+const clearCart = async () => {
+  console.log("[CLEAR] cart clearing initiated via item removal loop");
+  
+  // Clone current items to prevent array mutations midway through the loop
+  const itemsToClear = [...cart.value];
+  
+  // Wipe local state instantly so the UI feels fast
+  cart.value = [];
 
+  // Fire removal requests to the server sequentially for all items
+  for (const item of itemsToClear) {
+    try {
+      const url = `https://api.osimart.com/store/apis/cart/update-item/?store=${STORE_ID}`;
+      const payload = {
+        item_id: item.variantId,
+        quantity: item.quantity,
+        action: "remove"
+      };
+      
+      console.log(`[CLEAR LOOP] Removing item ${item.variantId}`);
+      await axios.post(url, payload, {
+        headers: getAuthHeaders(),
+        withCredentials: true
+      });
+    } catch (e) {
+      console.error(`[CLEAR LOOP] Failed to remove item ${item.variantId}:`, e.message);
+    }
+  }
+
+  // Final fetch to guarantee state synchronization
+  await fetchRemoteCart();
+};
 /* ======================
 COMPUTED READS
 ====================== */
@@ -236,7 +288,6 @@ const clearUserCartDisplay = () => {
   loadCart()
 }
 
-// Initialization bootstrap
 console.log("[INIT] useCart.js loaded, bootstrapping local cart")
 loadCart()
 
