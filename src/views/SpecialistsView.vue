@@ -101,14 +101,14 @@
               </p>
 
               <!-- Luxury Reservation Wire Anchor -->
-              <div class="pt-4">
-                <RouterLink 
-                  :to="`/book?specialist=${specialist.key}&service=${specialist.service}`" 
-                  class="inline-block relative overflow-hidden bg-stone-900 hover:bg-[#D4AF37] text-white text-[11px] tracking-[0.2em] uppercase font-bold px-8 py-4 transition-all duration-500 shadow-sm rounded-none transform hover:-translate-y-0.5"
-                >
-                  Book {{ specialist.name.split(' ')[0] }}
-                </RouterLink>
-              </div>
+             <div class="pt-4">
+  <RouterLink 
+    :to="{ name: 'service', params: { type: specialist.service } }" 
+    class="inline-block relative overflow-hidden bg-stone-900 hover:bg-[#D4AF37] text-white text-[11px] tracking-[0.2em] uppercase font-bold px-8 py-4 transition-all duration-500 shadow-sm rounded-none transform hover:-translate-y-0.5"
+  >
+    Book Now
+  </RouterLink>
+</div>
             </div>
           </div>
         </div>
