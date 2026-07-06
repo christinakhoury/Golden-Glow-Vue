@@ -101,33 +101,52 @@
                 </div>
               </div>
 
-              <div
-                v-for="item in serviceItems"
-                :key="'service-' + item.id"
-                class="p-5 flex justify-between items-center bg-stone-50/40"
-              >
-                <div class="flex-1 min-w-0">
-                  <div class="flex flex-wrap items-center gap-2">
-                    <h3 class="font-playfair font-medium text-stone-800 text-sm md:text-base">
-                      {{ item.variantName ? item.baseName : item.name }}
-                    </h3>
-                    <span 
-                      v-if="item.variantName" 
-                      class="inline-block bg-stone-50 text-stone-500 text-[10px] px-2 py-0.5 border border-stone-200 rounded font-medium tracking-wider uppercase"
-                    >
-                      {{ item.variantName }}
-                    </span>
-                  </div>
-                  <p class="text-[#D4AF37] font-semibold text-sm mt-1">${{ item.price.toLocaleString() }}</p>
-                </div>
+<div
+  v-for="item in serviceItems"
+  :key="'service-' + item.id"
+  class="p-5 flex flex-col sm:flex-row gap-5 items-start sm:items-center justify-between bg-stone-50/40"
+>
+  <!-- LEFT SIDE -->
+  <div class="flex gap-4 items-center flex-1">
+    
+    <!-- IMAGE (FIX ADDED HERE) -->
+    <div class="w-20 h-20 md:w-24 md:h-24 bg-stone-50 rounded-xl p-1.5 flex items-center justify-center flex-shrink-0 border border-stone-100">
+      <img 
+        :src="item.image || item.image_url || item.imageUrl" 
+        :alt="item.name"
+        class="max-w-full max-h-full object-contain rounded-lg"
+      />
+    </div>
 
-                <button
-                  @click="removeItem(item.id)"
-                  class="text-stone-400 hover:text-red-500 text-xs font-medium tracking-wider uppercase flex items-center gap-1.5 transition-colors duration-300"
-                >
-                  <i class="fas fa-trash-alt text-[10px]"></i> Remove
-                </button>
-              </div>
+    <!-- TEXT -->
+    <div class="flex-1 min-w-0">
+      <div class="flex flex-wrap items-center gap-2">
+        <h3 class="font-playfair font-medium text-stone-800 text-sm md:text-base">
+          {{ item.variantName ? item.baseName : item.name }}
+        </h3>
+
+        <span 
+          v-if="item.variantName" 
+          class="inline-block bg-stone-50 text-stone-500 text-[10px] px-2 py-0.5 border border-stone-200 rounded font-medium tracking-wider uppercase"
+        >
+          {{ item.variantName }}
+        </span>
+      </div>
+
+      <p class="text-[#D4AF37] font-semibold text-sm mt-1">
+        ${{ item.price.toLocaleString() }}
+      </p>
+    </div>
+  </div>
+
+  <!-- REMOVE BUTTON -->
+  <button
+    @click="removeItem(item.id)"
+    class="text-stone-400 hover:text-red-500 text-xs font-medium tracking-wider uppercase flex items-center gap-1.5 transition-colors duration-300"
+  >
+    <i class="fas fa-trash-alt text-[10px]"></i> Remove
+  </button>
+</div>
 
             </div>
           </div>

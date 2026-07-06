@@ -7,11 +7,7 @@ const cart = ref([])
 const loading = ref(false)
 const currentUserEmail = ref(null)
 
-/* ======================
-CATALOG TYPE MAP (name -> 'product' | 'service')
-Built from your category list — parent === 'Services' means service, else product.
-This overrides whatever the API sends, since the API's `type` field isn't reliable.
-====================== */
+
 const CATALOG_TYPE_MAP = {
   // Services
   "acne treatment": "service",
