@@ -124,7 +124,11 @@
               <div class="space-y-3 max-h-56 overflow-y-auto pr-1 mb-4">
                 <div v-for="item in productItems" :key="item.id" class="flex justify-between text-sm text-stone-600">
                   <span class="truncate max-w-[65%]">
-                    {{ item.variantName ? item.baseName : item.name }}
+                     {{ item.baseName }}
+                       <span v-if="item.variantName" class="text-stone-400">
+    ({{ item.variantName }})
+  </span>
+
                     <span v-if="item.quantity > 1" class="text-stone-400">× {{ item.quantity }}</span>
                   </span>
                   <span class="font-medium text-stone-800">${{ (item.price * item.quantity).toLocaleString() }}</span>
@@ -160,7 +164,11 @@
               <div class="space-y-3 max-h-56 overflow-y-auto pr-1 mb-4">
                 <div v-for="item in serviceItems" :key="item.id" class="flex justify-between text-sm text-stone-600">
                   <span class="truncate max-w-[65%]">
-                    {{ item.variantName ? item.baseName : item.name }}
+                      {{ item.baseName }}
+                      <span v-if="item.variantName" class="text-stone-400">
+    ({{ item.variantName }})
+  </span>
+
                   </span>
                   <span class="font-medium text-stone-800">${{ item.price.toLocaleString() }}</span>
                 </div>
