@@ -53,7 +53,6 @@ const routes = [
     meta: { hideLayout: true }
   },
 
-
   {
     path: "/login",
     name: "login",
@@ -67,29 +66,28 @@ const routes = [
     component: () => import("../views/VIPView.vue"),
     meta: { hideLayout: true }
   },
-{
-  path: "/checkout",
-  name: "checkout",
-  component: () => import("../views/CheckoutView.vue") // 
-},
-{
-  path: "/products",
-  name: "products",
-  component: () => import("../views/ProductsView.vue")
-},
+  {
+    path: "/checkout",
+    name: "checkout",
+    component: () => import("../views/CheckoutView.vue")
+  },
+  {
+    path: "/products",
+    name: "products",
+    component: () => import("../views/ProductsView.vue")
+  },
 
   {
     path: '/wishlist',
     name: 'Wishlist',
     component: () => import('../views/WishlistView.vue'),
   },
-    {
+  {
     path: '/cart',
     name: 'cart',
     component: () => import('../views/CartView.vue'),
   }
 ]
-
 
 const router = createRouter({
   history: createWebHistory(),
@@ -133,15 +131,14 @@ router.beforeEach((to, from, next) => {
     return next("/giftcards")
   }
 
-  const paymentConfirmed =
-  localStorage.getItem("paymentConfirmed")
+  /* ✅ Checkout is guest-friendly — no login required */
 
-if (
-  to.name === "booking" &&
-  !paymentConfirmed
-) {
-  return next("/cart")
-}
+  const paymentConfirmed = localStorage.getItem("paymentConfirmed")
+
+  if (to.name === "booking" && !paymentConfirmed) {
+    return next("/cart")
+  }
+
   next()
 })
 

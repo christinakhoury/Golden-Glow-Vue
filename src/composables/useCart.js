@@ -1,12 +1,125 @@
-
 import { ref, computed, watch } from "vue"
 import axios from "axios"
 
-const STORE_ID = "17781c3f-b46-4897-be7d-15d1ff48589e"
+const STORE_ID = '17781c3f-b746-4897-be7d-15d1ff48589e'
 
 const cart = ref([])
 const loading = ref(false)
 const currentUserEmail = ref(null)
+
+/* ======================
+CATALOG TYPE MAP (name -> 'product' | 'service')
+Built from your category list — parent === 'Services' means service, else product.
+This overrides whatever the API sends, since the API's `type` field isn't reliable.
+====================== */
+const CATALOG_TYPE_MAP = {
+  // Services
+  "acne treatment": "service",
+  "photoshoot makeup": "service",
+  "bridal makeup": "service",
+  "event makeup": "service",
+  "natural makeup": "service",
+  "pigmentation removal": "service",
+  "aromatherapy": "service",
+  "skin rejuvenation": "service",
+  "deep tissue": "service",
+  "hair removal": "service",
+  "hot stone": "service",
+  "swedish massage": "service",
+  "nail art": "service",
+  "manicure": "service",
+  "gel & acrylic": "service",
+  "pedicure": "service",
+  "event styling": "service",
+  "hair treatments": "service",
+  "hair coloring": "service",
+  "haircut": "service",
+
+  // Products
+  "bubbly pop": "product",
+  "sienna dilena": "product",
+  "lilo eyeshadow": "product",
+  "eyes coco maskara": "product",
+  "one of a kind": "product",
+  "girlie pop set": "product",
+  "cherry on top": "product",
+  "lollipop gloss": "product",
+  "setting powder": "product",
+  "lara's touch": "product",
+  "concealer": "product",
+  "dalana brushes (set)": "product",
+  "dinia set": "product",
+  "aurora bath salts": "product",
+  "laluna": "product",
+  "relaxia face roller": "product",
+  "sculpting nephrite jade gua sha": "product",
+  "iona massage oil": "product",
+  "leona massage oil": "product",
+  "miisica massage oil": "product",
+  "sculpa bath salts": "product",
+  "vanilla bath salts": "product",
+  "ilalai": "product",
+  "anamolie": "product",
+  "enchante candle": "product",
+  "machinia": "product",
+  "post-laser gel": "product",
+  "relaxing massage oil": "product",
+  "post-laser hyper-calming complex": "product",
+  "la machina": "product",
+  "luxury machine": "product",
+  "coco cream": "product",
+  "laravene cream": "product",
+  "biri cream": "product",
+  "mooz ditsie": "product",
+  "vroom vroom": "product",
+  "luxy scissors (pack of 2)": "product",
+  "ceel set": "product",
+  "honori oil": "product",
+  "aulanail oil": "product",
+  "cuticle oil": "product",
+  "maeomo oil": "product",
+  "dreamy oil": "product",
+  "oriko oil": "product",
+  "uneedmee": "product",
+  "power buf set": "product",
+  "jupiter shampoo": "product",
+  "eleganta mist": "product",
+  "dreamy mist": "product",
+  "coco mist": "product",
+  "minimalist": "product",
+  "nivi homa": "product",
+  "touche deluxe press-on extensions": "product",
+  "lelegance press-on nails": "product",
+  "lala press-on extensions": "product",
+  "synddney press-on extensions": "product",
+  "georgette press-on extensions": "product",
+  "ola set": "product"
+}
+
+function resolveType(nameForLookup, apiType) {
+  const key = (nameForLookup || "").toLowerCase().trim()
+  const catalogType = CATALOG_TYPE_MAP[key]
+
+  if (catalogType && apiType && catalogType !== apiType) {
+    console.warn(
+      `[TYPE MISMATCH] "${nameForLookup}" — API said type="${apiType}", catalog says "${catalogType}". Using catalog value.`
+    )
+    return catalogType
+  }
+
+  if (catalogType) {
+    console.log(`[TYPE RESOLVED] "${nameForLookup}" -> "${catalogType}" (from catalog)`)
+    return catalogType
+  }
+
+  if (apiType) {
+    console.log(`[TYPE RESOLVED] "${nameForLookup}" -> "${apiType}" (from API, not in catalog)`)
+    return apiType
+  }
+
+  console.warn(`[TYPE UNKNOWN] "${nameForLookup}" not found in catalog and API sent no type — defaulting to "product". Add this item to CATALOG_TYPE_MAP if that's wrong.`)
+  return "product"
+}
 
 /* ======================
 AUTH HEADERS
@@ -34,7 +147,7 @@ watch(cart, () => {
 }, { deep: true })
 
 /* ======================
-NORMALIZE (VARIANT-AWARE)
+NORMALIZE (VARIANT-AWARE + CATALOG TYPE OVERRIDE)
 ====================== */
 const normalize = (item) => {
   const variantId = item.variantId ||
@@ -57,42 +170,41 @@ const normalize = (item) => {
     rawImage = `https://api.osimart.com/${rawImage}`;
   }
 
-const variantName =
-  item.variantName ??
-  item.variant_name ??
-  item.variant_title ??
-  item.variant?.name ??
-  item.variant?.title ??
-  item.product_variant?.name ??
-  item.product_variant?.title ??
-  item.product_variant_name ??
-  item.product_variant_title ??
-  (Array.isArray(item.values) ? item.values.join(" / ") : null) ??
-  null
+  const variantName =
+    item.variantName ??
+    item.variant_name ??
+    item.variant_title ??
+    item.variant?.name ??
+    item.variant?.title ??
+    item.product_variant?.name ??
+    item.product_variant?.title ??
+    item.product_variant_name ??
+    item.product_variant_title ??
+    (Array.isArray(item.values) ? item.values.join(" / ") : null) ??
+    null
 
-let baseName = item.name || item.product?.name || "Unknown Item"
+  let baseName = item.name || item.product?.name || "Unknown Item"
 
+  // Remove anything inside parentheses
+  baseName = baseName.replace(/\s*\([^)]*\)/g, "").trim()
 
+  const displayName = variantName
+    ? `${baseName} (${variantName})`
+    : baseName
 
-// Remove anything inside parentheses
-baseName = baseName.replace(/\s*\([^)]*\)/g, "").trim()
-
-const displayName = variantName
-  ? `${baseName} (${variantName})`
-  : baseName
-
-
+  const apiType = item.type || item.product?.type || null
+  const resolvedType = resolveType(baseName, apiType)
 
   const result = {
     id: variantId,
     productId,
     variantId,
-    variantName,   
-    baseName,      
-    name: displayName, 
+    variantName,
+    baseName,
+    name: displayName,
     price: Number(item.price ?? item.product?.price ?? item.product_variant?.price ?? 0),
     quantity: item.quantity || 1,
-    type: item.type || item.product?.type || "product",
+    type: resolvedType,
     image: rawImage
   }
 
@@ -122,9 +234,10 @@ const fetchRemoteCart = async () => {
       : Object.values(res.data?.cart || {})
 
     console.log("[FETCH] raw cart array before normalize:", raw)
-console.log(JSON.stringify(raw[0], null, 2))
     cart.value = raw.map(normalize).filter(Boolean)
     console.log("[FETCH] final normalized cart:", cart.value)
+    console.log("[FETCH] product items:", cart.value.filter(i => i.type === "product"))
+    console.log("[FETCH] service items:", cart.value.filter(i => i.type === "service"))
   } catch (e) {
     console.error("[FETCH] ERROR", e.response?.status, e.response?.data || e.message)
   } finally {
@@ -229,14 +342,10 @@ const removeFromCart = async (id) => {
 
 const clearCart = async () => {
   console.log("[CLEAR] cart clearing initiated via item removal loop");
-  
-  // Clone current items to prevent array mutations midway through the loop
+
   const itemsToClear = [...cart.value];
-  
-  // Wipe local state instantly so the UI feels fast
   cart.value = [];
 
-  // Fire removal requests to the server sequentially for all items
   for (const item of itemsToClear) {
     try {
       const url = `https://api.osimart.com/store/apis/cart/update-item/?store=${STORE_ID}`;
@@ -245,7 +354,7 @@ const clearCart = async () => {
         quantity: item.quantity,
         action: "remove"
       };
-      
+
       console.log(`[CLEAR LOOP] Removing item ${item.variantId}`);
       await axios.post(url, payload, {
         headers: getAuthHeaders(),
@@ -256,9 +365,9 @@ const clearCart = async () => {
     }
   }
 
-  // Final fetch to guarantee state synchronization
   await fetchRemoteCart();
 };
+
 /* ======================
 COMPUTED READS
 ====================== */

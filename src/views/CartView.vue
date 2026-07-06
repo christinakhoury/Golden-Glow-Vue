@@ -12,7 +12,6 @@
           </p>
         </div>
 
-        <!-- Clear All Button (Aligned Right, matching Wishlist style) -->
         <div v-if="allCartItems.length > 0" class="shrink-0">
           <button 
             @click="handleClearCart"
@@ -24,9 +23,7 @@
         </div>
       </div>
 
-      <!-- Main Layout Context Fade -->
       <transition name="fade" mode="out-in">
-        <!-- Empty State -->
         <div v-if="!allCartItems.length" class="text-center py-16 md:py-24 max-w-md mx-auto">
           <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-stone-100 text-stone-400 mb-5">
             <i class="far fa-shopping-bag text-2xl"></i>
@@ -38,14 +35,11 @@
           </router-link>
         </div>
 
-        <!-- Cart Elements Container -->
         <div v-else class="flex flex-col lg:flex-row gap-8 lg:gap-10 items-start">
 
-          <!-- Left Side: Items Column -->
           <div class="flex-1 bg-white rounded-2xl shadow-sm border border-stone-100 overflow-hidden w-full">
             <div class="divide-y divide-stone-100">
 
-              <!-- Product Items -->
               <div
                 v-for="item in productItems"
                 :key="'product-' + item.id"
@@ -75,7 +69,6 @@
 
                     <p class="text-[#D4AF37] font-semibold text-sm mt-1">${{ item.price.toLocaleString() }}</p>
 
-                    <!-- Quantity Control and Inline Desktop Remove Button -->
                     <div class="flex items-center gap-4 mt-3">
                       <div class="flex items-center border border-stone-200 rounded-full bg-stone-50/50 p-0.5">
                         <button
@@ -103,13 +96,11 @@
                   </div>
                 </div>
 
-                <!-- Product Total Cost -->
                 <div class="w-full sm:w-auto text-left sm:text-right font-semibold text-stone-800 border-t sm:border-t-0 border-stone-100 pt-3 sm:pt-0 mt-2 sm:mt-0">
                   <span class="inline sm:hidden text-xs text-stone-400 font-normal mr-1">Total:</span>${{ (item.price * item.quantity).toLocaleString() }}
                 </div>
               </div>
 
-              <!-- Service Items -->
               <div
                 v-for="item in serviceItems"
                 :key="'service-' + item.id"
@@ -141,7 +132,6 @@
             </div>
           </div>
 
-          <!-- Right Side: Sticky Checkout Box -->
           <div class="w-full lg:w-96 lg:sticky lg:top-32">
             <div class="bg-white rounded-2xl shadow-sm border border-stone-100 p-6">
               <h3 class="text-lg font-playfair font-medium text-stone-800 mb-4 tracking-wide border-b border-stone-100 pb-3">Order Summary</h3>
@@ -182,24 +172,15 @@
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useCart } from '../composables/useCart'
-import { useAuthStore } from '../composables/auth'
 
 const router = useRouter()
-const authStore = useAuthStore()
 const cartStore = useCart()
 
+// Guest checkout allowed — no auth gate here anymore
 const handleCheckout = () => {
-  if (!authStore.isAuthenticated) {
-    if (typeof authStore.openAuthModal === 'function') {
-      authStore.openAuthModal('login')
-    } else {
-      alert("Please log in to proceed to checkout.")
-    }
-  } else {
-    router.push('/checkout').catch(() => {
-      window.location.href = '/checkout'
-    })
-  }
+  router.push('/checkout').catch(() => {
+    window.location.href = '/checkout'
+  })
 }
 
 async function handleClearCart() {
@@ -208,9 +189,6 @@ async function handleClearCart() {
   }
 }
 
-/* ====================================
-    DATA MAPPING (Unwrapped reactive refs)
-==================================== */
 const allCartItems = computed(() => cartStore.cart.value)
 const productItems = computed(() => cartStore.productItems.value)
 const serviceItems = computed(() => cartStore.serviceItems.value)
@@ -219,9 +197,6 @@ const subtotal = computed(() => cartStore.totalPrice.value)
 const tax = computed(() => subtotal.value * 0.08)
 const total = computed(() => subtotal.value + tax.value)
 
-/* ====================================
-    ACTIONS
-==================================== */
 async function increaseQty(id) {
   await cartStore.increaseQuantity(id)
 }
@@ -236,7 +211,6 @@ async function removeItem(id) {
 </script>
 
 <style scoped>
-/* Smooth view transition styles */
 .fade-enter-active,
 .fade-leave-active {
   transition: opacity 0.3s ease;
