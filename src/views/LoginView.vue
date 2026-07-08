@@ -133,8 +133,12 @@
 import { ref } from "vue"
 import { useRouter } from "vue-router"
 import { login, signup, saveAuthSession, verifyEmail } from "../services/login.js"
+import { useCart } from "../composables/useCart"
+import { useWishlistStore } from "../composables/wishlist"
 
 const router = useRouter()
+const cartStore = useCart()
+const wishlistStore = useWishlistStore()
 
 const mode = ref("login") // "login" | "signup" | "verify"
 const name = ref("")
@@ -165,6 +169,8 @@ async function handleSubmit() {
     if (mode.value === "login") {
       const data = await login({ email: cleanEmail, password: cleanPassword })
       saveAuthSession(data)
+      await cartStore.setUser(cleanEmail)
+      wishlistStore.setUser(cleanEmail)
       window.dispatchEvent(new Event("storage"))
       router.push("/")
     } else {
@@ -199,6 +205,8 @@ async function handleVerify() {
     const data = await login({ email: cleanEmail, password: password.value })
 
     saveAuthSession(data)
+    await cartStore.setUser(cleanEmail)
+    wishlistStore.setUser(cleanEmail)
     window.dispatchEvent(new Event("storage"))
     router.push("/")
   } catch (err) {

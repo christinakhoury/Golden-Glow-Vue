@@ -4,6 +4,7 @@ import { ref, computed } from 'vue'
 export const useWishlistStore = defineStore('wishlist', () => {
   // State
   const items = ref([])
+  const currentUserEmail = ref(null)
   
   // Getters
   const itemCount = computed(() => items.value.length)
@@ -78,6 +79,24 @@ export const useWishlistStore = defineStore('wishlist', () => {
     items.value = []
     saveWishlist()
   }
+
+  // Set current user (called on login/logout).
+  // NOTE: this is a stopgap — there's no remote wishlist endpoint wired up
+  // yet, so this just reloads the same localStorage key. Wishlist is NOT
+  // actually per-account yet; different users on the same browser will
+  // currently see the same saved items.
+  function setUser(email) {
+    console.log("[WISHLIST SET USER] email:", email)
+    currentUserEmail.value = email
+    loadWishlist()
+  }
+
+  // Fetch wishlist from server. No remote endpoint exists yet, so this
+  // just falls back to localStorage for now.
+  async function fetchWishlist() {
+    console.log("[WISHLIST FETCH] no remote wishlist endpoint wired up yet — reloading from localStorage")
+    loadWishlist()
+  }
   
   // Initialize
   loadWishlist()
@@ -85,12 +104,15 @@ export const useWishlistStore = defineStore('wishlist', () => {
   return {
     items,
     itemCount,
+    currentUserEmail,
     addToWishlist,
     removeFromWishlist,
     isInWishlist,
     toggleWishlist,
     clearWishlist,
     loadWishlist,
-    saveWishlist
+    saveWishlist,
+    setUser,
+    fetchWishlist
   }
 })

@@ -1,5 +1,6 @@
 import { ref, computed, watch } from "vue"
 import axios from "axios"
+import { getAuthToken } from "../services/login.js"
 
 const STORE_ID = '17781c3f-b746-4897-be7d-15d1ff48589e'
 
@@ -120,13 +121,23 @@ function resolveType(nameForLookup, apiType) {
 /* ======================
 AUTH HEADERS
 ====================== */
+// IMPORTANT: this used to read localStorage.getItem("token"), but login.js's
+// saveAuthSession() actually stores the access token under the key
+// "gg-token". That mismatch meant every cart request went out with NO
+// Authorization header at all — so osimart treated every add/remove as an
+// anonymous/guest action, never attaching it to the logged-in customer.
+// Using the same getAuthToken() helper that login.js exports guarantees
+// both files always agree on where the token lives.
 const getAuthHeaders = () => {
-  const token = localStorage.getItem("token")
+  const token = getAuthToken()
   console.log("[AUTH] token present:", !!token)
-  return token ? { Authorization: `Bearer ${token}` } : {}
+  // osimart's WWW-Authenticate header (seen on the wishlist endpoint)
+  // specifies JWT_AUTH_HEADER_PREFIX, meaning it expects
+  // "Authorization: JWT <token>", not "Bearer <token>".
+  return token ? { Authorization: `JWT ${token}` } : {}
 }
 
-const isAuthenticated = () => !!localStorage.getItem("token")
+const isAuthenticated = () => !!getAuthToken()
 
 /* ======================
 LOCAL STORAGE
