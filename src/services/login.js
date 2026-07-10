@@ -173,6 +173,50 @@ export async function verifyEmail({ email, code }) {
   return data
 }
 
+/**
+ * Requests a new verification code be sent, in case the original expired
+ * or never arrived.
+ * @param {{ email: string }} details
+ * @returns {Promise<object>}
+ */
+export async function resendVerificationCode({ email }) {
+  const url = `${BASE_URL}/auth/regen/?store=${STORE_ID}`
+
+  const payload = {
+    email,
+    store_id: STORE_ID,
+    verify_as: 'customer'
+  }
+
+  console.log('[osimart] resend code request ->', url, payload)
+
+  let res
+  try {
+    res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    })
+  } catch (networkErr) {
+    console.error('[osimart] resend code network error:', networkErr)
+    throw new Error('Could not reach the server. Check your connection.')
+  }
+
+  let data = null
+  try {
+    data = await res.json()
+  } catch {}
+
+  console.log('[osimart] resend code response <-', res.status, JSON.stringify(data))
+
+  if (!res.ok) {
+    const message = data?.detail || data?.message || data?.email?.[0] || 'Could not resend code.'
+    throw new Error(message)
+  }
+
+  return data
+}
+
 /** Persists the auth session from a login/signup response. */
 export function saveAuthSession(data) {
   const accessToken = data?.access_token || data?.token || data?.access

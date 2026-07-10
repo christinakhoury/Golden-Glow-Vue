@@ -117,6 +117,15 @@
 
         <button 
           type="button" 
+          @click="handleResendCode"
+          :disabled="resending"
+          class="w-full text-xs text-center text-[#D4AF37] hover:underline block pt-2 disabled:opacity-60"
+        >
+          {{ resending ? "Sending..." : "Resend Code" }}
+        </button>
+
+        <button 
+          type="button" 
           @click="switchMode('login')" 
           class="w-full text-xs text-center text-secondary hover:underline block pt-2"
         >
@@ -132,7 +141,7 @@
 <script setup>
 import { ref } from "vue"
 import { useRouter } from "vue-router"
-import { login, signup, saveAuthSession, verifyEmail } from "../services/login.js"
+import { login, signup, saveAuthSession, verifyEmail, resendVerificationCode } from "../services/login.js"
 import { useCart } from "../composables/useCart"
 import { useWishlistStore } from "../composables/wishlist"
 
@@ -148,6 +157,7 @@ const verificationCode = ref("")
 const error = ref("")
 const successMessage = ref("")
 const loading = ref(false)
+const resending = ref(false)
 
 function switchMode(next) {
   mode.value = next
@@ -184,6 +194,22 @@ async function handleSubmit() {
     error.value = err.message || "An error occurred. Please try again."
   } finally {
     loading.value = false
+  }
+}
+
+async function handleResendCode() {
+  error.value = ""
+  successMessage.value = ""
+  resending.value = true
+
+  try {
+    await resendVerificationCode({ email: email.value.trim() })
+    successMessage.value = "A new code has been sent to your email."
+  } catch (err) {
+    console.error("[Login.vue] resend code failed:", err)
+    error.value = err.message || "Could not resend the code. Please try again."
+  } finally {
+    resending.value = false
   }
 }
 
