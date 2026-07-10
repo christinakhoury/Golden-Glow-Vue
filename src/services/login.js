@@ -53,9 +53,6 @@ export async function login({ email, password }) {
   console.log('[osimart] login response <-', res.status, data)
 
   if (!res.ok) {
-    // osimart returns error details under different keys depending on the
-    // failure (non_field_errors for bad credentials, verified for unverified
-    // accounts, detail for generic errors) — check the specific ones first.
     const message =
       data?.non_field_errors?.[0] ||
       data?.verified?.[0] ||
@@ -79,8 +76,6 @@ export async function login({ email, password }) {
 export async function signup({ name, email, password }) {
   const url = `${BASE_URL}/auth/register/?store=${STORE_ID}`
 
-  // osimart's response shape has separate first_name/last_name fields
-  // that came back empty when only `name` was sent — split it explicitly.
   const trimmedName = (name || '').trim()
   const nameParts = trimmedName.split(/\s+/).filter(Boolean)
   const first_name = nameParts[0] || ''
@@ -180,16 +175,12 @@ export async function verifyEmail({ email, code }) {
 
 /** Persists the auth session from a login/signup response. */
 export function saveAuthSession(data) {
-  // osimart returns access_token / refresh_token / user_id — not
-  // token / access / refresh / user like a generic auth API might.
   const accessToken = data?.access_token || data?.token || data?.access
   const refreshToken = data?.refresh_token || data?.refresh
 
   if (accessToken) localStorage.setItem('gg-token', accessToken)
   if (refreshToken) localStorage.setItem('gg-refresh', refreshToken)
 
-  // osimart's login response has no nested user object, just a user_id
-  // string, so build a minimal user object from what's available.
   const userObj =
     data?.user ||
     (data?.user_id
