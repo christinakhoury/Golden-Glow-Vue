@@ -62,6 +62,17 @@
           />
         </div>
 
+        <div v-if="mode === 'signup'">
+          <label class="text-sm font-medium text-secondary">Mobile Number</label>
+          <input
+            v-model="phone"
+            type="tel"
+            autocomplete="tel"
+            class="w-full mt-1 px-4 py-3 border border-theme rounded-xl focus:ring-2 focus:ring-[#D4AF37] outline-none bg-input text-primary"
+            placeholder="e.g. +961 71 234 567"
+          />
+        </div>
+
         <div>
           <label class="text-sm font-medium text-secondary">Password</label>
           <input
@@ -152,6 +163,7 @@ const wishlistStore = useWishlistStore()
 const mode = ref("login") // "login" | "signup" | "verify"
 const name = ref("")
 const email = ref("")
+const phone = ref("")
 const password = ref("")
 const verificationCode = ref("")
 const error = ref("")
@@ -184,7 +196,7 @@ async function handleSubmit() {
       window.dispatchEvent(new Event("storage"))
       router.push("/")
     } else {
-      await signup({ name: cleanName, email: cleanEmail, password: cleanPassword })
+      await signup({ name: cleanName, email: cleanEmail, password: cleanPassword, phone: phone.value.trim() })
 
       successMessage.value = "Account created! Please check your email for a verification code."
       mode.value = "verify"

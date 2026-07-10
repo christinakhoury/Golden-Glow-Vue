@@ -70,10 +70,10 @@ export async function login({ email, password }) {
 
 /**
  * Registers a new customer against the osimart auth endpoint.
- * @param {{ name: string, email: string, password: string }} details
+ * @param {{ name: string, email: string, password: string, phone?: string }} details
  * @returns {Promise<object>}
  */
-export async function signup({ name, email, password }) {
+export async function signup({ name, email, password, phone }) {
   const url = `${BASE_URL}/auth/register/?store=${STORE_ID}`
 
   const trimmedName = (name || '').trim()
@@ -87,6 +87,11 @@ export async function signup({ name, email, password }) {
     last_name,
     email,
     password,
+    // osimart's admin dashboard labels this field "Mobile", so trying the
+    // matching plain field name — same pattern as first_name/last_name.
+    // If it doesn't save, check the register endpoint's browsable API form
+    // for the actual expected key (e.g. phone_number, phone, mobile_number).
+    mobile: phone || '',
     store_id: STORE_ID,
     device_name: navigator.userAgent || 'web-client',
     device_id: getDeviceId(),
