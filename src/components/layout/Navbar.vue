@@ -124,7 +124,7 @@
         <template v-if="user">
           <div class="hidden sm:flex items-center px-3.5 py-1.5 bg-gradient-to-r from-[#bd9c30]/10 to-[#bd9c30]/5 rounded-full border border-[#bd9c30]/20">
             <p class="text-xs font-semibold text-[#bd9c30] whitespace-nowrap">
-              {{ user.points }} pts ✨
+              {{ user.points }}  ✨
             </p>
           </div>
           <button @click="logout" class="hidden sm:block text-xs font-medium text-gray-500 hover:text-gray-800 transition px-2">

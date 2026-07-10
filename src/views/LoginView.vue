@@ -196,7 +196,25 @@ async function handleSubmit() {
       window.dispatchEvent(new Event("storage"))
       router.push("/")
     } else {
-      await signup({ name: cleanName, email: cleanEmail, password: cleanPassword, phone: phone.value.trim() })
+      const signupData = await signup({ name: cleanName, email: cleanEmail, password: cleanPassword, phone: phone.value.trim() })
+
+      // Save the name now — osimart's /auth/login/ response never includes
+      // it, only /auth/register/ does. Without this, the VIP page and
+      // anywhere else showing the user's name would fall back to "Guest"
+      // after the very first login.
+      try {
+        const existingUser = JSON.parse(localStorage.getItem('gg-user')) || {}
+        localStorage.setItem('gg-user', JSON.stringify({
+          ...existingUser,
+          first_name: signupData?.first_name || '',
+          last_name: signupData?.last_name || ''
+        }))
+      } catch {
+        localStorage.setItem('gg-user', JSON.stringify({
+          first_name: signupData?.first_name || '',
+          last_name: signupData?.last_name || ''
+        }))
+      }
 
       successMessage.value = "Account created! Please check your email for a verification code."
       mode.value = "verify"
@@ -263,4 +281,4 @@ async function handleVerify() {
 .body-font {
   font-family: "Poppins", sans-serif;
 }
-</style>
+</style> 

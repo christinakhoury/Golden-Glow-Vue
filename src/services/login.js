@@ -230,13 +230,40 @@ export function saveAuthSession(data) {
   if (accessToken) localStorage.setItem('gg-token', accessToken)
   if (refreshToken) localStorage.setItem('gg-refresh', refreshToken)
 
-  const userObj =
+  // IMPORTANT: osimart's /auth/login/ response only contains
+  // { access_token, refresh_token, user_id, session_id, ... } — no name.
+  // Only /auth/register/ returns first_name/last_name. So on every login
+  // (as opposed to right after signup), a naive overwrite would wipe out
+  // the name that was saved at signup. Instead, merge: keep whatever name
+  // fields already exist in localStorage unless this response actually
+  // provides new ones.
+  let existingUser = {}
+  try {
+    existingUser = JSON.parse(localStorage.getItem('gg-user')) || {}
+  } catch {
+    existingUser = {}
+  }
+
+  const newUserFields =
     data?.user ||
     (data?.user_id
       ? { id: data.user_id, session_id: data.session_id }
       : (data?.id ? data : null))
 
-  if (userObj) localStorage.setItem('gg-user', JSON.stringify(userObj))
+  const userObj = newUserFields
+    ? {
+        ...existingUser,
+        ...newUserFields,
+        // Only overwrite first_name/last_name if this response actually
+        // included non-empty values — login responses won't, signup will.
+        first_name: newUserFields.first_name || existingUser.first_name || '',
+        last_name: newUserFields.last_name || existingUser.last_name || ''
+      }
+    : existingUser
+
+  if (Object.keys(userObj).length) {
+    localStorage.setItem('gg-user', JSON.stringify(userObj))
+  }
 
   console.log('[osimart] auth session saved:', {
     token: getAuthToken(),

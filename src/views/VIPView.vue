@@ -39,7 +39,7 @@
                 <div class="space-y-1 text-left">
                   <span class="text-[#D4AF37] font-mono text-[9px] tracking-[0.3em] uppercase block font-bold">ATELIER TIER</span>
                   <h2 class="text-xl font-light text-stone-100 tracking-wide" style="font-family: 'Playfair Display', serif;">
-                    Welcome, {{ user?.name || 'Guest Member' }}
+                    Welcome, {{ displayName }}
                   </h2>
                 </div>
                 <!-- Micro Geometric Logo Icon Placement -->
@@ -148,6 +148,17 @@ const user = computed(() => {
   } catch (e) {
     return null
   }
+})
+
+// gg-user never actually has a single "name" field — only first_name/
+// last_name (from signup) get saved. Build a display name from those,
+// falling back to "Guest Member" only when neither exists (i.e. actually
+// logged out, not just "logged in but name missing").
+const displayName = computed(() => {
+  const first = user.value?.first_name?.trim()
+  const last = user.value?.last_name?.trim()
+  const fullName = [first, last].filter(Boolean).join(' ')
+  return fullName || 'Guest Member'
 })
 </script>
 
