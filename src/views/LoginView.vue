@@ -180,7 +180,7 @@ async function handleSubmit() {
       const data = await login({ email: cleanEmail, password: cleanPassword })
       saveAuthSession(data)
       await cartStore.setUser(cleanEmail)
-      wishlistStore.setUser(cleanEmail)
+      await wishlistStore.setUser(cleanEmail)
       window.dispatchEvent(new Event("storage"))
       router.push("/")
     } else {
@@ -232,7 +232,7 @@ async function handleVerify() {
 
     saveAuthSession(data)
     await cartStore.setUser(cleanEmail)
-    wishlistStore.setUser(cleanEmail)
+    await wishlistStore.setUser(cleanEmail)
     window.dispatchEvent(new Event("storage"))
     router.push("/")
   } catch (err) {
