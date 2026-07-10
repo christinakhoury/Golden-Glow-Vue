@@ -132,6 +132,20 @@
             </div>
           </div>
 
+          <!-- BECOME VIP ROUTER LINK CALL TO ACTION -->
+          <div class="pt-4" data-aos="fade-up" data-aos-duration="800" data-aos-delay="300">
+            <router-link 
+              to="/vip-signup"
+              class="group relative w-full inline-flex items-center justify-center px-8 py-5 bg-stone-950 text-[#D4AF37] border border-stone-800 font-mono text-xs tracking-[0.3em] uppercase font-bold transition-all duration-300 hover:bg-[#D4AF37] hover:text-stone-950 hover:border-[#D4AF37] hover:shadow-[0_20px_40px_-10px_rgba(212,175,55,0.25)] overflow-hidden"
+            >
+              <!-- Luxury Shimmer Reflection Line Glow -->
+              <div class="absolute -inset-x-full top-0 bottom-0 bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-12 group-hover:animate-shimmer pointer-events-none"></div>
+              
+              <span class="mr-2">Become VIP Member</span>
+              <span class="transition-transform duration-300 group-hover:translate-x-1.5">→</span>
+            </router-link>
+          </div>
+
         </div>
 
       </div>
@@ -150,10 +164,6 @@ const user = computed(() => {
   }
 })
 
-// gg-user never actually has a single "name" field — only first_name/
-// last_name (from signup) get saved. Build a display name from those,
-// falling back to "Guest Member" only when neither exists (i.e. actually
-// logged out, not just "logged in but name missing").
 const displayName = computed(() => {
   const first = user.value?.first_name?.trim()
   const last = user.value?.last_name?.trim()
