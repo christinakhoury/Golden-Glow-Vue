@@ -2,16 +2,17 @@
   <nav class="fixed top-0 left-0 w-full bg-white/80 backdrop-blur-xl border-b border-gray-100 shadow-sm z-50 h-20 transition-all duration-300">
     <div class="max-w-[1600px] mx-auto px-6 lg:px-10 h-full flex items-center justify-between gap-4">
       
-<RouterLink to="/" class="flex-shrink-0 group flex items-center gap-3">
-  <div class="flex flex-col mt-0.5">
-    <h1 class="text-lg md:text-xl font-light tracking-widest text-gray-800 uppercase leading-none">
-      Golden Glow
-    </h1>
-    <span class="text-[9px] tracking-[0.3em] text-[#bd9c30] uppercase mt-1">
-      Premium Studio
-    </span>
-  </div>
-</RouterLink>
+      <!-- 🏷️ Brand Logo -->
+      <RouterLink to="/" class="flex-shrink-0 group flex items-center gap-3">
+        <div class="flex flex-col mt-0.5">
+          <h1 class="text-lg md:text-xl font-light tracking-widest text-gray-800 uppercase leading-none">
+            Golden Glow
+          </h1>
+          <span class="text-[9px] tracking-[0.3em] text-[#bd9c30] uppercase mt-1">
+            Premium Studio
+          </span>
+        </div>
+      </RouterLink>
 
       <!-- 🗺️ Navigation Links (Conditional based on route) -->
       <div class="hidden lg:flex items-center justify-center flex-1 px-4">
@@ -50,8 +51,8 @@
               class="w-48 lg:w-56 focus:w-64 px-4 py-2 pl-9 text-sm border border-gray-200 rounded-full bg-gray-50/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#bd9c30]/20 focus:border-[#bd9c30] transition-all duration-300"
             />
             <svg class="absolute left-3 top-2.5 w-4 h-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-  <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.603 10.602z" />
-</svg>
+              <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.603 10.602z" />
+            </svg>
           </div>
 
           <!-- Results Dropdown -->
@@ -120,16 +121,39 @@
           </div>
         </div>
 
-        <!-- 👤 User Loyalty / Authentication State -->
+        <!-- 👤 User Profile Dropdown / Authentication State -->
         <template v-if="user">
-          <div class="hidden sm:flex items-center px-3.5 py-1.5 bg-gradient-to-r from-[#bd9c30]/10 to-[#bd9c30]/5 rounded-full border border-[#bd9c30]/20">
-            <p class="text-xs font-semibold text-[#bd9c30] whitespace-nowrap">
-              {{ user.points }}  ✨
-            </p>
+          <div class="relative hidden sm:block group">
+            <!-- Profile Trigger Button -->
+            <button class="flex items-center gap-2 px-3 py-2 bg-[#faf7ef] hover:bg-[#ebdcb0]/20 rounded-full border border-gray-100 transition-colors duration-300 focus:outline-none">
+              <div class="w-6 h-6 bg-[#bd9c30] text-white rounded-full flex items-center justify-center text-xs font-bold uppercase shadow-sm">
+                {{ user.name ? user.name.charAt(0) : 'U' }}
+              </div>
+              <span class="text-xs font-medium text-gray-700 max-w-[100px] truncate hidden md:inline">
+                {{ user.name || 'Account' }}
+              </span>
+              <svg class="w-3 h-3 text-gray-400 group-hover:text-[#bd9c30] transition-colors duration-200" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+              </svg>
+            </button>
+
+            <!-- Dropdown Menu -->
+            <div class="absolute right-0 mt-2 w-48 bg-white shadow-xl border border-gray-100 rounded-2xl overflow-hidden z-50 transform origin-top scale-95 opacity-0 invisible group-hover:opacity-100 group-hover:visible group-hover:scale-100 transition-all duration-200">
+              <div class="p-3 border-b border-gray-50 bg-gray-50/50">
+                <p class="text-xs font-semibold text-gray-800 truncate">{{ user.name || 'Welcome Back' }}</p>
+                <p class="text-[10px] text-gray-400 truncate mt-0.5">{{ user.email }}</p>
+              </div>
+              <div class="py-1">
+                <RouterLink to="/account" class="block px-4 py-2.5 text-xs font-medium text-gray-600 hover:text-[#bd9c30] hover:bg-[#faf7ef] transition">
+                  Profile
+                </RouterLink>
+                <hr class="border-gray-100 my-1">
+                <button @click="logout" class="w-full text-left block px-4 py-2.5 text-xs font-semibold text-red-500 hover:bg-red-50 transition">
+                  Logout
+                </button>
+              </div>
+            </div>
           </div>
-          <button @click="logout" class="hidden sm:block text-xs font-medium text-gray-500 hover:text-gray-800 transition px-2">
-            Logout
-          </button>
         </template>
         <template v-else>
           <RouterLink to="/login" class="hidden sm:block text-sm font-medium text-gray-600 hover:text-[#bd9c30] transition">

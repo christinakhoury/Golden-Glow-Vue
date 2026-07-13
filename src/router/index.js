@@ -2,7 +2,6 @@ import { createRouter, createWebHistory } from "vue-router"
 
 // Views
 import HomeView from "../views/HomeView.vue"
-import BookView from "../views/BookView.vue"
 import ServiceView from "../views/ServiceView.vue"
 import GiftCardsFormView from "../views/GiftCardsForm.vue"
 import PaymentView from "../views/PaymentView.vue"
@@ -19,47 +18,40 @@ const routes = [
     name: "payment",
     component: PaymentView
   },
-
   {
     path: "/booking",
     name: "booking",
     component: () => import("../views/BookView.vue")
   },
-
   {
     path: "/services/:type",
     name: "service",
     component: ServiceView,
     props: true
   },
-
   {
     path: "/specialists",
     name: "specialists",
     component: () => import("../views/SpecialistsView.vue")
   },
-
   {
     path: "/giftcards",
     name: "giftcards",
     component: GiftCardsFormView,
     meta: { hideLayout: true }
   },
-
   {
     path: "/voucher",
     name: "voucher",
     component: VoucherView,
     meta: { hideLayout: true }
   },
-
   {
     path: "/login",
     name: "login",
     component: () => import("../views/LoginView.vue"),
     meta: { hideLayout: true }
   },
-
   {
     path: "/vip",
     name: "vip",
@@ -76,7 +68,6 @@ const routes = [
     name: "products",
     component: () => import("../views/ProductsView.vue")
   },
-
   {
     path: '/wishlist',
     name: 'Wishlist',
@@ -86,6 +77,12 @@ const routes = [
     path: '/cart',
     name: 'cart',
     component: () => import('../views/CartView.vue'),
+  },
+  {
+    path: '/account',
+    name: 'account',
+    component: () => import('../views/AccountView.vue'), // Points directly to your new component
+    meta: { requiresAuth: true }
   }
 ]
 
@@ -108,13 +105,26 @@ const router = createRouter({
 })
 
 /* =========================
-   GLOBAL ROUTE GUARDS
+    GLOBAL ROUTE GUARDS
 ========================= */
 
+
 router.beforeEach((to, from, next) => {
+  // Let's grab all possible places your app might look for a user session
+  const user = JSON.parse(localStorage.getItem("gg-user") || localStorage.getItem("auth_user") || "null")
+  const token = localStorage.getItem("gg-token") || localStorage.getItem("gg-token") // matches auth.js keys
+  
   const giftCard = JSON.parse(localStorage.getItem("gg-current-giftcard"))
   const completed = JSON.parse(localStorage.getItem("gg-giftcards")) || []
-  const user = JSON.parse(localStorage.getItem("gg-user"))
+
+  /* 🚫 Profile and security settings authentication check */
+  if (to.meta.requiresAuth) {
+    // If we have a user object OR a token, let them right in!
+    if (!user && !token) {
+      console.warn("🔒 Route blocked: Redirecting unauthorized guest to login portal.")
+      return next("/login")
+    }
+  }
 
   /* 🚫 Payment protection (gift cards) */
   if (to.name === "payment" && !giftCard) {
@@ -130,8 +140,6 @@ router.beforeEach((to, from, next) => {
   if (to.name === "voucher" && completed.length === 0) {
     return next("/giftcards")
   }
-
-  /* ✅ Checkout is guest-friendly — no login required */
 
   const paymentConfirmed = localStorage.getItem("paymentConfirmed")
 

@@ -97,6 +97,7 @@ export async function signup({ name, email, password, phone }) {
     device_id: getDeviceId(),
     register_as: 'customer'
   }
+  
 
   console.log('[osimart] signup request ->', url, payload)
 
@@ -222,21 +223,258 @@ export async function resendVerificationCode({ email }) {
   return data
 }
 
-/** Persists the auth session from a login/signup response. */
-export function saveAuthSession(data) {
+/**
+ * Changes the logged-in customer's password.
+ * POST /auth/change-password/?store=... { old-password, new-password }
+ * @param {{ old_password: string, new_password: string }} details
+ * @returns {Promise<object>}
+ */
+export async function changePassword({ old_password, new_password }) {
+  const url = `${BASE_URL}/auth/change-password/?store=${STORE_ID}`
+
+  const payload = {
+    old_password,
+    password: new_password,
+    store_id: STORE_ID
+  }
+
+  console.log('[osimart] change-password request ->', url, { ...payload, old_password: '••••', password: '••••' })
+
+  const token = getAuthToken()
+
+  let res
+  try {
+    res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {})
+      },
+      body: JSON.stringify(payload)
+    })
+  } catch (networkErr) {
+    console.error('[osimart] change-password network error:', networkErr)
+    throw new Error('Could not reach the server. Check your connection and try again.')
+  }
+
+  let data = null
+  try {
+    data = await res.json()
+  } catch {
+    console.warn('[osimart] change-password response had no JSON body')
+  }
+
+  console.log('[osimart] change-password response <-', res.status, data)
+
+  if (!res.ok) {
+    const message =
+      data?.detail ||
+      data?.message ||
+      data?.non_field_errors?.[0] ||
+      data?.old_password?.[0] ||
+      data?.password?.[0] ||
+      (data ? JSON.stringify(data) : `Password change failed (${res.status})`)
+    console.error('[osimart] change-password failed:', res.status, message, data)
+    throw new Error(message)
+  }
+
+  return data
+}
+
+/**
+ * Sends a password reset code to the customer's email.
+ * POST /auth/forgot-password/?store=... { email, reset-as, store-id }
+ * @param {{ email: string }} details
+ * @returns {Promise<object>}
+ */
+export async function forgotPassword({ email }) {
+  const url = `${BASE_URL}/auth/forgot-password/?store=${STORE_ID}`
+
+  const payload = {
+    email,
+    // Matches the login_as / register_as / verify_as pattern used elsewhere
+    // in this API. The API confirmed it wants snake_case (reset_as, not
+    // the hyphenated reset-as originally given).
+    reset_as: 'customer',
+    store_id: STORE_ID
+  }
+
+  console.log('[osimart] forgot-password request ->', url, payload)
+
+  let res
+  try {
+    res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    })
+  } catch (networkErr) {
+    console.error('[osimart] forgot-password network error:', networkErr)
+    throw new Error('Could not reach the server. Check your connection and try again.')
+  }
+
+  let data = null
+  try {
+    data = await res.json()
+  } catch {
+    console.warn('[osimart] forgot-password response had no JSON body')
+  }
+
+  console.log('[osimart] forgot-password response <-', res.status, data)
+
+  if (!res.ok) {
+    const message =
+      data?.detail ||
+      data?.message ||
+      data?.non_field_errors?.[0] ||
+      data?.email?.[0] ||
+      (data ? JSON.stringify(data) : `Could not send reset code (${res.status})`)
+    console.error('[osimart] forgot-password failed:', res.status, message, data)
+    throw new Error(message)
+  }
+
+  return data
+}
+
+/**
+ * Resets the customer's password using the code sent via forgotPassword().
+ * POST /auth/reset-password/?store=... { email, reset-as, store-id, code, new-password }
+ *
+ * NOTE: the endpoint spec only explicitly listed email/reset-as/store-id/code
+ * (no new-password field). A password reset that doesn't accept a new
+ * password wouldn't do anything useful, so 'new-password' is included here
+ * as an assumption — confirm the exact field name against the real API
+ * (e.g. it might be 'password' or 'new_password' instead) and adjust below.
+ * @param {{ email: string, code: string, new_password: string }} details
+ * @returns {Promise<object>}
+ */
+export async function resetPassword({ email, code, new_password }) {
+  const url = `${BASE_URL}/auth/reset-password/?store=${STORE_ID}`
+
+  const payload = {
+    email,
+    reset_as: 'customer',
+    store_id: STORE_ID,
+    code,
+    password: new_password
+  }
+
+  console.log('[osimart] reset-password request ->', url, { ...payload, password: '••••' })
+
+  let res
+  try {
+    res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    })
+  } catch (networkErr) {
+    console.error('[osimart] reset-password network error:', networkErr)
+    throw new Error('Could not reach the server. Check your connection and try again.')
+  }
+
+  let data = null
+  try {
+    data = await res.json()
+  } catch {
+    console.warn('[osimart] reset-password response had no JSON body')
+  }
+
+  console.log('[osimart] reset-password response <-', res.status, data)
+
+  if (!res.ok) {
+    const message =
+      data?.detail ||
+      data?.message ||
+      data?.non_field_errors?.[0] ||
+      data?.code?.[0] ||
+      data?.password?.[0] ||
+      (data ? JSON.stringify(data) : `Password reset failed (${res.status})`)
+    console.error('[osimart] reset-password failed:', res.status, message, data)
+    throw new Error(message)
+  }
+
+  return data
+}
+
+/**
+ * Refreshes the access token using the stored refresh token.
+ * POST /auth/refresh/?store=...
+ *
+ * NOTE: exact expected field name for the refresh token wasn't specified
+ * (sending both `refresh` and `refresh_token` to cover common conventions —
+ * trim to one once you confirm which the backend expects).
+ * @returns {Promise<object>}
+ */
+export async function refreshAuthToken() {
+  const url = `${BASE_URL}/auth/refresh/?store=${STORE_ID}`
+  const refresh = localStorage.getItem('gg-refresh')
+
+  if (!refresh) {
+    throw new Error('No refresh token available. Please log in again.')
+  }
+
+  const payload = {
+    refresh,
+    refresh_token: refresh,
+    store_id: STORE_ID,
+    device_id: getDeviceId()
+  }
+
+  console.log('[osimart] refresh request ->', url)
+
+  let res
+  try {
+    res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    })
+  } catch (networkErr) {
+    console.error('[osimart] refresh network error:', networkErr)
+    throw new Error('Could not reach the server. Check your connection and try again.')
+  }
+
+  let data = null
+  try {
+    data = await res.json()
+  } catch {
+    console.warn('[osimart] refresh response had no JSON body')
+  }
+
+  console.log('[osimart] refresh response <-', res.status, data)
+
+  if (!res.ok) {
+    const message = data?.detail || data?.message || `Session refresh failed (${res.status})`
+    console.error('[osimart] refresh failed:', res.status, message, data)
+    throw new Error(message)
+  }
+
+  const newAccessToken = data?.access_token || data?.token || data?.access
+  if (newAccessToken) {
+    localStorage.setItem('gg-token', newAccessToken)
+  }
+
+  return data
+}
+
+/**
+ * Persists the auth session from a login/signup response.
+ * @param {object} data - the raw API response
+ * @param {object} [extraFields] - client-known values (e.g. the email/phone
+ *   the user just typed into the form) used to fill in anything the API
+ *   response doesn't echo back. osimart's /auth/login/ response, for
+ *   example, only returns { access_token, refresh_token, user_id,
+ *   session_id } — no email, no name, no phone — so without this, those
+ *   fields would never make it into localStorage at all.
+ */
+export function saveAuthSession(data, extraFields = {}) {
   const accessToken = data?.access_token || data?.token || data?.access
   const refreshToken = data?.refresh_token || data?.refresh
 
   if (accessToken) localStorage.setItem('gg-token', accessToken)
   if (refreshToken) localStorage.setItem('gg-refresh', refreshToken)
 
-  // IMPORTANT: osimart's /auth/login/ response only contains
-  // { access_token, refresh_token, user_id, session_id, ... } — no name.
-  // Only /auth/register/ returns first_name/last_name. So on every login
-  // (as opposed to right after signup), a naive overwrite would wipe out
-  // the name that was saved at signup. Instead, merge: keep whatever name
-  // fields already exist in localStorage unless this response actually
-  // provides new ones.
   let existingUser = {}
   try {
     existingUser = JSON.parse(localStorage.getItem('gg-user')) || {}
@@ -250,16 +488,19 @@ export function saveAuthSession(data) {
       ? { id: data.user_id, session_id: data.session_id }
       : (data?.id ? data : null))
 
-  const userObj = newUserFields
-    ? {
-        ...existingUser,
-        ...newUserFields,
-        // Only overwrite first_name/last_name if this response actually
-        // included non-empty values — login responses won't, signup will.
-        first_name: newUserFields.first_name || existingUser.first_name || '',
-        last_name: newUserFields.last_name || existingUser.last_name || ''
-      }
-    : existingUser
+  // Merge priority, low to high: what was already stored -> extraFields
+  // (client-typed values) -> newUserFields (the API response itself, since
+  // that's the most authoritative source whenever it actually provides a
+  // field).
+  const userObj = {
+    ...existingUser,
+    ...extraFields,
+    ...(newUserFields || {}),
+    first_name: newUserFields?.first_name || extraFields.first_name || existingUser.first_name || '',
+    last_name: newUserFields?.last_name || extraFields.last_name || existingUser.last_name || '',
+    email: newUserFields?.email || extraFields.email || existingUser.email || '',
+    mobile: newUserFields?.mobile || extraFields.mobile || existingUser.mobile || ''
+  }
 
   if (Object.keys(userObj).length) {
     localStorage.setItem('gg-user', JSON.stringify(userObj))

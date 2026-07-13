@@ -7,6 +7,8 @@
         {{ 
           mode === "login" ? "Login to your beauty account" : 
           mode === "signup" ? "Create your beauty account" : 
+          mode === "verify" ? "Verify your email address" :
+          mode === "forgot" ? "Reset your password" :
           "Verify your email address" 
         }}
       </p>
@@ -16,8 +18,8 @@
         {{ successMessage }}
       </div>
 
-      <!-- Login / Signup toggle (Hidden when in verification mode) -->
-      <div v-if="mode !== 'verify'" class="flex mb-6 bg-secondary rounded-xl p-1 border border-theme">
+      <!-- Login / Signup toggle (Hidden when in verification or forgot-password mode) -->
+      <div v-if="mode === 'login' || mode === 'signup'" class="flex mb-6 bg-secondary rounded-xl p-1 border border-theme">
         <button
           type="button"
           class="flex-1 py-2 rounded-lg text-sm font-semibold transition"
@@ -37,7 +39,7 @@
       </div>
 
       <!-- 1. LOGIN & SIGNUP FORM -->
-      <form v-if="mode !== 'verify'" @submit.prevent="handleSubmit" class="space-y-5">
+      <form v-if="mode === 'login' || mode === 'signup'" @submit.prevent="handleSubmit" class="space-y-5">
         <div v-if="mode === 'signup'">
           <label class="text-sm font-medium text-secondary">Full Name</label>
           <input
@@ -74,7 +76,17 @@
         </div>
 
         <div>
-          <label class="text-sm font-medium text-secondary">Password</label>
+          <div class="flex items-center justify-between">
+            <label class="text-sm font-medium text-secondary">Password</label>
+            <button
+              v-if="mode === 'login'"
+              type="button"
+              @click="switchMode('forgot')"
+              class="text-xs text-[#D4AF37] hover:underline"
+            >
+              Forgot password?
+            </button>
+          </div>
           <input
             v-model="password"
             type="password"
@@ -96,8 +108,8 @@
         </button>
       </form>
 
-      <!-- 2. EMAIL VERIFICATION FORM -->
-      <form v-else @submit.prevent="handleVerify" class="space-y-5">
+      <!-- 2. EMAIL VERIFICATION FORM (post-signup) -->
+      <form v-else-if="mode === 'verify'" @submit.prevent="handleVerify" class="space-y-5">
         <p class="text-xs text-secondary text-center">
           We sent a 4-digit verification code to <br><strong class="text-primary">{{ email }}</strong>
         </p>
@@ -144,6 +156,107 @@
         </button>
       </form>
 
+      <!-- 3. FORGOT PASSWORD FORM (email -> code + new password) -->
+      <form v-else-if="mode === 'forgot'" @submit.prevent="forgotStep === 'request' ? handleForgotRequest() : handleForgotReset()" class="space-y-5">
+
+        <!-- Step A: ask for the email to send the code to -->
+        <template v-if="forgotStep === 'request'">
+          <div>
+            <label class="text-sm font-medium text-secondary">Email</label>
+            <input
+              v-model="email"
+              type="email"
+              required
+              autocomplete="email"
+              class="w-full mt-1 px-4 py-3 border border-theme rounded-xl focus:ring-2 focus:ring-[#D4AF37] outline-none bg-input text-primary"
+              placeholder="Enter your account email"
+            />
+          </div>
+
+          <p v-if="error" class="text-sm text-red-500 text-center">{{ error }}</p>
+
+          <button
+            type="submit"
+            :disabled="loading"
+            class="w-full bg-[#D4AF37] text-white py-3 rounded-xl font-semibold hover:bg-[#c39d28] transition disabled:opacity-60"
+          >
+            {{ loading ? "Sending code..." : "Send Reset Code" }}
+          </button>
+        </template>
+
+        <!-- Step B: enter the code + choose a new password -->
+        <template v-else>
+          <p class="text-xs text-secondary text-center">
+            We sent a reset code to <br><strong class="text-primary">{{ email }}</strong>
+          </p>
+
+          <div>
+            <label class="text-sm font-medium text-secondary block text-center">Reset Code</label>
+            <input
+              v-model="resetCode"
+              type="text"
+              inputmode="numeric"
+              pattern="[0-9]*"
+              maxlength="4"
+              required
+              placeholder="0000"
+              class="w-full max-w-[160px] mx-auto block mt-2 px-4 py-3 border border-theme rounded-xl text-center text-2xl tracking-[0.5em] font-bold focus:ring-2 focus:ring-[#D4AF37] outline-none bg-input text-primary"
+            />
+          </div>
+
+          <div>
+            <label class="text-sm font-medium text-secondary">New Password</label>
+            <input
+              v-model="newPassword"
+              type="password"
+              required
+              autocomplete="new-password"
+              class="w-full mt-1 px-4 py-3 border border-theme rounded-xl focus:ring-2 focus:ring-[#D4AF37] outline-none bg-input text-primary"
+              placeholder="••••••••"
+            />
+          </div>
+
+          <div>
+            <label class="text-sm font-medium text-secondary">Confirm New Password</label>
+            <input
+              v-model="confirmNewPassword"
+              type="password"
+              required
+              autocomplete="new-password"
+              class="w-full mt-1 px-4 py-3 border border-theme rounded-xl focus:ring-2 focus:ring-[#D4AF37] outline-none bg-input text-primary"
+              placeholder="••••••••"
+            />
+          </div>
+
+          <p v-if="error" class="text-sm text-red-500 text-center">{{ error }}</p>
+
+          <button
+            type="submit"
+            :disabled="loading || resetCode.length !== 4"
+            class="w-full bg-[#D4AF37] text-white py-3 rounded-xl font-semibold hover:bg-[#c39d28] transition disabled:opacity-60"
+          >
+            {{ loading ? "Resetting..." : "Reset Password" }}
+          </button>
+
+          <button
+            type="button"
+            @click="handleForgotRequest"
+            :disabled="resending"
+            class="w-full text-xs text-center text-[#D4AF37] hover:underline block pt-2 disabled:opacity-60"
+          >
+            {{ resending ? "Sending..." : "Resend Code" }}
+          </button>
+        </template>
+
+        <button 
+          type="button" 
+          @click="switchMode('login')" 
+          class="w-full text-xs text-center text-secondary hover:underline block pt-2"
+        >
+          Back to Login
+        </button>
+      </form>
+
       <p class="text-xs text-center text-muted mt-6">By continuing, you join Glow Rewards ✨</p>
     </div>
   </div>
@@ -152,7 +265,15 @@
 <script setup>
 import { ref } from "vue"
 import { useRouter } from "vue-router"
-import { login, signup, saveAuthSession, verifyEmail, resendVerificationCode } from "../services/login.js"
+import {
+  login,
+  signup,
+  saveAuthSession,
+  verifyEmail,
+  resendVerificationCode,
+  forgotPassword,
+  resetPassword
+} from "../services/login.js"
 import { useCart } from "../composables/useCart"
 import { useWishlistStore } from "../composables/wishlist"
 
@@ -160,12 +281,20 @@ const router = useRouter()
 const cartStore = useCart()
 const wishlistStore = useWishlistStore()
 
-const mode = ref("login") // "login" | "signup" | "verify"
+const mode = ref("login") // "login" | "signup" | "verify" | "forgot"
+const forgotStep = ref("request") // "request" | "reset" — sub-step within "forgot" mode
+
 const name = ref("")
 const email = ref("")
 const phone = ref("")
 const password = ref("")
 const verificationCode = ref("")
+
+// Forgot-password specific fields
+const resetCode = ref("")
+const newPassword = ref("")
+const confirmNewPassword = ref("")
+
 const error = ref("")
 const successMessage = ref("")
 const loading = ref(false)
@@ -173,9 +302,13 @@ const resending = ref(false)
 
 function switchMode(next) {
   mode.value = next
+  forgotStep.value = "request"
   error.value = ""
   successMessage.value = ""
   verificationCode.value = ""
+  resetCode.value = ""
+  newPassword.value = ""
+  confirmNewPassword.value = ""
 }
 
 async function handleSubmit() {
@@ -190,7 +323,7 @@ async function handleSubmit() {
   try {
     if (mode.value === "login") {
       const data = await login({ email: cleanEmail, password: cleanPassword })
-      saveAuthSession(data)
+      saveAuthSession(data, { email: cleanEmail })
       await cartStore.setUser(cleanEmail)
       await wishlistStore.setUser(cleanEmail)
       window.dispatchEvent(new Event("storage"))
@@ -198,21 +331,27 @@ async function handleSubmit() {
     } else {
       const signupData = await signup({ name: cleanName, email: cleanEmail, password: cleanPassword, phone: phone.value.trim() })
 
-      // Save the name now — osimart's /auth/login/ response never includes
-      // it, only /auth/register/ does. Without this, the VIP page and
-      // anywhere else showing the user's name would fall back to "Guest"
+      // Save what we know now — osimart's /auth/login/ response never
+      // includes name, email, or mobile, only /auth/register/ does (and
+      // even that's unconfirmed for mobile). Without this, the account
+      // page and anywhere else showing these details would stay blank
       // after the very first login.
+      const trimmedPhone = phone.value.trim()
       try {
         const existingUser = JSON.parse(localStorage.getItem('gg-user')) || {}
         localStorage.setItem('gg-user', JSON.stringify({
           ...existingUser,
           first_name: signupData?.first_name || '',
-          last_name: signupData?.last_name || ''
+          last_name: signupData?.last_name || '',
+          email: signupData?.email || cleanEmail,
+          mobile: signupData?.mobile || trimmedPhone
         }))
       } catch {
         localStorage.setItem('gg-user', JSON.stringify({
           first_name: signupData?.first_name || '',
-          last_name: signupData?.last_name || ''
+          last_name: signupData?.last_name || '',
+          email: signupData?.email || cleanEmail,
+          mobile: signupData?.mobile || trimmedPhone
         }))
       }
 
@@ -260,7 +399,7 @@ async function handleVerify() {
     // 2. Perform regular customer login with the same clean email
     const data = await login({ email: cleanEmail, password: password.value })
 
-    saveAuthSession(data)
+    saveAuthSession(data, { email: cleanEmail })
     await cartStore.setUser(cleanEmail)
     await wishlistStore.setUser(cleanEmail)
     window.dispatchEvent(new Event("storage"))
@@ -268,6 +407,67 @@ async function handleVerify() {
   } catch (err) {
     console.error("[Login.vue] verification workflow failed:", err)
     error.value = err.message || "Verification code is incorrect or expired."
+  } finally {
+    loading.value = false
+  }
+}
+
+// Step A of forgot-password: send the reset code to the entered email
+async function handleForgotRequest() {
+  error.value = ""
+  successMessage.value = ""
+
+  const cleanEmail = email.value.trim()
+  if (!cleanEmail) {
+    error.value = "Please enter your email."
+    return
+  }
+
+  const isResend = forgotStep.value === "reset"
+  if (isResend) {
+    resending.value = true
+  } else {
+    loading.value = true
+  }
+
+  try {
+    await forgotPassword({ email: cleanEmail })
+    successMessage.value = isResend
+      ? "A new code has been sent to your email."
+      : "A reset code has been sent to your email."
+    forgotStep.value = "reset"
+  } catch (err) {
+    console.error("[Login.vue] forgot-password request failed:", err)
+    error.value = err.message || "Could not send a reset code. Please try again."
+  } finally {
+    loading.value = false
+    resending.value = false
+  }
+}
+
+// Step B of forgot-password: submit the code + new password
+async function handleForgotReset() {
+  error.value = ""
+  successMessage.value = ""
+
+  if (newPassword.value !== confirmNewPassword.value) {
+    error.value = "New password entries do not match."
+    return
+  }
+
+  loading.value = true
+  try {
+    await resetPassword({
+      email: email.value.trim(),
+      code: resetCode.value.trim(),
+      new_password: newPassword.value
+    })
+
+    switchMode('login')
+    successMessage.value = "Password reset! Please log in with your new password."
+  } catch (err) {
+    console.error("[Login.vue] reset-password failed:", err)
+    error.value = err.message || "Reset code is incorrect or expired."
   } finally {
     loading.value = false
   }
@@ -281,4 +481,4 @@ async function handleVerify() {
 .body-font {
   font-family: "Poppins", sans-serif;
 }
-</style> 
+</style>
