@@ -12,6 +12,47 @@ function getDeviceId() {
   return deviceId
 }
 
+// ---------------------------------------------------------------------------
+// Profile cache — keyed by email, survives logout().
+//
+// osimart's /auth/login/ response only ever returns
+// { access_token, refresh_token, user_id, session_id } — it never echoes
+// back first_name / last_name / mobile. Those values only exist because the
+// user typed them into the signup form. gg-user gets wiped on every
+// logout(), so relying on it alone means the profile fields go blank the
+// very next time the user logs back in (as opposed to right after signup,
+// when gg-user still happens to have them). This cache is the one place
+// those fields survive a logout/login cycle.
+// ---------------------------------------------------------------------------
+const PROFILE_CACHE_KEY = 'gg-profile-cache'
+
+function getCachedProfile(email) {
+  if (!email) return {}
+  try {
+    const all = JSON.parse(localStorage.getItem(PROFILE_CACHE_KEY)) || {}
+    return all[email.toLowerCase()] || {}
+  } catch {
+    return {}
+  }
+}
+
+function setCachedProfile(email, fields) {
+  if (!email) return
+  try {
+    const all = JSON.parse(localStorage.getItem(PROFILE_CACHE_KEY)) || {}
+    const key = email.toLowerCase()
+    const existing = all[key] || {}
+    all[key] = {
+      first_name: fields.first_name || existing.first_name || '',
+      last_name: fields.last_name || existing.last_name || '',
+      mobile: fields.mobile || existing.mobile || ''
+    }
+    localStorage.setItem(PROFILE_CACHE_KEY, JSON.stringify(all))
+  } catch (e) {
+    console.warn('[osimart] could not cache profile', e)
+  }
+}
+
 /**
  * Logs a customer in against the osimart auth endpoint.
  * @param {{ email: string, password: string }} credentials
@@ -97,7 +138,6 @@ export async function signup({ name, email, password, phone }) {
     device_id: getDeviceId(),
     register_as: 'customer'
   }
-  
 
   console.log('[osimart] signup request ->', url, payload)
 
@@ -131,6 +171,15 @@ export async function signup({ name, email, password, phone }) {
     console.error('[osimart] signup failed:', res.status, message, data)
     throw new Error(message)
   }
+
+  // Seed the profile cache immediately with what the user typed, since the
+  // register response may or may not echo these fields back, and this is
+  // the earliest point we reliably know them.
+  setCachedProfile(email, {
+    first_name: data?.first_name || first_name,
+    last_name: data?.last_name || last_name,
+    mobile: data?.mobile || phone || ''
+  })
 
   return data
 }
@@ -234,11 +283,10 @@ export async function changePassword({ old_password, new_password }) {
 
   const payload = {
     old_password,
-    new_password, // <-- CHANGED THIS from 'password: new_password'
+    new_password,
     store_id: STORE_ID
   }
 
-  // Updated log to safely show the correct key mapping
   console.log('[osimart] change-password request ->', url, { ...payload, old_password: '••••', new_password: '••••' })
 
   const token = getAuthToken()
@@ -273,7 +321,7 @@ export async function changePassword({ old_password, new_password }) {
       data?.message ||
       data?.non_field_errors?.[0] ||
       data?.old_password?.[0] ||
-      data?.new_password?.[0] || // <-- Also updated error message fallback reading
+      data?.new_password?.[0] ||
       (data ? JSON.stringify(data) : `Password change failed (${res.status})`)
     console.error('[osimart] change-password failed:', res.status, message, data)
     throw new Error(message)
@@ -340,12 +388,6 @@ export async function forgotPassword({ email }) {
 /**
  * Resets the customer's password using the code sent via forgotPassword().
  * POST /auth/reset-password/?store=... { email, reset-as, store-id, code, new-password }
- *
- * NOTE: the endpoint spec only explicitly listed email/reset-as/store-id/code
- * (no new-password field). A password reset that doesn't accept a new
- * password wouldn't do anything useful, so 'new-password' is included here
- * as an assumption — confirm the exact field name against the real API
- * (e.g. it might be 'password' or 'new_password' instead) and adjust below.
  * @param {{ email: string, code: string, new_password: string }} details
  * @returns {Promise<object>}
  */
@@ -401,10 +443,6 @@ export async function resetPassword({ email, code, new_password }) {
 /**
  * Refreshes the access token using the stored refresh token.
  * POST /auth/refresh/?store=...
- *
- * NOTE: exact expected field name for the refresh token wasn't specified
- * (sending both `refresh` and `refresh_token` to cover common conventions —
- * trim to one once you confirm which the backend expects).
  * @returns {Promise<object>}
  */
 export async function refreshAuthToken() {
@@ -462,12 +500,13 @@ export async function refreshAuthToken() {
 /**
  * Persists the auth session from a login/signup response.
  * @param {object} data - the raw API response
- * @param {object} [extraFields] - client-known values (e.g. the email/phone
+ * @param {object} [extraFields] - client-known values (e.g. the email/name/phone
  *   the user just typed into the form) used to fill in anything the API
  *   response doesn't echo back. osimart's /auth/login/ response, for
  *   example, only returns { access_token, refresh_token, user_id,
- *   session_id } — no email, no name, no phone — so without this, those
- *   fields would never make it into localStorage at all.
+ *   session_id } — no email, no name, no phone — so without this (and the
+ *   profile cache below), those fields would never make it into
+ *   localStorage after a normal login.
  */
 export function saveAuthSession(data, extraFields = {}) {
   const accessToken = data?.access_token || data?.token || data?.access
@@ -489,23 +528,39 @@ export function saveAuthSession(data, extraFields = {}) {
       ? { id: data.user_id, session_id: data.session_id }
       : (data?.id ? data : null))
 
-  // Merge priority, low to high: what was already stored -> extraFields
-  // (client-typed values) -> newUserFields (the API response itself, since
-  // that's the most authoritative source whenever it actually provides a
-  // field).
+  const resolvedEmail =
+    newUserFields?.email || extraFields.email || existingUser.email || ''
+
+  // Fallback of last resort: gg-user gets wiped on logout(), so on a normal
+  // (non-signup) login there's no existingUser data left. The profile
+  // cache is keyed by email and survives logout — it's what actually
+  // repopulates name/mobile after re-logging in.
+  const cached = getCachedProfile(resolvedEmail)
+
+  // Merge priority, low to high: existingUser -> extraFields (client-typed
+  // values) -> newUserFields (API response, most authoritative when
+  // present) -> cached as the final fallback for name/mobile specifically.
   const userObj = {
     ...existingUser,
     ...extraFields,
     ...(newUserFields || {}),
-    first_name: newUserFields?.first_name || extraFields.first_name || existingUser.first_name || '',
-    last_name: newUserFields?.last_name || extraFields.last_name || existingUser.last_name || '',
-    email: newUserFields?.email || extraFields.email || existingUser.email || '',
-    mobile: newUserFields?.mobile || extraFields.mobile || existingUser.mobile || ''
+    email: resolvedEmail,
+    first_name: newUserFields?.first_name || extraFields.first_name || existingUser.first_name || cached.first_name || '',
+    last_name: newUserFields?.last_name || extraFields.last_name || existingUser.last_name || cached.last_name || '',
+    mobile: newUserFields?.mobile || extraFields.mobile || existingUser.mobile || cached.mobile || ''
   }
 
   if (Object.keys(userObj).length) {
     localStorage.setItem('gg-user', JSON.stringify(userObj))
   }
+
+  // Keep the cache fresh any time we actually know these values, so future
+  // logins (after a logout wipes gg-user) can still recover them.
+  setCachedProfile(resolvedEmail, {
+    first_name: userObj.first_name,
+    last_name: userObj.last_name,
+    mobile: userObj.mobile
+  })
 
   console.log('[osimart] auth session saved:', {
     token: getAuthToken(),
@@ -521,4 +576,7 @@ export function logout() {
   localStorage.removeItem('gg-token')
   localStorage.removeItem('gg-refresh')
   localStorage.removeItem('gg-user')
+  // gg-profile-cache intentionally NOT cleared here — first_name/last_name/
+  // mobile are never returned by osimart's login API, so this cache is the
+  // only place they survive across a logout/login cycle.
 }

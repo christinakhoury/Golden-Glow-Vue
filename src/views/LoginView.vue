@@ -323,6 +323,8 @@ async function handleSubmit() {
   try {
     if (mode.value === "login") {
       const data = await login({ email: cleanEmail, password: cleanPassword })
+      // No name/phone typed on the login form — saveAuthSession will fall
+      // back to the profile cache (keyed by email) to fill those in.
       saveAuthSession(data, { email: cleanEmail })
       await cartStore.setUser(cleanEmail)
       await wishlistStore.setUser(cleanEmail)
@@ -331,25 +333,26 @@ async function handleSubmit() {
     } else {
       const signupData = await signup({ name: cleanName, email: cleanEmail, password: cleanPassword, phone: phone.value.trim() })
 
-      // Save what we know now — osimart's /auth/login/ response never
-      // includes name, email, or mobile, only /auth/register/ does (and
-      // even that's unconfirmed for mobile). Without this, the account
-      // page and anywhere else showing these details would stay blank
-      // after the very first login.
+      // Save what we know now — osimart's /auth/register/ response may not
+      // echo back name/email/mobile. signup() already seeds the profile
+      // cache internally, but we also keep gg-user populated here so the
+      // account page shows correctly immediately after signup, before the
+      // user has verified/logged in for the first time.
       const trimmedPhone = phone.value.trim()
+      const nameParts = cleanName.split(/\s+/).filter(Boolean)
       try {
         const existingUser = JSON.parse(localStorage.getItem('gg-user')) || {}
         localStorage.setItem('gg-user', JSON.stringify({
           ...existingUser,
-          first_name: signupData?.first_name || '',
-          last_name: signupData?.last_name || '',
+          first_name: signupData?.first_name || nameParts[0] || '',
+          last_name: signupData?.last_name || nameParts.slice(1).join(' ') || '',
           email: signupData?.email || cleanEmail,
           mobile: signupData?.mobile || trimmedPhone
         }))
       } catch {
         localStorage.setItem('gg-user', JSON.stringify({
-          first_name: signupData?.first_name || '',
-          last_name: signupData?.last_name || '',
+          first_name: signupData?.first_name || nameParts[0] || '',
+          last_name: signupData?.last_name || nameParts.slice(1).join(' ') || '',
           email: signupData?.email || cleanEmail,
           mobile: signupData?.mobile || trimmedPhone
         }))
@@ -391,6 +394,7 @@ async function handleVerify() {
   // email that the register response returns. That prefix appears to be
   // an internal storage key, not the value other endpoints expect back.
   const cleanEmail = email.value.trim()
+  const nameParts = name.value.trim().split(/\s+/).filter(Boolean)
 
   try {
     // 1. Validate the code against the database
@@ -399,7 +403,17 @@ async function handleVerify() {
     // 2. Perform regular customer login with the same clean email
     const data = await login({ email: cleanEmail, password: password.value })
 
-    saveAuthSession(data, { email: cleanEmail })
+    // Pass name/phone through explicitly — the login response never
+    // contains them, and this is the moment they're freshest (straight
+    // from the signup form still held in this component's state). This is
+    // also what seeds/refreshes the profile cache in login.js so future
+    // logins (after a logout wipes gg-user) can still recover them.
+    saveAuthSession(data, {
+      email: cleanEmail,
+      first_name: nameParts[0] || '',
+      last_name: nameParts.slice(1).join(' ') || '',
+      mobile: phone.value.trim()
+    })
     await cartStore.setUser(cleanEmail)
     await wishlistStore.setUser(cleanEmail)
     window.dispatchEvent(new Event("storage"))
