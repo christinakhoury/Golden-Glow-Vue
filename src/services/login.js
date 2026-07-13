@@ -225,7 +225,7 @@ export async function resendVerificationCode({ email }) {
 
 /**
  * Changes the logged-in customer's password.
- * POST /auth/change-password/?store=... { old-password, new-password }
+ * POST /auth/change-password/?store=... { old_password, new_password }
  * @param {{ old_password: string, new_password: string }} details
  * @returns {Promise<object>}
  */
@@ -234,11 +234,12 @@ export async function changePassword({ old_password, new_password }) {
 
   const payload = {
     old_password,
-    password: new_password,
+    new_password, // <-- CHANGED THIS from 'password: new_password'
     store_id: STORE_ID
   }
 
-  console.log('[osimart] change-password request ->', url, { ...payload, old_password: '••••', password: '••••' })
+  // Updated log to safely show the correct key mapping
+  console.log('[osimart] change-password request ->', url, { ...payload, old_password: '••••', new_password: '••••' })
 
   const token = getAuthToken()
 
@@ -272,7 +273,7 @@ export async function changePassword({ old_password, new_password }) {
       data?.message ||
       data?.non_field_errors?.[0] ||
       data?.old_password?.[0] ||
-      data?.password?.[0] ||
+      data?.new_password?.[0] || // <-- Also updated error message fallback reading
       (data ? JSON.stringify(data) : `Password change failed (${res.status})`)
     console.error('[osimart] change-password failed:', res.status, message, data)
     throw new Error(message)
