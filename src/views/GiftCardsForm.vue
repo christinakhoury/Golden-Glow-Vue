@@ -6,7 +6,7 @@
         Gift Cards
       </h1>
 
-      <p class="text-center text-gray-500 mb-8">
+      <p class="text-center text-stone-500 mb-8">
         Send luxury beauty to someone special 🎁
       </p>
 
@@ -27,21 +27,21 @@
       <div class="space-y-4">
 
         <input v-model="buyerName" type="text" placeholder="Your Name"
-          class="w-full px-4 py-3 border rounded-xl">
+          class="w-full px-4 py-3 bg-white border border-stone-200 rounded-xl text-stone-900 placeholder-stone-400 focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] focus:outline-none">
 
         <input v-model="buyerEmail" type="email" placeholder="Your Email"
-          class="w-full px-4 py-3 border rounded-xl">
+          class="w-full px-4 py-3 bg-white border border-stone-200 rounded-xl text-stone-900 placeholder-stone-400 focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] focus:outline-none">
 
         <input v-model="recipientName" type="text" placeholder="Recipient Name"
-          class="w-full px-4 py-3 border rounded-xl">
+          class="w-full px-4 py-3 bg-white border border-stone-200 rounded-xl text-stone-900 placeholder-stone-400 focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] focus:outline-none">
 
         <input v-model="recipientPhone" type="text" placeholder="Recipient Phone Number"
-          class="w-full px-4 py-3 border rounded-xl">
+          class="w-full px-4 py-3 bg-white border border-stone-200 rounded-xl text-stone-900 placeholder-stone-400 focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] focus:outline-none">
 
         <textarea v-model="message" placeholder="Add a message (optional)"
-          class="w-full px-4 py-3 border rounded-xl"></textarea>
+          class="w-full px-4 py-3 bg-white border border-stone-200 rounded-xl text-stone-900 placeholder-stone-400 focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] focus:outline-none"></textarea>
 
-        <p class="text-center text-gray-600">
+        <p class="text-center text-stone-600">
           Selected Amount:
           <span class="font-bold text-[#D4AF37]">${{ selectedAmount }}</span>
         </p>
@@ -123,15 +123,17 @@ onMounted(() => {
   border-radius: 12px;
   font-weight: 600;
   transition: 0.3s;
+  background-color: #ffffff;
+  color: #1c1917; /* stone-900 */
 }
 
 .gift-btn:hover {
-  background: #D4AF37;
-  color: white;
+  background-color: #D4AF37;
+  color: #ffffff;
 }
 
 .gift-btn.active {
-  background: #D4AF37;
-  color: white;
+  background-color: #D4AF37;
+  color: #ffffff;
 }
 </style>

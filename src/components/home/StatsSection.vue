@@ -1,5 +1,6 @@
 <template>
-  <section ref="sectionRef" class="bg-card py-20">
+  <!-- Changed 'bg-card' to 'bg-white' for a forced light background -->
+  <section ref="sectionRef" class="bg-white py-20">
     
     <div class="max-w-4xl mx-auto px-6 mb-12">
       <div class="flex items-center gap-4">
@@ -17,7 +18,8 @@
         <h2 class="text-5xl font-bold text-[#D4AF37]">
           {{ stat.display }}
         </h2>
-        <p class="mt-3 text-secondary">
+        <!-- Changed 'text-secondary' to a stable neutral 'text-gray-600' -->
+        <p class="mt-3 text-gray-600">
           {{ stat.label }}
         </p>
       </div>

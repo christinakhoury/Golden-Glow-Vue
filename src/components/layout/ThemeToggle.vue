@@ -5,9 +5,9 @@
     class="fixed z-50 p-3 rounded-full shadow-lg transition-all duration-300 hover:scale-110"
     :class="[
       theme === 'dark' 
-        ? 'bg-gray-800 text-yellow-400 hover:bg-gray-700' 
-        : 'bg-white text-gray-700 hover:bg-gray-100',
-      'border border-gray-200 dark:border-gray-600'
+        ? 'bg-[#1a1a1a] text-[#bd9c30] hover:bg-[#262626] border-amber-500/20 shadow-amber-500/5' 
+        : 'bg-white text-gray-700 hover:bg-gray-100 border-gray-200',
+      'border'
     ]"
     style="bottom: 100px; right: 20px;"
     aria-label="Toggle theme"

@@ -1,27 +1,27 @@
 <template>
-  <div class="body-font bg-secondary min-h-screen flex items-center justify-center">
-    <div class="max-w-2xl w-full bg-card border border-[#D4AF37] rounded-3xl shadow-theme-heavy p-10 text-center">
+  <div class="body-font bg-[#F8F4EF] min-h-screen flex items-center justify-center">
+    <div class="max-w-2xl w-full bg-white border border-[#D4AF37] rounded-3xl shadow-2xl p-10 text-center">
       <h1 class="heading-font text-5xl font-bold text-[#D4AF37] mb-4">Gift Voucher</h1>
-      <p class="text-secondary mb-8">Your gift card purchase was successful 🎉</p>
+      <p class="text-stone-500 mb-8">Your gift card purchase was successful 🎉</p>
 
-      <div class="border border-[#D4AF37] rounded-3xl p-8 mb-8 bg-card">
+      <div class="border border-[#D4AF37] rounded-3xl p-8 mb-8 bg-white">
         <h2 class="text-3xl font-bold text-[#D4AF37] mb-4">Golden Glow Studio</h2>
-        <p class="mb-2 text-primary">🎁 Gifted To: <strong>{{ giftCard.recipientName }}</strong></p>
-        <p class="mb-2 text-primary">💝 Gifted By: <strong>{{ giftCard.buyerName }}</strong></p>
-        <p class="mb-2 text-primary">💰 Value: <strong>${{ giftCard.amount }}</strong></p>
-        <p class="mb-6 text-primary">🎫 Voucher Code: <strong>{{ giftCard.code }}</strong></p>
+        <p class="mb-2 text-stone-800">🎁 Gifted To: <strong class="text-stone-900">{{ giftCard.recipientName }}</strong></p>
+        <p class="mb-2 text-stone-800">💝 Gifted By: <strong class="text-stone-900">{{ giftCard.buyerName }}</strong></p>
+        <p class="mb-2 text-stone-800">💰 Value: <strong class="text-stone-900">${{ giftCard.amount }}</strong></p>
+        <p class="mb-6 text-stone-800">🎫 Voucher Code: <strong class="text-[#D4AF37] font-mono">{{ giftCard.code }}</strong></p>
 
-        <div class="bg-secondary rounded-2xl p-5 border border-theme">
-          <p class="font-semibold mb-2 text-primary">Personal Message</p>
-          <p class="italic text-secondary">"{{ giftCard.message || 'Enjoy your luxury experience at Golden Glow Studio.' }}"</p>
+        <div class="bg-[#F8F4EF] rounded-2xl p-5 border border-stone-200">
+          <p class="font-semibold mb-2 text-stone-900">Personal Message</p>
+          <p class="italic text-stone-600">"{{ giftCard.message || 'Enjoy your luxury experience at Golden Glow Studio.' }}"</p>
         </div>
       </div>
 
-      <button @click="downloadPDF" class="bg-[#D4AF37] text-white px-8 py-3 rounded-xl hover:bg-[#c39d28] transition">
+      <button @click="downloadPDF" class="bg-[#D4AF37] text-white px-8 py-3 rounded-xl hover:bg-[#c39d28] transition font-semibold">
         Download PDF Voucher
       </button>
 
-      <router-link to="/" class="inline-block mt-4 px-6 py-2 text-sm border border-[#D4AF37] text-[#D4AF37] rounded-xl hover:bg-[#D4AF37] hover:text-white transition">
+      <router-link to="/" class="inline-block mt-4 px-6 py-2 text-sm bg-white border border-[#D4AF37] text-[#D4AF37] rounded-xl hover:bg-[#D4AF37] hover:text-white transition">
         ← Get Back Home
       </router-link>
     </div>

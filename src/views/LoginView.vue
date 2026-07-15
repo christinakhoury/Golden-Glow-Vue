@@ -1,9 +1,9 @@
 <template>
-  <div class="body-font bg-secondary flex items-center justify-center min-h-screen">
-    <div class="w-full max-w-md bg-card shadow-theme-heavy rounded-3xl p-10 border border-theme">
+  <div class="body-font bg-[#FAF7EF] flex items-center justify-center min-h-screen">
+    <div class="w-full max-w-md bg-white shadow-xl rounded-3xl p-10 border border-gray-100">
       <h1 class="heading-font text-4xl font-bold text-center text-[#D4AF37] mb-2">Golden Glow</h1>
       
-      <p class="text-center text-secondary mb-8">
+      <p class="text-center text-gray-500 mb-8">
         {{ 
           mode === "login" ? "Login to your beauty account" : 
           mode === "signup" ? "Create your beauty account" : 
@@ -18,12 +18,12 @@
         {{ successMessage }}
       </div>
 
-      <!-- Login / Signup toggle (Hidden when in verification or forgot-password mode) -->
-      <div v-if="mode === 'login' || mode === 'signup'" class="flex mb-6 bg-secondary rounded-xl p-1 border border-theme">
+      <!-- Login / Signup toggle -->
+      <div v-if="mode === 'login' || mode === 'signup'" class="flex mb-6 bg-gray-50 rounded-xl p-1 border border-gray-100">
         <button
           type="button"
           class="flex-1 py-2 rounded-lg text-sm font-semibold transition"
-          :class="mode === 'login' ? 'bg-[#D4AF37] text-white' : 'text-secondary'"
+          :class="mode === 'login' ? 'bg-[#D4AF37] text-white' : 'text-gray-500 hover:text-gray-800'"
           @click="switchMode('login')"
         >
           Login
@@ -31,7 +31,7 @@
         <button
           type="button"
           class="flex-1 py-2 rounded-lg text-sm font-semibold transition"
-          :class="mode === 'signup' ? 'bg-[#D4AF37] text-white' : 'text-secondary'"
+          :class="mode === 'signup' ? 'bg-[#D4AF37] text-white' : 'text-gray-500 hover:text-gray-800'"
           @click="switchMode('signup')"
         >
           Sign Up
@@ -41,43 +41,43 @@
       <!-- 1. LOGIN & SIGNUP FORM -->
       <form v-if="mode === 'login' || mode === 'signup'" @submit.prevent="handleSubmit" class="space-y-5">
         <div v-if="mode === 'signup'">
-          <label class="text-sm font-medium text-secondary">Full Name</label>
+          <label class="text-sm font-medium text-gray-500">Full Name</label>
           <input
             v-model="name"
             type="text"
             required
             autocomplete="name"
-            class="w-full mt-1 px-4 py-3 border border-theme rounded-xl focus:ring-2 focus:ring-[#D4AF37] outline-none bg-input text-primary"
+            class="w-full mt-1 px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#D4AF37]/20 focus:border-[#D4AF37] outline-none bg-gray-50 text-gray-800 transition"
             placeholder="Enter your name"
           />
         </div>
 
         <div>
-          <label class="text-sm font-medium text-secondary">Email</label>
+          <label class="text-sm font-medium text-gray-500">Email</label>
           <input
             v-model="email"
             type="email"
             required
             autocomplete="email"
-            class="w-full mt-1 px-4 py-3 border border-theme rounded-xl focus:ring-2 focus:ring-[#D4AF37] outline-none bg-input text-primary"
+            class="w-full mt-1 px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#D4AF37]/20 focus:border-[#D4AF37] outline-none bg-gray-50 text-gray-800 transition"
             placeholder="Enter your email"
           />
         </div>
 
         <div v-if="mode === 'signup'">
-          <label class="text-sm font-medium text-secondary">Mobile Number</label>
+          <label class="text-sm font-medium text-gray-500">Mobile Number</label>
           <input
             v-model="phone"
             type="tel"
             autocomplete="tel"
-            class="w-full mt-1 px-4 py-3 border border-theme rounded-xl focus:ring-2 focus:ring-[#D4AF37] outline-none bg-input text-primary"
+            class="w-full mt-1 px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#D4AF37]/20 focus:border-[#D4AF37] outline-none bg-gray-50 text-gray-800 transition"
             placeholder="e.g. +961 71 234 567"
           />
         </div>
 
         <div>
           <div class="flex items-center justify-between">
-            <label class="text-sm font-medium text-secondary">Password</label>
+            <label class="text-sm font-medium text-gray-500">Password</label>
             <button
               v-if="mode === 'login'"
               type="button"
@@ -92,7 +92,7 @@
             type="password"
             required
             :autocomplete="mode === 'login' ? 'current-password' : 'new-password'"
-            class="w-full mt-1 px-4 py-3 border border-theme rounded-xl focus:ring-2 focus:ring-[#D4AF37] outline-none bg-input text-primary"
+            class="w-full mt-1 px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#D4AF37]/20 focus:border-[#D4AF37] outline-none bg-gray-50 text-gray-800 transition"
             placeholder="••••••••"
           />
         </div>
@@ -110,12 +110,12 @@
 
       <!-- 2. EMAIL VERIFICATION FORM (post-signup) -->
       <form v-else-if="mode === 'verify'" @submit.prevent="handleVerify" class="space-y-5">
-        <p class="text-xs text-secondary text-center">
-          We sent a 4-digit verification code to <br><strong class="text-primary">{{ email }}</strong>
+        <p class="text-xs text-gray-500 text-center">
+          We sent a 4-digit verification code to <br><strong class="text-gray-800">{{ email }}</strong>
         </p>
         
         <div>
-          <label class="text-sm font-medium text-secondary block text-center">Verification Code</label>
+          <label class="text-sm font-medium text-gray-500 block text-center">Verification Code</label>
           <input
             v-model="verificationCode"
             type="text"
@@ -124,7 +124,7 @@
             maxlength="4"
             required
             placeholder="0000"
-            class="w-full max-w-[160px] mx-auto block mt-2 px-4 py-3 border border-theme rounded-xl text-center text-2xl tracking-[0.5em] font-bold focus:ring-2 focus:ring-[#D4AF37] outline-none bg-input text-primary"
+            class="w-full max-w-[160px] mx-auto block mt-2 px-4 py-3 border border-gray-200 rounded-xl text-center text-2xl tracking-[0.5em] font-bold focus:ring-2 focus:ring-[#D4AF37]/20 focus:border-[#D4AF37] outline-none bg-gray-50 text-gray-800"
           />
         </div>
 
@@ -150,25 +150,25 @@
         <button 
           type="button" 
           @click="switchMode('login')" 
-          class="w-full text-xs text-center text-secondary hover:underline block pt-2"
+          class="w-full text-xs text-center text-gray-500 hover:underline block pt-2"
         >
           Back to Login
         </button>
       </form>
 
-      <!-- 3. FORGOT PASSWORD FORM (email -> code + new password) -->
+      <!-- 3. FORGOT PASSWORD FORM -->
       <form v-else-if="mode === 'forgot'" @submit.prevent="forgotStep === 'request' ? handleForgotRequest() : handleForgotReset()" class="space-y-5">
 
-        <!-- Step A: ask for the email to send the code to -->
+        <!-- Step A: Email request -->
         <template v-if="forgotStep === 'request'">
           <div>
-            <label class="text-sm font-medium text-secondary">Email</label>
+            <label class="text-sm font-medium text-gray-500">Email</label>
             <input
               v-model="email"
               type="email"
               required
               autocomplete="email"
-              class="w-full mt-1 px-4 py-3 border border-theme rounded-xl focus:ring-2 focus:ring-[#D4AF37] outline-none bg-input text-primary"
+              class="w-full mt-1 px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#D4AF37]/20 focus:border-[#D4AF37] outline-none bg-gray-50 text-gray-800 transition"
               placeholder="Enter your account email"
             />
           </div>
@@ -184,14 +184,14 @@
           </button>
         </template>
 
-        <!-- Step B: enter the code + choose a new password -->
+        <!-- Step B: Code input + reset fields -->
         <template v-else>
-          <p class="text-xs text-secondary text-center">
-            We sent a reset code to <br><strong class="text-primary">{{ email }}</strong>
+          <p class="text-xs text-gray-500 text-center">
+            We sent a reset code to <br><strong class="text-gray-800">{{ email }}</strong>
           </p>
 
           <div>
-            <label class="text-sm font-medium text-secondary block text-center">Reset Code</label>
+            <label class="text-sm font-medium text-gray-500 block text-center">Reset Code</label>
             <input
               v-model="resetCode"
               type="text"
@@ -200,30 +200,30 @@
               maxlength="4"
               required
               placeholder="0000"
-              class="w-full max-w-[160px] mx-auto block mt-2 px-4 py-3 border border-theme rounded-xl text-center text-2xl tracking-[0.5em] font-bold focus:ring-2 focus:ring-[#D4AF37] outline-none bg-input text-primary"
+              class="w-full max-w-[160px] mx-auto block mt-2 px-4 py-3 border border-gray-200 rounded-xl text-center text-2xl tracking-[0.5em] font-bold focus:ring-2 focus:ring-[#D4AF37]/20 focus:border-[#D4AF37] outline-none bg-gray-50 text-gray-800"
             />
           </div>
 
           <div>
-            <label class="text-sm font-medium text-secondary">New Password</label>
+            <label class="text-sm font-medium text-gray-500">New Password</label>
             <input
               v-model="newPassword"
               type="password"
               required
               autocomplete="new-password"
-              class="w-full mt-1 px-4 py-3 border border-theme rounded-xl focus:ring-2 focus:ring-[#D4AF37] outline-none bg-input text-primary"
+              class="w-full mt-1 px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#D4AF37]/20 focus:border-[#D4AF37] outline-none bg-gray-50 text-gray-800 transition"
               placeholder="••••••••"
             />
           </div>
 
           <div>
-            <label class="text-sm font-medium text-secondary">Confirm New Password</label>
+            <label class="text-sm font-medium text-gray-500">Confirm New Password</label>
             <input
               v-model="confirmNewPassword"
               type="password"
               required
               autocomplete="new-password"
-              class="w-full mt-1 px-4 py-3 border border-theme rounded-xl focus:ring-2 focus:ring-[#D4AF37] outline-none bg-input text-primary"
+              class="w-full mt-1 px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#D4AF37]/20 focus:border-[#D4AF37] outline-none bg-gray-50 text-gray-800 transition"
               placeholder="••••••••"
             />
           </div>
@@ -251,13 +251,13 @@
         <button 
           type="button" 
           @click="switchMode('login')" 
-          class="w-full text-xs text-center text-secondary hover:underline block pt-2"
+          class="w-full text-xs text-center text-gray-500 hover:underline block pt-2"
         >
           Back to Login
         </button>
       </form>
 
-      <p class="text-xs text-center text-muted mt-6">By continuing, you join Glow Rewards ✨</p>
+      <p class="text-xs text-center text-gray-400 mt-6">By continuing, you join Glow Rewards ✨</p>
     </div>
   </div>
 </template>
@@ -282,7 +282,7 @@ const cartStore = useCart()
 const wishlistStore = useWishlistStore()
 
 const mode = ref("login") // "login" | "signup" | "verify" | "forgot"
-const forgotStep = ref("request") // "request" | "reset" — sub-step within "forgot" mode
+const forgotStep = ref("request") // "request" | "reset"
 
 const name = ref("")
 const email = ref("")
@@ -290,7 +290,7 @@ const phone = ref("")
 const password = ref("")
 const verificationCode = ref("")
 
-// Forgot-password specific fields
+// Forgot-password fields
 const resetCode = ref("")
 const newPassword = ref("")
 const confirmNewPassword = ref("")
@@ -323,8 +323,6 @@ async function handleSubmit() {
   try {
     if (mode.value === "login") {
       const data = await login({ email: cleanEmail, password: cleanPassword })
-      // No name/phone typed on the login form — saveAuthSession will fall
-      // back to the profile cache (keyed by email) to fill those in.
       saveAuthSession(data, { email: cleanEmail })
       await cartStore.setUser(cleanEmail)
       await wishlistStore.setUser(cleanEmail)
@@ -333,11 +331,6 @@ async function handleSubmit() {
     } else {
       const signupData = await signup({ name: cleanName, email: cleanEmail, password: cleanPassword, phone: phone.value.trim() })
 
-      // Save what we know now — osimart's /auth/register/ response may not
-      // echo back name/email/mobile. signup() already seeds the profile
-      // cache internally, but we also keep gg-user populated here so the
-      // account page shows correctly immediately after signup, before the
-      // user has verified/logged in for the first time.
       const trimmedPhone = phone.value.trim()
       const nameParts = cleanName.split(/\s+/).filter(Boolean)
       try {
@@ -390,24 +383,13 @@ async function handleVerify() {
   successMessage.value = ""
   loading.value = true
 
-  // Use the clean, user-typed email — NOT the "mystore6__..." prefixed
-  // email that the register response returns. That prefix appears to be
-  // an internal storage key, not the value other endpoints expect back.
   const cleanEmail = email.value.trim()
   const nameParts = name.value.trim().split(/\s+/).filter(Boolean)
 
   try {
-    // 1. Validate the code against the database
     await verifyEmail({ email: cleanEmail, code: verificationCode.value.trim() })
-
-    // 2. Perform regular customer login with the same clean email
     const data = await login({ email: cleanEmail, password: password.value })
 
-    // Pass name/phone through explicitly — the login response never
-    // contains them, and this is the moment they're freshest (straight
-    // from the signup form still held in this component's state). This is
-    // also what seeds/refreshes the profile cache in login.js so future
-    // logins (after a logout wipes gg-user) can still recover them.
     saveAuthSession(data, {
       email: cleanEmail,
       first_name: nameParts[0] || '',
@@ -426,7 +408,6 @@ async function handleVerify() {
   }
 }
 
-// Step A of forgot-password: send the reset code to the entered email
 async function handleForgotRequest() {
   error.value = ""
   successMessage.value = ""
@@ -459,7 +440,6 @@ async function handleForgotRequest() {
   }
 }
 
-// Step B of forgot-password: submit the code + new password
 async function handleForgotReset() {
   error.value = ""
   successMessage.value = ""

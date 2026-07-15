@@ -1,5 +1,5 @@
 <template>
-  <main class="bg-secondary pt-28 md:pt-32 pb-12 md:pb-20 px-4 md:px-6 min-h-screen">
+  <main class="bg-[#F8F4EF] pt-28 md:pt-32 pb-12 md:pb-20 px-4 md:px-6 min-h-screen">
     <div class="max-w-6xl mx-auto">
 
       <div v-if="!orderComplete">
@@ -106,7 +106,7 @@
               </div>
             </transition>
 
-            <p v-if="error" class="text-red-500 text-xs">{{ error }}</p>
+            <p v-if="error" class="text-red-500 text-xs font-semibold">{{ error }}</p>
           </div>
 
           <!-- Right: Two separate order summaries -->
@@ -124,12 +124,9 @@
               <div class="space-y-3 max-h-56 overflow-y-auto pr-1 mb-4">
                 <div v-for="item in productItems" :key="item.id" class="flex justify-between text-sm text-stone-600">
                   <span class="truncate max-w-[65%]">
-                     {{ item.baseName }}
-                       <span v-if="item.variantName" class="text-stone-400">
-    ({{ item.variantName }})
-  </span>
-
-                    <span v-if="item.quantity > 1" class="text-stone-400">× {{ item.quantity }}</span>
+                    {{ item.baseName }}
+                    <span v-if="item.variantName" class="text-stone-400"> ({{ item.variantName }})</span>
+                    <span v-if="item.quantity > 1" class="text-stone-400"> × {{ item.quantity }}</span>
                   </span>
                   <span class="font-medium text-stone-800">${{ (item.price * item.quantity).toLocaleString() }}</span>
                 </div>
@@ -164,11 +161,8 @@
               <div class="space-y-3 max-h-56 overflow-y-auto pr-1 mb-4">
                 <div v-for="item in serviceItems" :key="item.id" class="flex justify-between text-sm text-stone-600">
                   <span class="truncate max-w-[65%]">
-                      {{ item.baseName }}
-                      <span v-if="item.variantName" class="text-stone-400">
-    ({{ item.variantName }})
-  </span>
-
+                    {{ item.baseName }}
+                    <span v-if="item.variantName" class="text-stone-400"> ({{ item.variantName }})</span>
                   </span>
                   <span class="font-medium text-stone-800">${{ item.price.toLocaleString() }}</span>
                 </div>
@@ -292,7 +286,6 @@ function fillCustomerInformation(user) {
     ''
 }
 
-
 watch(
   () => authStore.currentUser,
   (user) => {
@@ -303,7 +296,6 @@ watch(
     deep: true
   }
 )
-
 
 onMounted(() => {
   if (!allCartItems.value.length) {
@@ -334,7 +326,6 @@ function getAuthHeaders() {
 async function submitOrder() {
   const url = `https://api.osimart.com/store/apis/checkout/?store=${STORE_ID}`
 
-  // NOTE: field names are best-guess — confirm against the real DRF schema and adjust if needed.
   const payload = {
     store: STORE_ID,
     customer_name: customer.name,
@@ -347,7 +338,7 @@ async function submitOrder() {
       quantity: item.quantity,
       price: item.price
     })),
-    product_payment_method: hasProducts.value ? productPaymentMethod.value : undefined, // 'card' | 'cod'
+    product_payment_method: hasProducts.value ? productPaymentMethod.value : undefined,
     product_subtotal: hasProducts.value ? productSubtotal.value : undefined,
     product_tax: hasProducts.value ? productTax.value : undefined,
     product_total: hasProducts.value ? productTotal.value : undefined,
@@ -357,7 +348,7 @@ async function submitOrder() {
       quantity: item.quantity,
       price: item.price
     })),
-    service_payment_method: hasServices.value ? servicePaymentMethod.value : undefined, // 'card' | 'instore'
+    service_payment_method: hasServices.value ? servicePaymentMethod.value : undefined,
     service_subtotal: hasServices.value ? serviceSubtotal.value : undefined,
     service_tax: hasServices.value ? serviceTax.value : undefined,
     service_total: hasServices.value ? serviceTotal.value : undefined,

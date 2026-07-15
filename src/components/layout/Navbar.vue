@@ -41,19 +41,22 @@
       <!-- ⚡ Right Actions Side -->
       <div class="flex items-center gap-3 md:gap-4 flex-shrink-0">
 
-        <!-- 🔍 Search Component -->
-        <div class="relative hidden md:block">
-          <div class="relative">
-            <input
-              v-model="search"
-              type="text"
-              placeholder="Search services, masters..."
-              class="w-48 lg:w-56 focus:w-64 px-4 py-2 pl-9 text-sm border border-gray-200 rounded-full bg-gray-50/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#bd9c30]/20 focus:border-[#bd9c30] transition-all duration-300"
-            />
-            <svg class="absolute left-3 top-2.5 w-4 h-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.603 10.602z" />
-            </svg>
-          </div>
+      <!-- 🔍 Search Component -->
+<div class="relative hidden md:block">
+  <div class="relative">
+    <input
+      v-model="search"
+      type="text"
+      placeholder="Search services, masters..."
+      class="w-48 lg:w-56 focus:w-64 px-4 py-2 pl-9 text-sm text-gray-800 placeholder-gray-400 border border-gray-200 rounded-full bg-gray-50/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#bd9c30]/20 focus:border-[#bd9c30] transition-all duration-300"
+    />
+    <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+      <svg class="w-4 h-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.603 10.602z" />
+      </svg>
+    </div>
+  </div>
+
 
           <!-- Results Dropdown -->
           <div v-if="search" class="absolute top-12 right-0 w-80 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden z-50 transform origin-top transition-all">

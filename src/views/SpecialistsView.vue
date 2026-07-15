@@ -37,12 +37,19 @@
     </section>
 
     <!-- COHORT SHOWCASE SECTIONS -->
+    <!-- Dynamically mapping safe, explicit light backgrounds based on the section ID -->
     <section 
       v-for="section in sections" 
       :key="section.id" 
       :id="section.id" 
-      :class="section.bg" 
-      class="py-28 border-t border-stone-200/70 scroll-mt-12 bg-white"
+      :class="[
+        'py-28 border-t border-stone-200/70 scroll-mt-12',
+        section.id === 'hair' ? 'bg-white' : '',
+        section.id === 'nail' ? 'bg-[#FCFBF9]' : '',
+        section.id === 'makeup' ? 'bg-white' : '',
+        section.id === 'massage' ? 'bg-[#FCFBF9]' : '',
+        section.id === 'laser' ? 'bg-white' : ''
+      ]"
     >
       <div class="max-w-6xl mx-auto px-6">
         
@@ -64,7 +71,7 @@
           >
             <!-- Media Display Core Frame -->
             <div class="w-full md:w-1/2 relative fade-on-scroll" :class="idx % 2 === 0 ? 'fade-right' : 'fade-left'">
-              <!-- Architectural Frame Accents mimicking an fine art display -->
+              <!-- Architectural Frame Accents mimicking an art display -->
               <div class="absolute inset-4 border border-white/20 pointer-events-none z-20"></div>
               <div class="absolute -inset-2 border border-stone-200/40 pointer-events-none z-0 transform group-hover:scale-102 transition-transform duration-500"></div>
               
@@ -101,14 +108,14 @@
               </p>
 
               <!-- Luxury Reservation Wire Anchor -->
-             <div class="pt-4">
-  <RouterLink 
-    :to="{ name: 'service', params: { type: specialist.service } }" 
-    class="inline-block relative overflow-hidden bg-stone-900 hover:bg-[#D4AF37] text-white text-[11px] tracking-[0.2em] uppercase font-bold px-8 py-4 transition-all duration-500 shadow-sm rounded-none transform hover:-translate-y-0.5"
-  >
-    Book Now
-  </RouterLink>
-</div>
+              <div class="pt-4">
+                <RouterLink 
+                  :to="{ name: 'service', params: { type: specialist.service } }" 
+                  class="inline-block relative overflow-hidden bg-stone-900 hover:bg-[#D4AF37] text-white text-[11px] tracking-[0.2em] uppercase font-bold px-8 py-4 transition-all duration-500 shadow-sm rounded-none transform hover:-translate-y-0.5"
+                >
+                  Book Now
+                </RouterLink>
+              </div>
             </div>
           </div>
         </div>

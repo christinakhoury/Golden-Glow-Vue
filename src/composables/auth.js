@@ -36,13 +36,6 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  // NOTE: LoginView.vue currently calls login()/signup() from
-  // services/login.js directly (it doesn't go through this store) since
-  // signup requires an email-verification step in between that this store
-  // doesn't orchestrate. These actions are kept here as thin wrappers in
-  // case another entry point (e.g. a login modal elsewhere) wants to use
-  // the store instead — they mirror the exact same service calls.
-
   async function loginAction(email, password) {
     try {
       const data = await apiLogin({ email, password })
@@ -61,9 +54,6 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  // Signup does NOT log the user in — osimart requires email verification
-  // first. Returns the raw signup response; caller is responsible for
-  // moving to a verification step and calling login() afterwards.
   async function signupAction(name, email, password, phone = '') {
     try {
       return await apiSignup({ name, email, password, phone })
@@ -120,10 +110,7 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   async function deleteAccount() {
-    // NOTE: endpoint path/shape wasn't part of the osimart spec you shared —
-    // this is carried over from the previous version as a placeholder.
-    // Confirm the real path (likely also needs ?store=... like everything
-    // else) before relying on it.
+//still waiting ofr the correct path
     const token = getAuthToken()
     const response = await fetch(`https://api.osimart.com/auth/delete-account/?store=17781c3f-b746-4897-be7d-15d1ff48589e`, {
       method: 'DELETE',
@@ -134,7 +121,6 @@ export const useAuthStore = defineStore('auth', () => {
     return await response.json()
   }
 
-  // Thin wrappers so components can call authStore.changePassword(...) etc.
   async function changePasswordAction(old_password, new_password) {
     return apiChangePassword({ old_password, new_password })
   }

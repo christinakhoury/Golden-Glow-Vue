@@ -1,5 +1,6 @@
 <template>
-  <main class="bg-secondary pt-28 md:pt-32 pb-12 md:pb-20 px-4 md:px-6">
+  <!-- Changed 'bg-secondary' to 'bg-stone-50' to force a clean light-mode backdrop -->
+  <main class="bg-stone-50 pt-28 md:pt-32 pb-12 md:pb-20 px-4 md:px-6">
     <div class="max-w-7xl mx-auto">
       
       <div v-if="uiError" class="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl flex justify-between items-center">

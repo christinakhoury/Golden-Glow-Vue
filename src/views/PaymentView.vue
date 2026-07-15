@@ -1,23 +1,43 @@
 <template>
-  <div class="body-font bg-secondary min-h-screen flex items-center justify-center">
-    <div class="w-full max-w-xl bg-card border border-[#D4AF37] rounded-3xl shadow-theme-heavy p-10">
+  <div class="body-font bg-[#F8F4EF] min-h-screen flex items-center justify-center">
+    <div class="w-full max-w-xl bg-white border border-[#D4AF37] rounded-3xl shadow-2xl p-10">
       <h1 class="heading-font text-4xl text-center font-bold text-[#D4AF37] mb-2">Payment</h1>
-      <p class="text-center text-secondary mb-8">Secure Checkout</p>
+      <p class="text-center text-stone-500 mb-8">Secure Checkout</p>
 
-      <div class="bg-secondary rounded-2xl p-4 mb-8 border border-theme">
-        <p class="text-primary"><strong>Recipient:</strong> {{ giftCard.recipientName }}</p>
-        <p class="text-primary"><strong>Phone number:</strong> {{ giftCard.phoneNumber }}</p>
-        <p class="text-primary"><strong>Amount:</strong> ${{ giftCard.amount }}</p>
+      <div class="bg-[#F8F4EF] rounded-2xl p-4 mb-8 border border-stone-200">
+        <p class="text-stone-800 mb-1"><strong>Recipient:</strong> <span class="text-stone-900 font-medium">{{ giftCard.recipientName }}</span></p>
+        <p class="text-stone-800 mb-1"><strong>Phone number:</strong> <span class="text-stone-900 font-medium">{{ giftCard.phoneNumber }}</span></p>
+        <p class="text-stone-800"><strong>Amount:</strong> <span class="font-bold text-[#D4AF37]">${{ giftCard.amount }}</span></p>
       </div>
 
       <div class="space-y-4">
-        <input v-model="cardName" placeholder="Name On Card" class="w-full border border-theme rounded-xl px-4 py-3 bg-input text-primary placeholder:text-secondary" />
-        <input v-model="cardNumber" placeholder="Card Number" class="w-full border border-theme rounded-xl px-4 py-3 bg-input text-primary placeholder:text-secondary" />
+        <input 
+          v-model="cardName" 
+          placeholder="Name On Card" 
+          class="w-full border border-stone-200 rounded-xl px-4 py-3 bg-white text-stone-900 placeholder-stone-400 focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] focus:outline-none" 
+        />
+        <input 
+          v-model="cardNumber" 
+          placeholder="Card Number" 
+          class="w-full border border-stone-200 rounded-xl px-4 py-3 bg-white text-stone-900 placeholder-stone-400 focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] focus:outline-none" 
+        />
         <div class="grid grid-cols-2 gap-4">
-          <input v-model="expiry" placeholder="MM/YY" class="w-full border border-theme rounded-xl px-4 py-3 bg-input text-primary placeholder:text-secondary" />
-          <input v-model="cvv" type="password" placeholder="CVV" class="w-full border border-theme rounded-xl px-4 py-3 bg-input text-primary placeholder:text-secondary" />
+          <input 
+            v-model="expiry" 
+            placeholder="MM/YY" 
+            class="w-full border border-stone-200 rounded-xl px-4 py-3 bg-white text-stone-900 placeholder-stone-400 focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] focus:outline-none" 
+          />
+          <input 
+            v-model="cvv" 
+            type="password" 
+            placeholder="CVV" 
+            class="w-full border border-stone-200 rounded-xl px-4 py-3 bg-white text-stone-900 placeholder-stone-400 focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] focus:outline-none" 
+          />
         </div>
-        <button @click="completePayment" class="w-full bg-[#D4AF37] text-white py-3 rounded-xl font-semibold hover:bg-[#c39d28] transition">
+        <button 
+          @click="completePayment" 
+          class="w-full bg-[#D4AF37] text-white py-3 rounded-xl font-semibold hover:bg-[#c39d28] transition"
+        >
           Pay Now
         </button>
       </div>

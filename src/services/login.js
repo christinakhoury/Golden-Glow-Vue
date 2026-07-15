@@ -576,7 +576,5 @@ export function logout() {
   localStorage.removeItem('gg-token')
   localStorage.removeItem('gg-refresh')
   localStorage.removeItem('gg-user')
-  // gg-profile-cache intentionally NOT cleared here — first_name/last_name/
-  // mobile are never returned by osimart's login API, so this cache is the
-  // only place they survive across a logout/login cycle.
+ 
 }
