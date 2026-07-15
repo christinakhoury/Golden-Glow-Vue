@@ -5,7 +5,7 @@ const PAYMENT_METHODS_URL = 'https://api.osimart.com/store/apis/payment-methods/
 const STORE_ID = '17781c3f-b746-4897-be7d-15d1ff48589e'
 
 function getAuthHeaders() {
-  const token = localStorage.getItem('token')
+  const token = localStorage.getItem('gg-token')
   return token ? { Authorization: `Bearer ${token}` } : {}
 }
 

@@ -228,15 +228,17 @@
 </template>
 
 <script setup>
-import { reactive, computed, ref, onMounted } from 'vue'
+import { reactive, computed, ref, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from 'axios'
 import { useCart } from '../composables/useCart'
+import { useAuthStore } from '../composables/auth'
 
 const STORE_ID = '17781c3f-b746-4897-be7d-15d1ff48589e'
 
 const router = useRouter()
 const cartStore = useCart()
+const authStore = useAuthStore()
 
 const allCartItems = computed(() => cartStore.cart.value)
 const productItems = computed(() => cartStore.productItems.value)
@@ -275,14 +277,37 @@ const error = ref('')
 const orderComplete = ref(false)
 const successMessage = ref('')
 
+function fillCustomerInformation(user) {
+  if (!user) return
+
+  customer.name =
+    user.name ||
+    `${user.first_name || ''} ${user.last_name || ''}`.trim()
+
+  customer.email = user.email || ''
+
+  customer.phone =
+    user.mobile ||
+    user.phone ||
+    ''
+}
+
+
+watch(
+  () => authStore.currentUser,
+  (user) => {
+    fillCustomerInformation(user)
+  },
+  {
+    immediate: true,
+    deep: true
+  }
+)
+
+
 onMounted(() => {
   if (!allCartItems.value.length) {
     router.push('/cart')
-  }
-  const user = JSON.parse(localStorage.getItem('gg-user') || 'null')
-  if (user) {
-    customer.name = user.name || ''
-    customer.email = user.email || ''
   }
 })
 
@@ -302,7 +327,7 @@ function validate() {
 }
 
 function getAuthHeaders() {
-  const token = localStorage.getItem('token')
+  const token = localStorage.getItem('gg-token')
   return token ? { Authorization: `Bearer ${token}` } : {}
 }
 
