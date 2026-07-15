@@ -20,7 +20,7 @@
         <ul v-if="route.name !== 'specialists'" class="flex items-center gap-6 xl:gap-8 text-sm font-medium text-gray-600 tracking-wide">
           <li><RouterLink to="/#home" class="hover:text-[#bd9c30] transition-colors duration-200">Home</RouterLink></li>
           <li><RouterLink to="/#services" class="hover:text-[#bd9c30] transition-colors duration-200">Services</RouterLink></li>
-          <li><RouterLink to="/specialists" class="hover:text-[#bd9c30] transition-colors duration-200 text-[#bd9c30] font-semibold">Specialists</RouterLink></li>
+          <li><RouterLink to="/specialists" class="hover:text-[#bd9c30] transition-colors duration-200 ">Specialists</RouterLink></li>
           <li><RouterLink to="/products" class="hover:text-[#bd9c30] transition-colors duration-200">Products</RouterLink></li>
           <li><RouterLink to="/#offers" class="hover:text-[#bd9c30] transition-colors duration-200">Offers</RouterLink></li>
           <li><RouterLink to="/#aboutus" class="hover:text-[#bd9c30] transition-colors duration-200">About Us</RouterLink></li>
@@ -33,7 +33,7 @@
           <li><a href="#hair" class="hover:text-[#bd9c30] transition-colors duration-200">Hair Experts</a></li>
           <li><a href="#nails" class="hover:text-[#bd9c30] transition-colors duration-200">Nail Artists</a></li>
           <li><a href="#makeup" class="hover:text-[#bd9c30] transition-colors duration-200">Makeup Pros</a></li>
-          <li><a href="#massage" class="hover:text-[#bd9c30] transition-colors duration-200">Wellness Therapists</a></li>
+          <li><a href="#massage" class="hover:text-[#bd9c30] transition-colors duration-200">Massage Therapists</a></li>
           <li><a href="#laser" class="hover:text-[#bd9c30] transition-colors duration-200">Laser Specialists</a></li>
         </ul>
       </div>
@@ -56,7 +56,6 @@
       </svg>
     </div>
   </div>
-
 
           <!-- Results Dropdown -->
           <div v-if="search" class="absolute top-12 right-0 w-80 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden z-50 transform origin-top transition-all">
@@ -130,10 +129,10 @@
             <!-- Profile Trigger Button -->
             <button class="flex items-center gap-2 px-3 py-2 bg-[#faf7ef] hover:bg-[#ebdcb0]/20 rounded-full border border-gray-100 transition-colors duration-300 focus:outline-none">
               <div class="w-6 h-6 bg-[#bd9c30] text-white rounded-full flex items-center justify-center text-xs font-bold uppercase shadow-sm">
-                {{ user.name ? user.name.charAt(0) : 'U' }}
+                {{ (authStore.user?.first_name || authStore.user?.name || 'U').charAt(0) }}
               </div>
               <span class="text-xs font-medium text-gray-700 max-w-[100px] truncate hidden md:inline">
-                {{ user.name || 'Account' }}
+                {{ authStore.user?.first_name || authStore.user?.name || 'Glow Client' }}
               </span>
               <svg class="w-3 h-3 text-gray-400 group-hover:text-[#bd9c30] transition-colors duration-200" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
@@ -178,6 +177,9 @@
 import { ref, computed, onMounted, watch } from "vue"
 import { useRouter, useRoute, RouterLink } from "vue-router"
 import { useCart } from "../../composables/useCart"
+import { useAuthStore } from '../../composables/auth'
+
+const authStore = useAuthStore()
 
 const router = useRouter()
 const route = useRoute()
@@ -262,8 +264,7 @@ const searchItems = [
   { id: 202, name: "Membership", type: "Category", route: "/#membership" },
   { id: 203, name: "Offers", type: "Category", route: "/#offers" },
   { id: 204, name: "Gift Cards", type: "Category", route: "/giftcards" },
-  { id: 205, name: "Book", type: "Category", route: "/book" },
-  { id: 206, name: "Appointment", type: "Category", route: "/book" }
+
 ]
 
 const levenshtein = (a, b) => {

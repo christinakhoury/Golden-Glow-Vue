@@ -4,6 +4,7 @@ import axios from 'axios'
 import { getAuthToken } from '../services/login.js'
 
 const STORE_ID = '17781c3f-b746-4897-be7d-15d1ff48589e'
+const WISHLIST_API_URL = `https://api.osimart.com/store/apis/wishlist/?store=${STORE_ID}`
 
 export const useWishlistStore = defineStore('wishlist', () => {
   // State
@@ -17,33 +18,28 @@ export const useWishlistStore = defineStore('wishlist', () => {
   /* ======================
   AUTH HEADERS
   ====================== */
-  // Same pattern as useCart.js: osimart's WWW-Authenticate header specifies
-  // JWT_AUTH_HEADER_PREFIX, meaning it expects "Authorization: JWT <token>".
   const getAuthHeaders = () => {
     const token = getAuthToken()
-    console.log('[WISHLIST AUTH] token present:', !!token)
+    console.log('[WISHLIST AUTH] token present:', !!token, '| token value (first 10 chars):', token ? token.slice(0, 10) + '...' : 'none')
     return token ? { Authorization: `JWT ${token}` } : {}
   }
 
   const isAuthenticated = () => !!getAuthToken()
 
-  // Load wishlist from localStorage (guest / not-logged-in fallback)
   function loadWishlist() {
     const savedWishlist = localStorage.getItem('golden_wishlist')
     items.value = savedWishlist ? JSON.parse(savedWishlist) : []
     console.log('[WISHLIST LOAD] loaded from localStorage:', items.value)
   }
 
-  // Save wishlist to localStorage
   function saveWishlist() {
     localStorage.setItem('golden_wishlist', JSON.stringify(items.value))
     console.log('[WISHLIST SAVE] saved to localStorage:', items.value)
   }
 
-  // Normalize a raw osimart wishlist item into the shape this store/UI uses.
-  // Mirrors the cart response shape (an object keyed by variant id), since
-  // that's the pattern osimart used for /store/apis/cart/view/.
   function normalize(item) {
+    console.log('[WISHLIST NORMALIZE] raw item in:', item)
+
     const variantId = item.variantId || item.product_variant_id || item.id
     if (!variantId) {
       console.warn('[WISHLIST NORMALIZE] skipped item, no identity found:', item)
@@ -55,7 +51,7 @@ export const useWishlistStore = defineStore('wishlist', () => {
       rawImage = `https://api.osimart.com/${rawImage}`
     }
 
-    return {
+    const normalized = {
       id: item.product_id || item.product?.id || variantId,
       productId: item.product_id || item.product?.id || variantId,
       variantId,
@@ -67,45 +63,51 @@ export const useWishlistStore = defineStore('wishlist', () => {
       category: item.category,
       badge: item.badge
     }
+
+    console.log('[WISHLIST NORMALIZE] normalized out:', normalized)
+    return normalized
   }
 
   /* ======================
   FETCH REMOTE WISHLIST
   ====================== */
-  // Confirmed route: GET https://api.osimart.com/store/apis/wishlist/
   async function fetchWishlist() {
     console.log('[WISHLIST FETCH] called. isAuthenticated:', isAuthenticated())
 
     if (!isAuthenticated()) {
+      console.log('[WISHLIST FETCH] not authenticated, falling back to localStorage')
       loadWishlist()
       return
     }
 
     loading.value = true
     try {
-      const url = `https://api.osimart.com/store/apis/wishlist/?store=${STORE_ID}`
-      console.log('[WISHLIST FETCH] GET', url)
+      console.log('[WISHLIST FETCH] GET', WISHLIST_API_URL)
+      console.log('[WISHLIST FETCH] headers:', getAuthHeaders())
 
-      const res = await axios.get(url, {
+      const res = await axios.get(WISHLIST_API_URL, {
         headers: getAuthHeaders(),
         withCredentials: true
       })
+
+      console.log('[WISHLIST FETCH] status:', res.status)
       console.log('[WISHLIST FETCH] raw response:', res.data)
 
-      // Mirror cart's response handling: could come back as
-      // { wishlist: { id: {...}, id2: {...} } } or as a plain array.
       const raw = Array.isArray(res.data?.wishlist)
         ? res.data.wishlist
         : Object.values(res.data?.wishlist || res.data || {})
 
+      console.log('[WISHLIST FETCH] raw array before normalize:', raw)
+
       items.value = raw.map(normalize).filter(Boolean)
-      console.log('[WISHLIST FETCH] normalized items:', items.value)
+      console.log('[WISHLIST FETCH] final normalized items:', items.value)
     } catch (e) {
-      console.error('[WISHLIST FETCH] ERROR', e.response?.status, e.response?.data || e.message)
-      // Fall back to local data rather than leaving the UI blank on error
+      console.error('[WISHLIST FETCH] ERROR status:', e.response?.status)
+      console.error('[WISHLIST FETCH] ERROR data:', e.response?.data || e.message)
       loadWishlist()
     } finally {
       loading.value = false
+      console.log('[WISHLIST FETCH] loading set to false')
     }
   }
 
@@ -113,35 +115,42 @@ export const useWishlistStore = defineStore('wishlist', () => {
   SYNC (ADD / REMOVE)
   ====================== */
   async function syncItem(variantId, action) {
-    if (!isAuthenticated()) return
+    if (!isAuthenticated()) {
+      console.log('[WISHLIST SYNC] skipped, not authenticated')
+      return
+    }
 
     console.log('[WISHLIST SYNC] variantId:', variantId, 'action:', action)
     try {
-      const url = `https://api.osimart.com/store/apis/wishlist/?store=${STORE_ID}`
       const payload = { item_id: variantId, action }
-      console.log('[WISHLIST SYNC] POST', url, payload)
+      console.log('[WISHLIST SYNC] POST', WISHLIST_API_URL, 'payload:', payload)
 
-      const res = await axios.post(url, payload, {
+      const res = await axios.post(WISHLIST_API_URL, payload, {
         headers: getAuthHeaders(),
         withCredentials: true
       })
-      console.log('[WISHLIST SYNC] success:', res.data)
 
-      // Re-fetch to stay in sync with whatever osimart actually persisted
+      console.log('[WISHLIST SYNC] status:', res.status)
+      console.log('[WISHLIST SYNC] response data:', res.data)
+
       await fetchWishlist()
     } catch (e) {
-      console.error('[WISHLIST SYNC] ERROR', e.response?.status, e.response?.data || e.message)
+      console.error('[WISHLIST SYNC] ERROR status:', e.response?.status)
+      console.error('[WISHLIST SYNC] ERROR data:', e.response?.data || e.message)
     }
   }
 
-  // Add item to wishlist
   async function addToWishlist(product) {
+    console.log('[WISHLIST ADD] product in:', product)
+
     const variantId = product.variantId || product.product_variant_id || product.id
     const variantName = product.variantName || product.variant_name || product.variant?.name || null
 
     const exists = items.value.some(
       item => item.id === product.id && (item.variantId || item.id) === variantId
     )
+    console.log('[WISHLIST ADD] already exists?', exists)
+
     if (!exists) {
       items.value.push({
         id: product.id,
@@ -161,21 +170,22 @@ export const useWishlistStore = defineStore('wishlist', () => {
     return false
   }
 
-  // Remove item from wishlist
   async function removeFromWishlist(productId) {
+    console.log('[WISHLIST REMOVE] productId in:', productId)
+
     const existing = items.value.find(item => item.id === productId)
     const variantId = existing?.variantId || productId
+    console.log('[WISHLIST REMOVE] resolved variantId:', variantId)
+
     items.value = items.value.filter(item => item.id !== productId)
     saveWishlist()
     await syncItem(variantId, 'remove')
   }
 
-  // Check if item is in wishlist
   function isInWishlist(productId) {
     return items.value.some(item => item.id === productId)
   }
 
-  // Toggle wishlist item
   async function toggleWishlist(product) {
     if (isInWishlist(product.id)) {
       await removeFromWishlist(product.id)
@@ -186,8 +196,8 @@ export const useWishlistStore = defineStore('wishlist', () => {
     }
   }
 
-  // Clear wishlist
   async function clearWishlist() {
+    console.log('[WISHLIST CLEAR] clearing', items.value.length, 'items')
     const itemsToClear = [...items.value]
     items.value = []
     saveWishlist()
@@ -197,11 +207,6 @@ export const useWishlistStore = defineStore('wishlist', () => {
     }
   }
 
-  /* ======================
-  USER AUTH SYNC
-  ====================== */
-  // Call this right after login/signup-verify succeeds (same pattern as
-  // cartStore.setUser). Pulls the customer's real wishlist from osimart.
   async function setUser(email) {
     console.log('[WISHLIST SET USER] email:', email)
     currentUserEmail.value = email
@@ -212,8 +217,6 @@ export const useWishlistStore = defineStore('wishlist', () => {
     }
   }
 
-  // Initialize with local data; fetchWishlist()/setUser() will overwrite
-  // this with the real server data once we know the user is authenticated.
   loadWishlist()
 
   return {
