@@ -5,7 +5,7 @@
   
   <Footer :mode="footerMode" v-if="!hideLayout" />
   
-  <ThemeToggle v-if="!hideLayout" />
+  
 </template>
 
 <script setup>
@@ -14,7 +14,7 @@ import { useRoute } from "vue-router"
 
 import Navbar from "./components/layout/Navbar.vue"
 import Footer from "./components/layout/Footer.vue"
-import ThemeToggle from "./components/layout/ThemeToggle.vue"
+
 
 const route = useRoute()
 
