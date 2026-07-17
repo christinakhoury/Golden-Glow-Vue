@@ -1,12 +1,15 @@
 import axios from 'axios'
 
+export const STORE_ID = '17781c3f-b746-4897-be7d-15d1ff48589e'
+
 const BASE_URL = 'https://api.osimart.com/store/apis/checkout/'
 const PAYMENT_METHODS_URL = 'https://api.osimart.com/store/apis/payment-methods/'
-const STORE_ID = '17781c3f-b746-4897-be7d-15d1ff48589e'
 
 function getAuthHeaders() {
   const token = localStorage.getItem('gg-token')
-  return token ? { Authorization: `Bearer ${token}` } : {}
+  // osimart expects the JWT auth scheme, not Bearer — see auth.js / useAuth.js
+  // for the same quirk documented elsewhere in this project.
+  return token ? { Authorization: `JWT ${token}` } : {}
 }
 
 let _paymentMethodsCache = null
@@ -15,61 +18,64 @@ async function getPaymentMethods() {
   if (_paymentMethodsCache) return _paymentMethodsCache
   const res = await axios.get(PAYMENT_METHODS_URL, {
     params: { store: STORE_ID },
-    headers: { ...getAuthHeaders() }
+    headers: getAuthHeaders()
   })
   _paymentMethodsCache = res.data.results
+
+  // Temporary — remove once payment_method_id validation is fully confirmed.
+  console.log('[CHECKOUT API] payment methods for store', STORE_ID, _paymentMethodsCache)
+
   return _paymentMethodsCache
 }
 
+// Card is disabled in the UI for now (backend doesn't support split
+// product/service payment methods yet), so in practice only the cash-style
+// entries get resolved. Left the full map in place so re-enabling card later
+// in CheckoutView.vue is a one-line change, not a rewrite here.
 const UI_TO_BACKEND_NAME = {
   card: 'Credit or Debit Card',
   cod: 'Cash on Delivery',
-  instore: 'Cash on Delivery', 
+  instore: 'Cash on Delivery',
   paypal: 'PayPal'
 }
 
-async function resolvePaymentMethodId(uiType) {
+export async function resolvePaymentMethodId(uiType) {
   const methods = await getPaymentMethods()
-  
-  console.group('🔍 [CHECKOUT DEBUG] Parsing Methods for Validation Bypass')
-  console.log('UI Requested Type:', uiType)
-  console.table(methods.map(m => ({ id: m.id, name: m.name, code: m.code || 'N/A' })))
-  console.groupEnd()
-
   const backendName = UI_TO_BACKEND_NAME[uiType]
+
   if (!backendName) {
     throw new Error(`No backend mapping defined for payment type "${uiType}"`)
   }
 
-  // 1. Primary Attempt: Match by strict backend name string
+  // 1. Strict name match
   let match = methods.find(m => m.name.toLowerCase() === backendName.toLowerCase())
 
-  // 2. Secondary Attempt / Fallback Workaround:
-  // If the strict name matches a restricted model instance, look for alternate instances 
-  // with similar naming tokens or codes that might be configured differently (e.g. Guest-friendly versions)
+  // 2. Fallback: fuzzy match by common tokens, in case osimart's dashboard
+  //    naming drifts from the exact string above
   if (!match) {
     if (uiType === 'cod' || uiType === 'instore') {
-      match = methods.find(m => 
-        m.name.toLowerCase().includes('delivery') || 
+      match = methods.find(m =>
+        m.name.toLowerCase().includes('delivery') ||
         m.name.toLowerCase().includes('cod') ||
         m.name.toLowerCase().includes('in-store') ||
         m.name.toLowerCase().includes('cash')
       )
     } else if (uiType === 'card' || uiType === 'paypal') {
-      match = methods.find(m => 
-        m.name.toLowerCase().includes('card') || 
-        m.name.toLowerCase().includes('stripe') || 
+      match = methods.find(m =>
+        m.name.toLowerCase().includes('card') ||
+        m.name.toLowerCase().includes('stripe') ||
         m.name.toLowerCase().includes('pay')
       )
     }
   }
 
   if (!match) {
-    throw new Error(`Could not resolve any compliant payment method ID for style: "${uiType}"`)
+    throw new Error(`Could not resolve a payment method ID for "${uiType}"`)
   }
 
-  // DEBUG: Track exactly which UUID is escaping to the network layer
-  console.log(`🎯 [RESOLVER] Selected ID: ${match.id} (${match.name})`)
+  // Temporary — remove once payment_method_id validation is fully confirmed.
+  console.log(`[CHECKOUT API] resolved "${uiType}" ->`, match)
+
   return match.id
 }
 
@@ -79,102 +85,141 @@ function buildCheckoutPayload({
   serviceItems,
   productTotals,
   serviceTotals,
-  resolvedPaymentMethodId,
-  primaryType
+  productPaymentMethod,
+  servicePaymentMethod,
+  paymentMethodId,
+  grandTotal
 }) {
-  const cart = {}
-  ;[...productItems, ...serviceItems].forEach(item => {
-    cart[item.variantId || item.id] = { quantity: item.quantity }
-  })
+  // NOTE: osimart's validator rejects the checkout with
+  // "Select an address or add full address details" whenever it doesn't
+  // recognize the address as "full." They haven't confirmed the exact field
+  // names their serializer expects, so this sends the common variants
+  // side-by-side (address_line_1/street_address/line1, state/region, etc).
+  // DRF serializers normally ignore keys they don't declare, so the extras
+  // are harmless. Once osimart support confirms the real shape, trim this
+  // down to just the correct keys.
+  const [addrFirstName, ...addrRest] = (customer.name || '').trim().split(' ')
+  const addrLastName = addrRest.join(' ')
 
-  const structuredAddress = customer.address 
+  const structuredAddress = customer.address
     ? {
+        full_name: customer.name,
+        first_name: addrFirstName || customer.name,
+        last_name: addrLastName || '',
+        phone: customer.phone,
+        phone_number: customer.phone,
+        email: customer.email,
+
+        address_line_1: customer.address,
+        address_line1: customer.address,
+        line1: customer.address,
         street_address: customer.address,
+        address: customer.address,
+
         city: 'Beirut',
+        state: 'Mount Lebanon',
+        region: 'Mount Lebanon',
         country: 'Lebanon',
-        postal_code: '0000'
+        country_code: 'LB',
+
+        postal_code: '0000',
+        zip_code: '0000',
+        zipcode: '0000'
       }
     : null
 
   return {
     store: STORE_ID,
-    
-    // VARIATION TEST: If the UUID fails, the backend might be expecting the short name string 
-    // or type code directly inside this property instead of a relation ID.
-    payment_method_id: resolvedPaymentMethodId, 
-    payment_method: "cod", 
-    payment_method_name: "Cash on Delivery",
 
-    address: customer.address, 
-    shipping_address: customer.address,
-    delivery_address: customer.address,
-    street_address: customer.address,
+    // Single required field on the backend right now — see submitCheckout()
+    // for how the primary method is chosen when both products and services
+    // are in the cart.
+    payment_method_id: paymentMethodId,
+
+    customer_name: customer.name,
+    customer_email: customer.email,
+    customer_phone: customer.phone,
+    delivery_address: customer.address || undefined,
+
+    // Sent at the top level too, in case the serializer looks for `address`
+    // on the order itself rather than nested under `guest`.
+    address: structuredAddress,
+    // address_id intentionally omitted — osimart's serializer allows this
+    // field to be absent (required=False) but rejects an explicit `null`
+    // (allow_null=False). Confirmed fixed.
 
     guest: {
       name: customer.name,
       email: customer.email,
       phone: customer.phone,
-      address: structuredAddress,
-      shipping_address: structuredAddress,
-      delivery_address: structuredAddress,
-      guest_address: customer.address,
-      street_address: customer.address
+      address: structuredAddress
     },
 
-    cart,
+    product_items: productItems.map(item => ({
+      item_id: item.variantId || item.id,
+      quantity: item.quantity,
+      price: item.price
+    })),
+    product_payment_method: productItems.length ? productPaymentMethod : undefined,
+    product_subtotal: productTotals ? productTotals.subtotal : undefined,
+    product_tax: productTotals ? parseFloat(productTotals.tax.toFixed(2)) : undefined,
+    product_total: productTotals ? parseFloat(productTotals.total.toFixed(2)) : undefined,
 
-    product_payment_method: "cod",
-    service_payment_method: "cod",
-
-    product_subtotal: productTotals.subtotal,
-    product_tax: parseFloat(productTotals.tax.toFixed(2)),
-    product_total: parseFloat(productTotals.total.toFixed(2)),
-
-    service_subtotal: serviceTotals.subtotal,
-    service_tax: parseFloat(serviceTotals.tax.toFixed(2)),
-    service_total: parseFloat(serviceTotals.total.toFixed(2)),
+    service_items: serviceItems.map(item => ({
+      item_id: item.variantId || item.id,
+      quantity: item.quantity,
+      price: item.price
+    })),
+    service_payment_method: serviceItems.length ? servicePaymentMethod : undefined,
+    service_subtotal: serviceTotals ? serviceTotals.subtotal : undefined,
+    service_tax: serviceTotals ? parseFloat(serviceTotals.tax.toFixed(2)) : undefined,
+    service_total: serviceTotals ? parseFloat(serviceTotals.total.toFixed(2)) : undefined,
 
     grand_total: parseFloat(grandTotal.toFixed(2))
   }
 }
 
+/**
+ * Resolves the payment method and submits the order.
+ *
+ * NOTE ON SPLIT PAYMENTS: osimart's checkout endpoint only accepts a single
+ * payment_method_id per order — there's no product_payment_method_id /
+ * service_payment_method_id split. Until they add that, we pick one primary
+ * method (products take priority if present, otherwise services). This is
+ * fine while both sides are forced to cash, but if card ever gets
+ * re-enabled with a genuine mixed cart, this will need a real backend fix,
+ * not a frontend workaround.
+ */
 export async function submitCheckout({
   customer,
   productItems = [],
   serviceItems = [],
   productTotals,
   serviceTotals,
-  paymentMethods,
+  productPaymentMethod,
+  servicePaymentMethod,
   grandTotal
 }) {
-  // FORCE OVERRIDE: Since only COD is active on the backend dashboard,
-  // we force primaryType to 'cod' so it resolves the correct working UUID.
-  const primaryType = 'cod'
+  const primaryUiType = productItems.length ? productPaymentMethod : servicePaymentMethod
+  const paymentMethodId = await resolvePaymentMethodId(primaryUiType)
 
-  const resolvedPaymentMethodId = await resolvePaymentMethodId(primaryType)
-
-  // Construct payload ensuring inner values match your backend capabilities
   const payload = buildCheckoutPayload({
     customer,
     productItems,
     serviceItems,
     productTotals,
     serviceTotals,
-    paymentMethods: {
-      product: 'cod',
-      service: 'cod'
-    },
-    grandTotal,
-    resolvedPaymentMethodId,
-    primaryType
+    productPaymentMethod,
+    servicePaymentMethod,
+    paymentMethodId,
+    grandTotal
   })
 
   const targetUrl = `${BASE_URL}?store=${STORE_ID}`
 
-  console.group('🚀 [CHECKOUT API] Initiating Request (Forced COD Mode)')
-  console.log('Target URL:', targetUrl)
-  console.log('Payload Data:', JSON.stringify(payload, null, 2))
-  console.groupEnd()
+  // Temporary — remove once checkout is fully stable.
+  console.log('[CHECKOUT API] auth headers', getAuthHeaders())
+  console.log('[CHECKOUT API] payload', JSON.stringify(payload, null, 2))
 
   try {
     const res = await axios.post(targetUrl, payload, {
@@ -184,20 +229,21 @@ export async function submitCheckout({
       },
       withCredentials: true
     })
-
-    console.group('✅ [CHECKOUT API] Connection Successful')
-    console.log('Server Response Data:', JSON.stringify(res.data, null, 2))
-    console.groupEnd()
-
     return res.data
   } catch (error) {
-    console.group('❌ [CHECKOUT API ERROR] Connection Failed')
     if (error.response) {
-      console.log('HTTP Status:', error.response.status)
-      console.log('Server Error Data:', JSON.stringify(error.response.data, null, 2))
+      const data = error.response.data
+      console.error('[CHECKOUT API] failed', error.response.status)
+      if (data && typeof data === 'object') {
+        Object.entries(data).forEach(([field, messages]) => {
+          console.error(`  → ${field}:`, Array.isArray(messages) ? messages.join(', ') : messages)
+        })
+      } else {
+        console.error('  →', data)
+      }
+    } else {
+      console.error('[CHECKOUT API] failed', error.message)
     }
-    console.groupEnd()
-
     throw error
   }
 }

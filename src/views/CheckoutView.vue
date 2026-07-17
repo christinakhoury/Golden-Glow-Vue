@@ -33,32 +33,28 @@
               <h3 class="text-lg font-playfair font-medium text-stone-800 mb-4 tracking-wide">Product Payment</h3>
               <div class="grid grid-cols-2 gap-3">
                 <button
-                  @click="productPaymentMethod = 'card'"
-                  class="p-4 border rounded-xl text-sm font-medium transition"
-                  :class="productPaymentMethod === 'card' ? 'border-[#D4AF37] bg-[#D4AF37]/10 text-[#D4AF37]' : 'border-stone-200 text-stone-600 hover:border-[#D4AF37]'"
+                  disabled
+                  title="Card payment is coming soon"
+                  class="relative p-4 border rounded-xl text-sm font-medium border-stone-200 text-stone-400 opacity-40 cursor-not-allowed"
                 >
                   Pay Now (Card)
+                  <span class="block text-[10px] tracking-wider uppercase mt-1 text-stone-400">Coming soon</span>
                 </button>
                 <button
-                  @click="productPaymentMethod = 'cod'"
-                  class="p-4 border rounded-xl text-sm font-medium transition"
-                  :class="productPaymentMethod === 'cod' ? 'border-[#D4AF37] bg-[#D4AF37]/10 text-[#D4AF37]' : 'border-stone-200 text-stone-600 hover:border-[#D4AF37]'"
+                  class="p-4 border rounded-xl text-sm font-medium transition border-[#D4AF37] bg-[#D4AF37]/10 text-[#D4AF37]"
                 >
                   Pay on Delivery
                 </button>
               </div>
 
-              <!-- Delivery address only appears once COD is actually chosen -->
-              <transition name="fade">
-                <div v-if="productPaymentMethod === 'cod'" class="mt-4">
-                  <input
-                    v-model="customer.address"
-                    placeholder="Delivery Address"
-                    class="w-full h-12 px-4 border border-stone-200 rounded-xl bg-stone-50/50 text-stone-800 placeholder:text-stone-400"
-                  />
-                  <p class="text-xs text-stone-400 mt-2">We'll deliver your products and collect payment at your door.</p>
-                </div>
-              </transition>
+              <div class="mt-4">
+                <input
+                  v-model="customer.address"
+                  placeholder="Delivery Address"
+                  class="w-full h-12 px-4 border border-stone-200 rounded-xl bg-stone-50/50 text-stone-800 placeholder:text-stone-400"
+                />
+                <p class="text-xs text-stone-400 mt-2">We'll deliver your products and collect payment at your door.</p>
+              </div>
             </div>
 
             <!-- SERVICE PAYMENT -->
@@ -66,45 +62,23 @@
               <h3 class="text-lg font-playfair font-medium text-stone-800 mb-4 tracking-wide">Service Payment</h3>
               <div class="grid grid-cols-2 gap-3">
                 <button
-                  @click="servicePaymentMethod = 'card'"
-                  class="p-4 border rounded-xl text-sm font-medium transition"
-                  :class="servicePaymentMethod === 'card' ? 'border-[#D4AF37] bg-[#D4AF37]/10 text-[#D4AF37]' : 'border-stone-200 text-stone-600 hover:border-[#D4AF37]'"
+                  disabled
+                  title="Card payment is coming soon"
+                  class="relative p-4 border rounded-xl text-sm font-medium border-stone-200 text-stone-400 opacity-40 cursor-not-allowed"
                 >
                   Pay Now (Card)
+                  <span class="block text-[10px] tracking-wider uppercase mt-1 text-stone-400">Coming soon</span>
                 </button>
                 <button
-                  @click="servicePaymentMethod = 'instore'"
-                  class="p-4 border rounded-xl text-sm font-medium transition"
-                  :class="servicePaymentMethod === 'instore' ? 'border-[#D4AF37] bg-[#D4AF37]/10 text-[#D4AF37]' : 'border-stone-200 text-stone-600 hover:border-[#D4AF37]'"
+                  class="p-4 border rounded-xl text-sm font-medium transition border-[#D4AF37] bg-[#D4AF37]/10 text-[#D4AF37]"
                 >
                   Pay In-Store
                 </button>
               </div>
-              <transition name="fade">
-                <p v-if="servicePaymentMethod === 'instore'" class="text-xs text-stone-400 mt-3">
-                  You'll pay for your service at the studio when you arrive.
-                </p>
-              </transition>
+              <p class="text-xs text-stone-400 mt-3">
+                You'll pay for your service at the studio when you arrive.
+              </p>
             </div>
-
-            <!-- CARD DETAILS (shown once, used for whichever side picked card) -->
-            <transition name="fade">
-              <div v-if="needsCard" class="border-t border-stone-100 pt-6">
-                <h3 class="text-lg font-playfair font-medium text-stone-800 mb-4 tracking-wide">Card Details</h3>
-                <div class="space-y-4">
-                  <input v-model="payment.cardName" placeholder="Name on Card"
-                    class="w-full h-12 px-4 border border-stone-200 rounded-xl bg-stone-50/50 text-stone-800 placeholder:text-stone-400" />
-                  <input v-model="payment.cardNumber" maxlength="19" placeholder="Card Number"
-                    class="w-full h-12 px-4 border border-stone-200 rounded-xl bg-stone-50/50 text-stone-800 placeholder:text-stone-400" />
-                  <div class="grid grid-cols-2 gap-4">
-                    <input v-model="payment.expiry" placeholder="MM/YY" maxlength="5"
-                      class="h-12 px-4 border border-stone-200 rounded-xl bg-stone-50/50 text-stone-800 placeholder:text-stone-400" />
-                    <input v-model="payment.cvv" placeholder="CVV" maxlength="4"
-                      class="h-12 px-4 border border-stone-200 rounded-xl bg-stone-50/50 text-stone-800 placeholder:text-stone-400" />
-                  </div>
-                </div>
-              </div>
-            </transition>
 
             <p v-if="error" class="text-red-500 text-xs font-semibold">{{ error }}</p>
           </div>
@@ -117,7 +91,7 @@
               <h3 class="text-lg font-playfair font-medium text-stone-800 mb-4 tracking-wide border-b border-stone-100 pb-3">
                 Products
                 <span class="block text-xs uppercase tracking-wider text-stone-400 font-normal mt-1">
-                  {{ productPaymentMethod === 'cod' ? 'Pay on Delivery' : 'Pay by Card' }}
+                  Pay on Delivery
                 </span>
               </h3>
 
@@ -154,7 +128,7 @@
               <h3 class="text-lg font-playfair font-medium text-stone-800 mb-4 tracking-wide border-b border-stone-100 pb-3">
                 Services
                 <span class="block text-xs uppercase tracking-wider text-stone-400 font-normal mt-1">
-                  {{ servicePaymentMethod === 'instore' ? 'Pay In-Store' : 'Pay by Card' }}
+                  Pay In-Store
                 </span>
               </h3>
 
@@ -224,11 +198,11 @@
 <script setup>
 import { reactive, computed, ref, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import axios from 'axios'
 import { useCart } from '../composables/useCart'
 import { useAuthStore } from '../composables/auth'
-
-const STORE_ID = '17781c3f-b746-4897-be7d-15d1ff48589e'
+// Adjust this path to wherever checkout.js actually lives in your project
+// (e.g. '../services/checkout' or '../api/checkout').
+import { submitCheckout } from '../services/checkout'
 
 const router = useRouter()
 const cartStore = useCart()
@@ -256,15 +230,13 @@ const serviceTotal = computed(() => serviceSubtotal.value + serviceTax.value)
 const grandTotal = computed(() => productTotal.value + serviceTotal.value)
 
 const customer = reactive({ name: '', email: '', phone: '', address: '' })
-const payment = reactive({ cardName: '', cardNumber: '', expiry: '', cvv: '' })
 
-const productPaymentMethod = ref('card') // 'card' | 'cod'
-const servicePaymentMethod = ref('card') // 'card' | 'instore'
-
-const needsCard = computed(() =>
-  (hasProducts.value && productPaymentMethod.value === 'card') ||
-  (hasServices.value && servicePaymentMethod.value === 'card')
-)
+// Card payment is disabled in the UI for now — the backend only accepts a
+// single payment_method_id per order, so real product/service split
+// payment isn't possible yet. Both sides are locked to cash until osimart
+// adds a proper split-payment field.
+const productPaymentMethod = ref('cod')
+const servicePaymentMethod = ref('instore')
 
 const processing = ref(false)
 const error = ref('')
@@ -307,61 +279,10 @@ function validate() {
   if (customer.name.trim().length < 2) return 'Enter your full name'
   if (!customer.email.includes('@')) return 'Enter a valid email'
   if (customer.phone.trim().length < 8) return 'Enter a valid phone number'
-  if (hasProducts.value && productPaymentMethod.value === 'cod' && customer.address.trim().length < 5) {
+  if (hasProducts.value && customer.address.trim().length < 5) {
     return 'Enter a delivery address for pay-on-delivery orders'
   }
-  if (needsCard.value) {
-    if (payment.cardNumber.replace(/\s/g, '').length < 12) return 'Enter a valid card number'
-    if (!/^\d{2}\/\d{2}$/.test(payment.expiry)) return 'Expiry must be MM/YY'
-    if (payment.cvv.length < 3) return 'Enter a valid CVV'
-  }
   return ''
-}
-
-function getAuthHeaders() {
-  const token = localStorage.getItem('gg-token')
-  return token ? { Authorization: `Bearer ${token}` } : {}
-}
-
-async function submitOrder() {
-  const url = `https://api.osimart.com/store/apis/checkout/?store=${STORE_ID}`
-
-  const payload = {
-    store: STORE_ID,
-    customer_name: customer.name,
-    customer_email: customer.email,
-    customer_phone: customer.phone,
-    delivery_address: (hasProducts.value && productPaymentMethod.value === 'cod') ? customer.address : undefined,
-
-    product_items: productItems.value.map(item => ({
-      item_id: item.variantId,
-      quantity: item.quantity,
-      price: item.price
-    })),
-    product_payment_method: hasProducts.value ? productPaymentMethod.value : undefined,
-    product_subtotal: hasProducts.value ? productSubtotal.value : undefined,
-    product_tax: hasProducts.value ? productTax.value : undefined,
-    product_total: hasProducts.value ? productTotal.value : undefined,
-
-    service_items: serviceItems.value.map(item => ({
-      item_id: item.variantId,
-      quantity: item.quantity,
-      price: item.price
-    })),
-    service_payment_method: hasServices.value ? servicePaymentMethod.value : undefined,
-    service_subtotal: hasServices.value ? serviceSubtotal.value : undefined,
-    service_tax: hasServices.value ? serviceTax.value : undefined,
-    service_total: hasServices.value ? serviceTotal.value : undefined,
-
-    grand_total: grandTotal.value
-  }
-
-  const res = await axios.post(url, payload, {
-    headers: getAuthHeaders(),
-    withCredentials: true
-  })
-
-  return res.data
 }
 
 async function handlePlaceOrder() {
@@ -370,19 +291,24 @@ async function handlePlaceOrder() {
 
   processing.value = true
   try {
-    await submitOrder()
+    await submitCheckout({
+      customer,
+      productItems: productItems.value,
+      serviceItems: serviceItems.value,
+      productTotals: hasProducts.value
+        ? { subtotal: productSubtotal.value, tax: productTax.value, total: productTotal.value }
+        : undefined,
+      serviceTotals: hasServices.value
+        ? { subtotal: serviceSubtotal.value, tax: serviceTax.value, total: serviceTotal.value }
+        : undefined,
+      productPaymentMethod: productPaymentMethod.value,
+      servicePaymentMethod: servicePaymentMethod.value,
+      grandTotal: grandTotal.value
+    })
 
     const parts = []
-    if (hasProducts.value) {
-      parts.push(productPaymentMethod.value === 'cod'
-        ? 'Your products will be paid for on delivery.'
-        : 'Your product payment has been processed.')
-    }
-    if (hasServices.value) {
-      parts.push(servicePaymentMethod.value === 'instore'
-        ? 'Your service will be paid for in-store.'
-        : 'Your service payment has been processed.')
-    }
+    if (hasProducts.value) parts.push('Your products will be paid for on delivery.')
+    if (hasServices.value) parts.push('Your service will be paid for in-store.')
     successMessage.value = parts.join(' ')
 
     if (hasServices.value) {
@@ -401,15 +327,3 @@ async function handlePlaceOrder() {
   }
 }
 </script>
-
-<style scoped>
-.fade-enter-active,
-.fade-leave-active {
-  transition: all 0.25s ease;
-}
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
-  transform: translateY(-4px);
-}
-</style>
