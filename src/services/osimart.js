@@ -2,7 +2,7 @@ export class OsiMartAPI {
   constructor(storeId) {
     this.storeId = storeId;
    
-    this.baseUrl = "https://api.osimart.com/store/apis";
+    this.baseUrl = `${import.meta.env.VITE_OSIMART_BASE_URL || 'https://api.osimart.com'}/store/apis`;
   }
 
 async _apiRequest(endpoint) {

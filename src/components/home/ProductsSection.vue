@@ -43,9 +43,9 @@
               <button 
                 @click.stop="handleWishlistToggle(product)"
                 class="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 backdrop-blur-xs shadow-md flex items-center justify-center transition-colors duration-300 z-20 cursor-pointer"
-                :class="isItemInWishlist(product.id) ? 'text-red-500' : 'text-stone-400 hover:text-stone-900'"
+                :class="isItemInWishlist(product) ? 'text-red-500' : 'text-stone-400 hover:text-stone-900'"
               >
-                <i :class="isItemInWishlist(product.id) ? 'fas fa-heart' : 'far fa-heart'"></i>
+                <i :class="isItemInWishlist(product) ? 'fas fa-heart' : 'far fa-heart'"></i>
               </button>
             </div>
 
@@ -119,6 +119,11 @@ const shuffleArray = (array) => {
   return array
 }
 
+const normalizeVariants = (variants) => {
+  if (!variants) return []
+  return Array.isArray(variants) ? variants : [variants]
+}
+
 const fetchRecommended = async () => {
   try {
     isLoading.value = true
@@ -130,12 +135,12 @@ const fetchRecommended = async () => {
         const catName = item.categories?.[0]?.category?.name?.toLowerCase() || ''
         const isService = catName.includes('service')
         
-        // Count how many variants this product has
-        const variantsCount = item.product_variants?.length || 0
+        const variants = normalizeVariants(item.product_variants)
+        const variantsCount = variants.length
         
         // If it has more than 1 variant, it means it has options (like multiple sizes/colors)
         // Also check if the lone variant contains a distinct sub-title option (e.g. "Default Title" means no real custom variant options)
-        const hasRealVariants = variantsCount > 1 || (variantsCount === 1 && item.product_variants[0].title && item.product_variants[0].title !== 'Default Title' && item.product_variants[0].title !== 'Default')
+        const hasRealVariants = variantsCount > 1 || (variantsCount === 1 && variants[0].title && variants[0].title !== 'Default Title' && variants[0].title !== 'Default')
 
         return !isService && !hasRealVariants
       })
@@ -147,7 +152,7 @@ const fetchRecommended = async () => {
       recommendedProducts.value = filteredProducts
         .slice(0, 8) 
         .map((item, index) => {
-          const initialVariant = item.product_variants?.[0]
+          const initialVariant = normalizeVariants(item.product_variants)[0]
           const rawImagePath = item.main_image?.path || item.image_url || item.image
           let finalImage = '/images/p1.jpg'
           
@@ -166,7 +171,7 @@ const fetchRecommended = async () => {
 
           return {
             id: item.id,
-            variantId: initialVariant?.id || item.id,
+            variantId: initialVariant?.id,
             name: item.name || 'Premium Item',
             subcategory: item.categories?.[0]?.category?.name || 'Luxury',
             desc: item.description || item.short_description || '',
@@ -190,17 +195,23 @@ onMounted(() => {
 /* ========================================================
     🛒 CART / WISHLIST HANDLERS
 =========================================================== */
-const isItemInWishlist = (productId) => {
+const getProductVariantId = (product) => product.variantId || product.id
+
+const isItemInWishlist = (product) => {
   if (!wishlistStore.items) return false
-  return wishlistStore.items.some(item => item.id === productId)
+  const variantId = typeof product === 'object' ? getProductVariantId(product) : product
+  return wishlistStore.items.some(item => item.id === variantId || item.variantId === variantId)
 }
 
 const handleWishlistToggle = (product) => {
-  if (isItemInWishlist(product.id)) {
-    wishlistStore.removeFromWishlist(product.id)
+  const variantId = getProductVariantId(product)
+
+  if (isItemInWishlist(product)) {
+    wishlistStore.removeFromWishlist(variantId)
   } else {
     wishlistStore.addToWishlist({
       id: product.id,
+      variantId,
       name: product.name,
       price: product.price,
       image: product.image,
@@ -212,13 +223,19 @@ const handleWishlistToggle = (product) => {
 const handleAddToCart = async (product) => {
   if (typeof cartStore.addToCart !== 'function') return
 
+  const variantId = product.variantId || product.id
+  if (!variantId) {
+    console.error("[HOME PRODUCTS] add to cart failed: no variant id for", product)
+    return
+  }
+
   addingToCartId.value = product.id
 
   try {
     await cartStore.addToCart(
       {
         id: product.id,
-        variantId: product.variantId || product.id,
+        variantId,
         name: product.name,
         price: product.price,
         image: product.image,

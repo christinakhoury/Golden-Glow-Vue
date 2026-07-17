@@ -19,11 +19,17 @@
             <div>
               <h3 class="text-lg font-playfair font-medium text-stone-800 mb-5 tracking-wide">Your Details</h3>
               <div class="space-y-4">
-                <input v-model="customer.name" placeholder="Full Name"
+                <input v-model="customer.firstName" placeholder="First Name"
                   class="w-full h-12 px-4 border border-stone-200 rounded-xl bg-stone-50/50 text-stone-800 placeholder:text-stone-400" />
-                <input v-model="customer.email" placeholder="Email"
+                <input v-model="customer.lastName" placeholder="Last Name"
                   class="w-full h-12 px-4 border border-stone-200 rounded-xl bg-stone-50/50 text-stone-800 placeholder:text-stone-400" />
-                <input v-model="customer.phone" placeholder="Phone"
+                <input v-model.trim="customer.email" type="email" placeholder="Email"
+                  class="w-full h-12 px-4 border border-stone-200 rounded-xl bg-stone-50/50 text-stone-800 placeholder:text-stone-400" />
+                <input v-model.trim="customer.phone" placeholder="Phone"
+                  class="w-full h-12 px-4 border border-stone-200 rounded-xl bg-stone-50/50 text-stone-800 placeholder:text-stone-400" />
+                <input v-model="customer.country" placeholder="Country"
+                  class="w-full h-12 px-4 border border-stone-200 rounded-xl bg-stone-50/50 text-stone-800 placeholder:text-stone-400" />
+                <input v-model="customer.address" placeholder="Delivery Address"
                   class="w-full h-12 px-4 border border-stone-200 rounded-xl bg-stone-50/50 text-stone-800 placeholder:text-stone-400" />
               </div>
             </div>
@@ -47,14 +53,7 @@
                 </button>
               </div>
 
-              <div class="mt-4">
-                <input
-                  v-model="customer.address"
-                  placeholder="Delivery Address"
-                  class="w-full h-12 px-4 border border-stone-200 rounded-xl bg-stone-50/50 text-stone-800 placeholder:text-stone-400"
-                />
-                <p class="text-xs text-stone-400 mt-2">We'll deliver your products and collect payment at your door.</p>
-              </div>
+              <p class="text-xs text-stone-400 mt-4">We'll deliver your products and collect payment at your door.</p>
             </div>
 
             <!-- SERVICE PAYMENT -->
@@ -184,7 +183,7 @@
         <div class="text-6xl mb-4">✨</div>
         <h2 class="text-2xl md:text-3xl font-playfair font-normal text-stone-800 mb-2">Order Placed!</h2>
         <p class="text-stone-500 text-sm md:text-base mb-8 leading-relaxed">
-          Thank you{{ customer.name ? `, ${customer.name}` : '' }}! {{ successMessage }}
+          Thank you{{ customer.firstName ? `, ${customer.firstName}` : '' }}! {{ successMessage }}
         </p>
         <router-link to="/products" class="inline-block bg-stone-900 text-white tracking-widest text-xs uppercase font-semibold px-8 py-3.5 rounded-full hover:bg-[#D4AF37] transition-all duration-300 shadow-sm hover:shadow-lg">
           Continue Shopping
@@ -229,7 +228,14 @@ const serviceTotal = computed(() => serviceSubtotal.value + serviceTax.value)
 
 const grandTotal = computed(() => productTotal.value + serviceTotal.value)
 
-const customer = reactive({ name: '', email: '', phone: '', address: '' })
+const customer = reactive({
+  firstName: '',
+  lastName: '',
+  email: '',
+  phone: '',
+  country: 'Lebanon',
+  address: ''
+})
 
 // Card payment is disabled in the UI for now — the backend only accepts a
 // single payment_method_id per order, so real product/service split
@@ -246,9 +252,9 @@ const successMessage = ref('')
 function fillCustomerInformation(user) {
   if (!user) return
 
-  customer.name =
-    user.name ||
-    `${user.first_name || ''} ${user.last_name || ''}`.trim()
+  const fallbackName = (user.name || '').trim().split(/\s+/).filter(Boolean)
+  customer.firstName = user.first_name || fallbackName[0] || ''
+  customer.lastName = user.last_name || fallbackName.slice(1).join(' ') || ''
 
   customer.email = user.email || ''
 
@@ -276,12 +282,13 @@ onMounted(() => {
 })
 
 function validate() {
-  if (customer.name.trim().length < 2) return 'Enter your full name'
-  if (!customer.email.includes('@')) return 'Enter a valid email'
+  if (customer.firstName.trim().length < 1) return 'Enter your first name'
+  if (customer.lastName.trim().length < 1) return 'Enter your last name'
+  customer.email = customer.email.trim().toLowerCase().replace(/\.{2,}/g, '.')
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customer.email)) return 'Enter a valid email'
   if (customer.phone.trim().length < 8) return 'Enter a valid phone number'
-  if (hasProducts.value && customer.address.trim().length < 5) {
-    return 'Enter a delivery address for pay-on-delivery orders'
-  }
+  if (customer.country.trim().length < 2) return 'Enter your country'
+  if (customer.address.trim().length < 5) return 'Enter your delivery address'
   return ''
 }
 
@@ -291,6 +298,8 @@ async function handlePlaceOrder() {
 
   processing.value = true
   try {
+    const serverCart = await cartStore.syncCartForCheckout()
+
     await submitCheckout({
       customer,
       productItems: productItems.value,
@@ -303,7 +312,8 @@ async function handlePlaceOrder() {
         : undefined,
       productPaymentMethod: productPaymentMethod.value,
       servicePaymentMethod: servicePaymentMethod.value,
-      grandTotal: grandTotal.value
+      grandTotal: grandTotal.value,
+      serverCart
     })
 
     const parts = []
@@ -321,7 +331,16 @@ async function handlePlaceOrder() {
     orderComplete.value = true
   } catch (e) {
     console.error('[CHECKOUT] order failed', e.response?.status, e.response?.data || e.message)
-    error.value = e.response?.data?.detail || 'Something went wrong placing your order. Please try again.'
+    const responseData = e.response?.data
+    const firstFieldError = responseData && typeof responseData === 'object'
+      ? Object.values(responseData).flat().find(Boolean)
+      : ''
+    error.value =
+      responseData?.detail ||
+      responseData?.cart?.[0] ||
+      firstFieldError ||
+      e.message ||
+      'Something went wrong placing your order. Please try again.'
   } finally {
     processing.value = false
   }

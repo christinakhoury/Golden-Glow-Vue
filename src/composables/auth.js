@@ -14,6 +14,7 @@ import {
   getAuthToken,
   logout as apiLogout
 } from '../services/login'
+import { storeUrl } from '../services/osimartConfig'
 
 export const useAuthStore = defineStore('auth', () => {
   const user = ref(null)
@@ -112,7 +113,7 @@ export const useAuthStore = defineStore('auth', () => {
   async function deleteAccount() {
 //still waiting ofr the correct path
     const token = getAuthToken()
-    const response = await fetch(`https://api.osimart.com/auth/delete-account/?store=17781c3f-b746-4897-be7d-15d1ff48589e`, {
+    const response = await fetch(storeUrl('/auth/delete-account/'), {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${token}` }
     })

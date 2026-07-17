@@ -273,6 +273,11 @@ const normalize = (str) =>
     .trim()
     .replace(/\s+/g, " ")
 
+const normalizeVariants = (variants) => {
+  if (!variants) return []
+  return Array.isArray(variants) ? variants : [variants]
+}
+
 /* ================= LOAD API ================= */
 onMounted(async () => {
   try {
@@ -321,9 +326,9 @@ const derivedTiers = computed(() => {
   if (!selectedService.value) return []
 
   const variants =
-    selectedService.value.product_variants ||
-    selectedService.value.vary_by?.[0]?.values ||
-    []
+    normalizeVariants(selectedService.value.product_variants).length
+      ? normalizeVariants(selectedService.value.product_variants)
+      : normalizeVariants(selectedService.value.vary_by?.[0]?.values)
 
   return variants.map(v => ({
     id: v.id,
@@ -376,21 +381,32 @@ const closeServiceOptions = () => {
   selectedService.value = null
 }
 
-const addToCart = (tier) => {
-  cartStore.addToCart(
-    {
-      id: tier.productId,
-      variantId: tier.variantId,
-      name: `${selectedService.value.name} - ${tier.name}`,
-      image: tier.image,
-      price: tier.price,
-      quantity: 1,
-      type: "service"
-    },
-    authStore.isAuthenticated,
-    authStore.openAuthModal
-  )
-  triggerToast(`${tier.name} added to cart 🛍️`)
+const addToCart = async (tier) => {
+  if (!tier.variantId) {
+    console.error("[SERVICES] add to cart failed: no variant id for", tier)
+    triggerToast("Could not add this item")
+    return
+  }
+
+  try {
+    await cartStore.addToCart(
+      {
+        id: tier.productId,
+        variantId: tier.variantId,
+        name: `${selectedService.value.name} - ${tier.name}`,
+        image: tier.image,
+        price: tier.price,
+        quantity: 1,
+        type: "service"
+      },
+      authStore.isAuthenticated,
+      authStore.openAuthModal
+    )
+    triggerToast(`${tier.name} added to cart 🛍️`)
+  } catch (err) {
+    console.error("[SERVICES] add to cart failed:", err.response?.data || err.message)
+    triggerToast("Could not add this item")
+  }
 }
 
 const triggerToast = (msg) => {

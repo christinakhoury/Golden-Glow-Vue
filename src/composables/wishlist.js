@@ -2,9 +2,9 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import axios from 'axios'
 import { getAuthToken } from '../services/login.js'
+import { storeUrl } from '../services/osimartConfig.js'
 
-const STORE_ID = '17781c3f-b746-4897-be7d-15d1ff48589e'
-const WISHLIST_API_URL = `https://api.osimart.com/store/apis/wishlist/?store=${STORE_ID}`
+const WISHLIST_API_URL = storeUrl('/store/apis/wishlist/')
 
 export const useWishlistStore = defineStore('wishlist', () => {
   // State
@@ -40,7 +40,12 @@ export const useWishlistStore = defineStore('wishlist', () => {
   function normalize(item) {
     console.log('[WISHLIST NORMALIZE] raw item in:', item)
 
-    const variantId = item.variantId || item.product_variant_id || item.id
+    const variantId =
+      item.variantId ||
+      item.product_variant_id ||
+      item.product_variant?.id ||
+      item.variant?.id ||
+      item.id
     if (!variantId) {
       console.warn('[WISHLIST NORMALIZE] skipped item, no identity found:', item)
       return null
@@ -52,7 +57,7 @@ export const useWishlistStore = defineStore('wishlist', () => {
     }
 
     const normalized = {
-      id: item.product_id || item.product?.id || variantId,
+      id: variantId,
       productId: item.product_id || item.product?.id || variantId,
       variantId,
       variantName: item.variantName || item.variant_name || null,
@@ -143,17 +148,23 @@ export const useWishlistStore = defineStore('wishlist', () => {
   async function addToWishlist(product) {
     console.log('[WISHLIST ADD] product in:', product)
 
-    const variantId = product.variantId || product.product_variant_id || product.id
+    const variantId =
+      product.variantId ||
+      product.product_variant_id ||
+      product.product_variant?.id ||
+      product.variant?.id ||
+      product.id
     const variantName = product.variantName || product.variant_name || product.variant?.name || null
 
     const exists = items.value.some(
-      item => item.id === product.id && (item.variantId || item.id) === variantId
+      item => item.id === variantId || item.variantId === variantId
     )
     console.log('[WISHLIST ADD] already exists?', exists)
 
     if (!exists) {
       items.value.push({
-        id: product.id,
+        id: variantId,
+        productId: product.productId || product.product_id || product.id,
         variantId,
         variantName,
         type: product.type || 'product',

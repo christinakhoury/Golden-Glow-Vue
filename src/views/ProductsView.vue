@@ -130,9 +130,9 @@
               <button 
                 @click="handleWishlistToggle(product)"
                 class="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 backdrop-blur-xs shadow-md flex items-center justify-center transition-colors duration-300 z-20"
-                :class="isItemInWishlist(product.id) ? 'text-red-500' : 'text-stone-400 hover:text-stone-900'"
+                :class="isItemInWishlist(product) ? 'text-red-500' : 'text-stone-400 hover:text-stone-900'"
               >
-                <i :class="isItemInWishlist(product.id) ? 'fas fa-heart' : 'far fa-heart'"></i>
+                <i :class="isItemInWishlist(product) ? 'fas fa-heart' : 'far fa-heart'"></i>
               </button>
             </div>
 
@@ -248,6 +248,11 @@ const getVariantLabel = (variant) => {
   )
 }
 
+const normalizeVariants = (variants) => {
+  if (!variants) return []
+  return Array.isArray(variants) ? variants : [variants]
+}
+
 // Core Dataset Configuration
 const categoryConfigs = [
   {
@@ -330,8 +335,13 @@ const clearCategory = () => {
 }
 
 /* ================= WISHLIST ================= */
-const isItemInWishlist = (id) =>
-  wishlistStore.items?.some(item => item.id === id)
+const getProductVariantId = (product) =>
+  product.selectedVariant?.id || product.variantId || product.id
+
+const isItemInWishlist = (product) => {
+  const variantId = typeof product === 'object' ? getProductVariantId(product) : product
+  return wishlistStore.items?.some(item => item.id === variantId || item.variantId === variantId)
+}
 
 const handleWishlistToggle = (product) => {
   // FIXED: now uses the shared getVariantLabel() resolver instead of
@@ -342,13 +352,16 @@ const handleWishlistToggle = (product) => {
     ? `${product.name} (${variantLabel})`
     : product.name
 
-  console.log("[WISHLIST]", isItemInWishlist(product.id) ? "removing" : "adding", currentName)
+  console.log("[WISHLIST]", isItemInWishlist(product) ? "removing" : "adding", currentName)
 
-  if (isItemInWishlist(product.id)) {
-    wishlistStore.removeFromWishlist(product.id)
+  const variantId = getProductVariantId(product)
+
+  if (isItemInWishlist(product)) {
+    wishlistStore.removeFromWishlist(variantId)
   } else {
     wishlistStore.addToWishlist({
       id: product.id,
+      variantId,
       name: currentName,
       price: currentPrice,
       image: product.image,
@@ -358,13 +371,18 @@ const handleWishlistToggle = (product) => {
 }
 
 /* ================= CART ================= */
-const handleAddToCart = (product) => {
+const handleAddToCart = async (product) => {
   if (product.variants && product.variants.length > 1 && !product.selectedVariant) {
     console.warn("⚠️ Option required before addition can be completed.")
     return
   }
 
   const finalVariantId = product.selectedVariant?.id || product.variantId
+  if (!finalVariantId) {
+    console.error("[PRODUCTS] add to cart failed: no variant id for", product)
+    addingToCartId.value = null
+    return
+  }
 
   // FIXED: now uses the shared getVariantLabel() resolver so this always
   // matches the label shown on the option button
@@ -373,23 +391,27 @@ const handleAddToCart = (product) => {
   console.log("[PRODUCTS] Add to cart clicked:", product.name, "variant:", variantLabel, "variantId:", finalVariantId)
   addingToCartId.value = product.id
 
-  cartStore.addToCart(
-    {
-      id: product.id,
-      variantId: finalVariantId, 
-      name: variantLabel ? `${product.name} (${variantLabel})` : product.name,
-      price: product.selectedVariant ? parseFloat(product.selectedVariant.price) : product.price,
-      image: product.image,
-      quantity: 1,
-      type: 'product'
-    },
-    authStore.isAuthenticated,
-    authStore.openAuthModal
-  )
-
-  setTimeout(() => {
-    addingToCartId.value = null
-  }, 800)
+  try {
+    await cartStore.addToCart(
+      {
+        id: product.id,
+        variantId: finalVariantId,
+        name: variantLabel ? `${product.name} (${variantLabel})` : product.name,
+        price: product.selectedVariant ? parseFloat(product.selectedVariant.price) : product.price,
+        image: product.image,
+        quantity: 1,
+        type: 'product'
+      },
+      authStore.isAuthenticated,
+      authStore.openAuthModal
+    )
+  } catch (err) {
+    console.error("[PRODUCTS] add to cart failed:", err.response?.data || err.message)
+  } finally {
+    setTimeout(() => {
+      addingToCartId.value = null
+    }, 800)
+  }
 }
 
 /* ================= INIT ================= */
@@ -414,8 +436,9 @@ onMounted(async () => {
         return null
       }
 
-      // Base baseline variant defaults
-      const initialVariantId = item.product_variants?.[0]?.id || item.id
+      const variants = normalizeVariants(item.product_variants)
+      const initialVariant = variants[0] || null
+      const initialVariantId = initialVariant?.id
       
       // Extract nested image configurations safely
       const rawImagePath = item.main_image?.path || item.image_url || item.image
@@ -465,8 +488,8 @@ onMounted(async () => {
         category: categoryName,
         subcategory: subcategoryName,
         price: finalPrice,
-        variants: item.product_variants || [],
-        selectedVariant: item.product_variants && item.product_variants.length === 1 ? item.product_variants[0] : null
+        variants,
+        selectedVariant: variants.length === 1 ? initialVariant : null
       }
     })
     .filter(Boolean) // NEW: drop the nulls (services) out of the final list

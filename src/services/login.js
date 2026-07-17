@@ -1,5 +1,6 @@
-const STORE_ID = '17781c3f-b746-4897-be7d-15d1ff48589e'
-const BASE_URL = 'https://api.osimart.com'
+import { OSIMART_STORE_ID, storeUrl } from './osimartConfig.js'
+
+const STORE_ID = OSIMART_STORE_ID
 
 // Generates (and persists) a stable device id so the backend can recognize
 // this browser across sessions. Swap for a more robust fingerprint if needed.
@@ -59,7 +60,7 @@ function setCachedProfile(email, fields) {
  * @returns {Promise<object>} the parsed JSON response (token, user info, etc.)
  */
 export async function login({ email, password }) {
-  const url = `${BASE_URL}/auth/login/?store=${STORE_ID}`
+  const url = storeUrl('/auth/login/')
 
   const payload = {
     email,
@@ -115,7 +116,7 @@ export async function login({ email, password }) {
  * @returns {Promise<object>}
  */
 export async function signup({ name, email, password, phone }) {
-  const url = `${BASE_URL}/auth/register/?store=${STORE_ID}`
+  const url = storeUrl('/auth/register/')
 
   const trimmedName = (name || '').trim()
   const nameParts = trimmedName.split(/\s+/).filter(Boolean)
@@ -190,7 +191,7 @@ export async function signup({ name, email, password, phone }) {
  * @returns {Promise<object>}
  */
 export async function verifyEmail({ email, code }) {
-  const url = `${BASE_URL}/auth/verify/?store=${STORE_ID}`
+  const url = storeUrl('/auth/verify/')
 
   const payload = {
     email,
@@ -235,7 +236,7 @@ export async function verifyEmail({ email, code }) {
  * @returns {Promise<object>}
  */
 export async function resendVerificationCode({ email }) {
-  const url = `${BASE_URL}/auth/regen/?store=${STORE_ID}`
+  const url = storeUrl('/auth/regen/')
 
   const payload = {
     email,
@@ -279,7 +280,7 @@ export async function resendVerificationCode({ email }) {
  * @returns {Promise<object>}
  */
 export async function changePassword({ old_password, new_password }) {
-  const url = `${BASE_URL}/auth/change-password/?store=${STORE_ID}`
+  const url = storeUrl('/auth/change-password/')
 
   const payload = {
     old_password,
@@ -337,7 +338,7 @@ export async function changePassword({ old_password, new_password }) {
  * @returns {Promise<object>}
  */
 export async function forgotPassword({ email }) {
-  const url = `${BASE_URL}/auth/forgot-password/?store=${STORE_ID}`
+  const url = storeUrl('/auth/forgot-password/')
 
   const payload = {
     email,
@@ -392,7 +393,7 @@ export async function forgotPassword({ email }) {
  * @returns {Promise<object>}
  */
 export async function resetPassword({ email, code, new_password }) {
-  const url = `${BASE_URL}/auth/reset-password/?store=${STORE_ID}`
+  const url = storeUrl('/auth/reset-password/')
 
   const payload = {
     email,
@@ -446,7 +447,7 @@ export async function resetPassword({ email, code, new_password }) {
  * @returns {Promise<object>}
  */
 export async function refreshAuthToken() {
-  const url = `${BASE_URL}/auth/refresh/?store=${STORE_ID}`
+  const url = storeUrl('/auth/refresh/')
   const refresh = localStorage.getItem('gg-refresh')
 
   if (!refresh) {

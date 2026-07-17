@@ -1,7 +1,7 @@
 import { OsiMartAPI } from './osimart.js';
+import { OSIMART_STORE_ID } from './osimartConfig.js';
 
-const STORE_ID = '17781c3f-b746-4897-be7d-15d1ff48589e'; 
-const api = new OsiMartAPI(STORE_ID);
+const api = new OsiMartAPI(OSIMART_STORE_ID);
 
 export async function loadStudioBanners() {
   try {

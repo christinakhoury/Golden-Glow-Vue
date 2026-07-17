@@ -1,31 +1,45 @@
 import axios from 'axios'
+import { OSIMART_STORE_ID, storeUrl } from './osimartConfig.js'
 
-export const STORE_ID = '17781c3f-b746-4897-be7d-15d1ff48589e'
+export const STORE_ID = OSIMART_STORE_ID
 
-const BASE_URL = 'https://api.osimart.com/store/apis/checkout/'
-const PAYMENT_METHODS_URL = 'https://api.osimart.com/store/apis/payment-methods/'
-
-function getAuthHeaders() {
-  const token = localStorage.getItem('gg-token')
-  // osimart expects the JWT auth scheme, not Bearer — see auth.js / useAuth.js
-  // for the same quirk documented elsewhere in this project.
-  return token ? { Authorization: `JWT ${token}` } : {}
-}
+const BASE_URL = storeUrl('/store/apis/checkout/')
+const PAYMENT_METHODS_URL = storeUrl('/store/apis/available-payment-methods/')
+const SHIPPING_COUNTRIES_URL = storeUrl('/store/apis/shippingcountries/')
 
 let _paymentMethodsCache = null
+let _shippingCountryCache = null
 
 async function getPaymentMethods() {
   if (_paymentMethodsCache) return _paymentMethodsCache
-  const res = await axios.get(PAYMENT_METHODS_URL, {
-    params: { store: STORE_ID },
-    headers: getAuthHeaders()
-  })
+  const res = await axios.get(PAYMENT_METHODS_URL)
   _paymentMethodsCache = res.data.results
 
-  // Temporary — remove once payment_method_id validation is fully confirmed.
-  console.log('[CHECKOUT API] payment methods for store', STORE_ID, _paymentMethodsCache)
-
   return _paymentMethodsCache
+}
+
+async function getShippingCountries() {
+  if (_shippingCountryCache) return _shippingCountryCache
+  const res = await axios.get(SHIPPING_COUNTRIES_URL)
+  _shippingCountryCache = res.data.results || res.data || []
+  return _shippingCountryCache
+}
+
+async function resolveShippingCountryId(preferredName = 'Lebanon') {
+  const countries = await getShippingCountries()
+  const preferred = (preferredName || 'Lebanon').toLowerCase()
+
+  const match = countries.find(country => {
+    const name = country.name || country.country || country.country_name || ''
+    const code = country.code || country.country_code || country.iso_code || ''
+    return (
+      name.toLowerCase() === preferred ||
+      code.toLowerCase() === 'lb' ||
+      code.toLowerCase() === 'lbn'
+    )
+  })
+
+  return (match || countries[0])?.id || null
 }
 
 // Card is disabled in the UI for now (backend doesn't support split
@@ -47,24 +61,36 @@ export async function resolvePaymentMethodId(uiType) {
     throw new Error(`No backend mapping defined for payment type "${uiType}"`)
   }
 
+  let match = null
+
+  if (uiType === 'cod' || uiType === 'instore') {
+    match = methods.find(m => m.is_cod && m.is_active !== false)
+  } else if (uiType === 'card') {
+    match = methods.find(m => m.is_creditordebit && m.is_active !== false)
+  } else if (uiType === 'paypal') {
+    match = methods.find(m => m.is_paypal && m.is_active !== false)
+  }
+
   // 1. Strict name match
-  let match = methods.find(m => m.name.toLowerCase() === backendName.toLowerCase())
+  if (!match) {
+    match = methods.find(m => m.name?.toLowerCase() === backendName.toLowerCase())
+  }
 
   // 2. Fallback: fuzzy match by common tokens, in case osimart's dashboard
   //    naming drifts from the exact string above
   if (!match) {
     if (uiType === 'cod' || uiType === 'instore') {
       match = methods.find(m =>
-        m.name.toLowerCase().includes('delivery') ||
-        m.name.toLowerCase().includes('cod') ||
-        m.name.toLowerCase().includes('in-store') ||
-        m.name.toLowerCase().includes('cash')
+        m.name?.toLowerCase().includes('delivery') ||
+        m.name?.toLowerCase().includes('cod') ||
+        m.name?.toLowerCase().includes('in-store') ||
+        m.name?.toLowerCase().includes('cash')
       )
     } else if (uiType === 'card' || uiType === 'paypal') {
       match = methods.find(m =>
-        m.name.toLowerCase().includes('card') ||
-        m.name.toLowerCase().includes('stripe') ||
-        m.name.toLowerCase().includes('pay')
+        m.name?.toLowerCase().includes('card') ||
+        m.name?.toLowerCase().includes('stripe') ||
+        m.name?.toLowerCase().includes('pay')
       )
     }
   }
@@ -72,9 +98,6 @@ export async function resolvePaymentMethodId(uiType) {
   if (!match) {
     throw new Error(`Could not resolve a payment method ID for "${uiType}"`)
   }
-
-  // Temporary — remove once payment_method_id validation is fully confirmed.
-  console.log(`[CHECKOUT API] resolved "${uiType}" ->`, match)
 
   return match.id
 }
@@ -88,7 +111,9 @@ function buildCheckoutPayload({
   productPaymentMethod,
   servicePaymentMethod,
   paymentMethodId,
-  grandTotal
+  grandTotal,
+  serverCart,
+  shippingCountryId
 }) {
   // NOTE: osimart's validator rejects the checkout with
   // "Select an address or add full address details" whenever it doesn't
@@ -98,29 +123,32 @@ function buildCheckoutPayload({
   // DRF serializers normally ignore keys they don't declare, so the extras
   // are harmless. Once osimart support confirms the real shape, trim this
   // down to just the correct keys.
-  const [addrFirstName, ...addrRest] = (customer.name || '').trim().split(' ')
-  const addrLastName = addrRest.join(' ')
+  const cleanName = (customer.name || '').trim()
+  const [nameFirst, ...nameRest] = cleanName.split(/\s+/).filter(Boolean)
+  const addrFirstName = (customer.firstName || nameFirst || 'Guest').trim()
+  const addrLastName = (customer.lastName || nameRest.join(' ') || addrFirstName).trim()
+  const fullName = cleanName || `${addrFirstName} ${addrLastName}`
+  const email = (customer.email || '').trim().toLowerCase().replace(/\.{2,}/g, '.')
+  const phone = (customer.phone || '').trim()
 
-  const structuredAddress = customer.address
+  const addressText = (customer.address || '').trim()
+
+  const structuredAddress = addressText
     ? {
-        full_name: customer.name,
-        first_name: addrFirstName || customer.name,
-        last_name: addrLastName || '',
-        phone: customer.phone,
-        phone_number: customer.phone,
-        email: customer.email,
+        full_name: fullName,
+        first_name: addrFirstName,
+        last_name: addrLastName,
+        phone,
+        phone_number: phone,
+        email,
 
-        address_line_1: customer.address,
-        address_line1: customer.address,
-        line1: customer.address,
-        street_address: customer.address,
-        address: customer.address,
+        address_line_1: addressText,
+        address_line1: addressText,
+        line1: addressText,
+        street_address: addressText,
+        address: addressText,
 
-        city: 'Beirut',
-        state: 'Mount Lebanon',
-        region: 'Mount Lebanon',
-        country: 'Lebanon',
-        country_code: 'LB',
+        country: shippingCountryId || undefined,
 
         postal_code: '0000',
         zip_code: '0000',
@@ -135,25 +163,45 @@ function buildCheckoutPayload({
     // for how the primary method is chosen when both products and services
     // are in the cart.
     payment_method_id: paymentMethodId,
+    payment_method: paymentMethodId,
 
-    customer_name: customer.name,
-    customer_email: customer.email,
-    customer_phone: customer.phone,
-    delivery_address: customer.address || undefined,
-
-    // Sent at the top level too, in case the serializer looks for `address`
-    // on the order itself rather than nested under `guest`.
+    customer_name: fullName,
+    customer_first_name: addrFirstName,
+    customer_last_name: addrLastName,
+    first_name: addrFirstName,
+    last_name: addrLastName,
+    customer_email: email,
+    email,
+    customer_phone: phone,
+    phone,
+    phone_number: phone,
+    country: shippingCountryId || undefined,
+    country_id: shippingCountryId || undefined,
+    delivery_address: addressText || undefined,
     address: structuredAddress,
+    address_line_1: addressText || undefined,
+    address_line1: addressText || undefined,
+    street_address: addressText || undefined,
+    address_details: structuredAddress,
+
     // address_id intentionally omitted — osimart's serializer allows this
     // field to be absent (required=False) but rejects an explicit `null`
     // (allow_null=False). Confirmed fixed.
 
     guest: {
-      name: customer.name,
-      email: customer.email,
-      phone: customer.phone,
+      full_name: fullName,
+      first_name: addrFirstName,
+      last_name: addrLastName,
+      name: fullName,
+      email,
+      phone,
+      phone_number: phone,
       address: structuredAddress
     },
+
+    cart: serverCart || undefined,
+    cart_items: serverCart || undefined,
+    items: serverCart || undefined,
 
     product_items: productItems.map(item => ({
       item_id: item.variantId || item.id,
@@ -198,10 +246,12 @@ export async function submitCheckout({
   serviceTotals,
   productPaymentMethod,
   servicePaymentMethod,
-  grandTotal
+  grandTotal,
+  serverCart
 }) {
   const primaryUiType = productItems.length ? productPaymentMethod : servicePaymentMethod
   const paymentMethodId = await resolvePaymentMethodId(primaryUiType)
+  const shippingCountryId = await resolveShippingCountryId(customer.country)
 
   const payload = buildCheckoutPayload({
     customer,
@@ -212,20 +262,17 @@ export async function submitCheckout({
     productPaymentMethod,
     servicePaymentMethod,
     paymentMethodId,
-    grandTotal
+    grandTotal,
+    serverCart,
+    shippingCountryId
   })
 
-  const targetUrl = `${BASE_URL}?store=${STORE_ID}`
-
-  // Temporary — remove once checkout is fully stable.
-  console.log('[CHECKOUT API] auth headers', getAuthHeaders())
-  console.log('[CHECKOUT API] payload', JSON.stringify(payload, null, 2))
+  const targetUrl = BASE_URL
 
   try {
     const res = await axios.post(targetUrl, payload, {
       headers: {
-        'Content-Type': 'application/json',
-        ...getAuthHeaders()
+        'Content-Type': 'application/json'
       },
       withCredentials: true
     })

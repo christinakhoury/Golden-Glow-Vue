@@ -1,8 +1,7 @@
 import { ref, computed, watch } from "vue"
 import axios from "axios"
 import { getAuthToken } from "../services/login.js"
-
-const STORE_ID = '17781c3f-b746-4897-be7d-15d1ff48589e'
+import { storeUrl } from "../services/osimartConfig.js"
 
 const cart = ref([])
 const loading = ref(false)
@@ -157,14 +156,18 @@ watch(cart, () => {
 NORMALIZE (VARIANT-AWARE + CATALOG TYPE OVERRIDE)
 ====================== */
 const normalize = (item) => {
-  const variantId = item.variantId ||
-                    item.product_variant_id ||
-                    item.product_variant?.id ||
-                    item.id;
+  const variantId =
+    item.variantId ||
+    item.product_variant_id ||
+    item.product_variant?.id ||
+    item.variant?.id ||
+    item.id;
 
-  const productId = item.product_id ||
-                    item.product?.id ||
-                    (item.variantId ? item.id : item.id);
+  const productId =
+    item.productId ||
+    item.product_id ||
+    item.product?.id ||
+    item.id;
 
   if (!variantId) {
     console.warn("[NORMALIZE] skipped item, no variant identity found:", item)
@@ -187,7 +190,9 @@ const normalize = (item) => {
     item.product_variant?.title ??
     item.product_variant_name ??
     item.product_variant_title ??
-    (Array.isArray(item.values) ? item.values.join(" / ") : null) ??
+    (Array.isArray(item.values)
+      ? item.values.map(value => value?.name || value).filter(Boolean).join(" / ")
+      : null) ??
     null
 
   let baseName = item.name || item.product?.name || "Unknown Item"
@@ -227,7 +232,7 @@ const fetchRemoteCart = async () => {
 
   loading.value = true
   try {
-    const url = `https://api.osimart.com/store/apis/cart/view/?store=${STORE_ID}`
+    const url = storeUrl('/store/apis/cart/view/')
     console.log("[FETCH] GET", url)
 
     const res = await axios.get(url, {
@@ -259,8 +264,12 @@ API UPDATE / SYNC
 const syncItem = async (variantId, deltaQuantity, action) => {
   console.log("[SYNC] called with variantId:", variantId, "delta:", deltaQuantity, "action:", action)
 
+  if (!variantId) {
+    throw new Error("Missing cart item variant id")
+  }
+
   try {
-    const url = `https://api.osimart.com/store/apis/cart/update-item/?store=${STORE_ID}`
+    const url = storeUrl('/store/apis/cart/update-item/')
     const payload = {
       item_id: variantId,
       quantity: deltaQuantity,
@@ -277,7 +286,24 @@ const syncItem = async (variantId, deltaQuantity, action) => {
     await fetchRemoteCart()
   } catch (e) {
     console.error("[SYNC] ERROR", e.response?.status, e.response?.data || e.message)
+    throw e
   }
+}
+
+const postCartAction = async (variantId, quantity, action) => {
+  const url = storeUrl('/store/apis/cart/update-item/')
+  const payload = {
+    item_id: variantId,
+    quantity,
+    action
+  }
+
+  const res = await axios.post(url, payload, {
+    headers: getAuthHeaders(),
+    withCredentials: true
+  })
+
+  return res.data
 }
 
 /* ======================
@@ -294,14 +320,27 @@ const addToCart = async (item) => {
   const existing = cart.value.find(i => i.id === n.id)
 
   if (existing) {
+    const previousQuantity = existing.quantity
+    const previousPrice = existing.price
     existing.quantity += n.quantity
     existing.price = n.price
     console.log("[ADD] existing item found, new quantity:", existing.quantity)
-    await syncItem(existing.variantId, n.quantity, "add")
+    try {
+      await syncItem(existing.variantId, n.quantity, "add")
+    } catch (e) {
+      existing.quantity = previousQuantity
+      existing.price = previousPrice
+      throw e
+    }
   } else {
     cart.value.push(n)
     console.log("[ADD] new item pushed:", n)
-    await syncItem(n.variantId, n.quantity, "add")
+    try {
+      await syncItem(n.variantId, n.quantity, "add")
+    } catch (e) {
+      cart.value = cart.value.filter(i => i.id !== n.id)
+      throw e
+    }
   }
 }
 
@@ -313,9 +352,15 @@ const increaseQuantity = async (id) => {
     return
   }
 
+  const previousQuantity = item.quantity
   item.quantity++
   console.log("[INCREASE] new quantity:", item.quantity)
-  await syncItem(item.variantId, 1, "add")
+  try {
+    await syncItem(item.variantId, 1, "add")
+  } catch (e) {
+    item.quantity = previousQuantity
+    throw e
+  }
 }
 
 const decreaseQuantity = async (id) => {
@@ -326,14 +371,21 @@ const decreaseQuantity = async (id) => {
     return
   }
 
+  const previousQuantity = item.quantity
   item.quantity--
   console.log("[DECREASE] new quantity:", item.quantity)
 
   if (item.quantity <= 0) {
     console.log("[DECREASE] quantity hit 0, removing item")
+    item.quantity = previousQuantity
     await removeFromCart(id)
   } else {
-    await syncItem(item.variantId, 1, "remove")
+    try {
+      await syncItem(item.variantId, 1, "remove")
+    } catch (e) {
+      item.quantity = previousQuantity
+      throw e
+    }
   }
 }
 
@@ -344,7 +396,12 @@ const removeFromCart = async (id) => {
   const fullQuantity = existing?.quantity || 1
   cart.value = cart.value.filter(i => i.id !== id)
   console.log("[REMOVE] cart after removal:", cart.value)
-  await syncItem(variantId, fullQuantity, "remove")
+  try {
+    await syncItem(variantId, fullQuantity, "remove")
+  } catch (e) {
+    if (existing) cart.value.push(existing)
+    throw e
+  }
 }
 
 const clearCart = async () => {
@@ -355,7 +412,7 @@ const clearCart = async () => {
 
   for (const item of itemsToClear) {
     try {
-      const url = `https://api.osimart.com/store/apis/cart/update-item/?store=${STORE_ID}`;
+      const url = storeUrl('/store/apis/cart/update-item/');
       const payload = {
         item_id: item.variantId,
         quantity: item.quantity,
@@ -374,6 +431,49 @@ const clearCart = async () => {
 
   await fetchRemoteCart();
 };
+
+const syncCartForCheckout = async () => {
+  const itemsToSync = [...cart.value]
+  const failedItems = []
+  const serverCart = {}
+
+  for (const item of itemsToSync) {
+    try {
+      await postCartAction(item.variantId, item.quantity, "remove_all")
+      const response = await postCartAction(item.variantId, item.quantity, "add")
+      if (response?.cart?.[item.variantId]) {
+        serverCart[item.variantId] = response.cart[item.variantId]
+      } else {
+        serverCart[item.variantId] = {
+          id: item.variantId,
+          name: item.baseName || item.name,
+          quantity: item.quantity,
+          price: String(item.price.toFixed ? item.price.toFixed(2) : item.price),
+          image: item.image,
+          values: item.variantName ? [{ name: item.variantName }] : [],
+          total_price: item.price * item.quantity
+        }
+      }
+    } catch (e) {
+      failedItems.push(item)
+      console.error("[CHECKOUT SYNC] failed item:", item, e.response?.data || e.message)
+    }
+  }
+
+  if (failedItems.length) {
+    const failedIds = new Set(failedItems.map(item => item.id))
+    cart.value = cart.value.filter(item => !failedIds.has(item.id))
+    throw new Error("Some items are no longer available. They were removed from your cart. Please review your bag and try again.")
+  }
+
+  await fetchRemoteCart()
+
+  if (!cart.value.length) {
+    throw new Error("Your cart is empty. Please add items before placing an order.")
+  }
+
+  return Object.keys(serverCart).length ? serverCart : null
+}
 
 /* ======================
 COMPUTED READS
@@ -415,6 +515,7 @@ export function useCart() {
     addToCart,
     removeFromCart,
     clearCart,
+    syncCartForCheckout,
     increaseQuantity,
     decreaseQuantity,
     productItems,
